@@ -95,6 +95,7 @@ func (aa *agent) getClient() (adapter_service.AdapterServiceClient, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	c, ok := client.(adapter_service.AdapterServiceClient)
 	if ok {
 		return c, nil

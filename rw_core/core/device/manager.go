@@ -383,7 +383,8 @@ func (dMgr *Manager) load(ctx context.Context, deviceID string) error {
 // adapterRestarted is invoked whenever an adapter is restarted
 func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapter) error {
 	logger.Debugw(ctx, "adapter-restarted", log.Fields{"adapter-id": adapter.Id, "vendor": adapter.Vendor,
-		"current-replica": adapter.CurrentReplica, "total-replicas": adapter.TotalReplicas, "restarted-endpoint": adapter.Endpoint})
+		"current-replica": adapter.CurrentReplica, "total-replicas": adapter.TotalReplicas,
+		"restarted-endpoint": adapter.Endpoint, "current-version": adapter.Version})
 
 	numberOfDevicesToReconcile := 0
 	dMgr.deviceAgents.Range(func(key, value interface{}) bool {
@@ -856,6 +857,17 @@ func (dMgr *Manager) ReconcilingCleanup(ctx context.Context, device *voltha.Devi
 func (dMgr *Manager) adapterRestartedHandler(ctx context.Context, endpoint string) error {
 	// Get the adapter corresponding to that endpoint
 	if a, _ := dMgr.adapterMgr.GetAdapterWithEndpoint(ctx, endpoint); a != nil {
+		if rollingUpdate, _ := dMgr.adapterMgr.GetRollingUpdate(ctx, endpoint); rollingUpdate {
+			dMgr.adapterMgr.RegisterOnRxStreamCloseChMap(ctx, endpoint)
+			// Blocking call. wait for the old adapters rx stream to close.
+			// That is a signal that the old adapter is completely down
+			dMgr.adapterMgr.WaitOnRxStreamCloseCh(ctx, endpoint)
+			dMgr.adapterMgr.DeleteRollingUpdate(ctx, endpoint)
+			// In case of rolling update we need to start the connection towards the new adapter instance now
+			if err := dMgr.adapterMgr.StartAdapterWithEndPoint(ctx, endpoint); err != nil {
+				return err
+			}
+		}
 		return dMgr.adapterRestarted(ctx, a)
 	}
 	logger.Errorw(ctx, "restarted-adapter-not-found", log.Fields{"endpoint": endpoint})
