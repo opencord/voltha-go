@@ -140,5 +140,6 @@ func main() {
 	core.Stop(shutdownCtx)
 
 	elapsed := time.Since(start)
+
 	logger.Infow(ctx, "rw-core-run-time", log.Fields{"core": instanceID, "time": elapsed / time.Second})
 }

@@ -548,6 +548,7 @@ loop:
 		tempClient, err = stream.Recv()
 		if err != nil {
 			logger.Warnw(ctx, "received-stream-error", log.Fields{"remote-client": remoteClient, "error": err})
+			dMgr.adapterMgr.SignalOnRxStreamCloseCh(ctx, remoteClient.Endpoint)
 			break loop
 		}
 		// Send a response back
