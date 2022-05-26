@@ -196,6 +196,38 @@ func (aMgr *Manager) addAdapter(ctx context.Context, adapter *voltha.Adapter, sa
 	return nil
 }
 
+func (aMgr *Manager) updateAdapter(ctx context.Context, adapter *voltha.Adapter, saveToDb bool) error {
+	aMgr.lockAdapterAgentsMap.Lock()
+	defer aMgr.lockAdapterAgentsMap.Unlock()
+	logger.Debugw(ctx, "updating-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint,
+		"version": adapter.Version})
+	if _, exist := aMgr.adapterAgents[adapter.Id]; !exist {
+		logger.Errorw(ctx, "adapter-does-not-exist", log.Fields{"adapterName": adapter.Id})
+		return fmt.Errorf("does-not-exist")
+	}
+	if saveToDb {
+		// Update the adapter to the KV store
+		if err := aMgr.adapterDbProxy.Set(log.WithSpanFromContext(context.Background(), ctx), adapter.Id, adapter); err != nil {
+			logger.Errorw(ctx, "failed-to-update-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+				"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas,
+				"endpoint": adapter.Endpoint, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas,
+				"version": adapter.Version})
+			return err
+		}
+		logger.Debugw(ctx, "adapter-updated-to-KV-Store", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+			"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint,
+			"replica": adapter.CurrentReplica, "total": adapter.TotalReplicas, "version": adapter.Version})
+	}
+	clonedAdapter := (proto.Clone(adapter)).(*voltha.Adapter)
+	// Use a muted adapter restart handler which is invoked by the corresponding gRPC client on an adapter restart.
+	// This handler just log the restart event.  The actual action taken following an adapter restart
+	// will be done when an adapter re-registers itself.
+	aMgr.adapterAgents[adapter.Id] = newAdapterAgent(aMgr.coreEndpoint, clonedAdapter, aMgr.mutedAdapterRestartedHandler, aMgr.liveProbeInterval)
+	aMgr.adapterEndpoints[Endpoint(adapter.Endpoint)] = aMgr.adapterAgents[adapter.Id]
+	return nil
+}
+
 func (aMgr *Manager) addDeviceTypes(ctx context.Context, deviceTypes *voltha.DeviceTypes, saveToDb bool) error {
 	if deviceTypes == nil {
 		return fmt.Errorf("no-device-type")
@@ -304,16 +336,35 @@ func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *core_ada
 	}
 
 	if adpt, _ := aMgr.getAdapter(ctx, adapter.Id); adpt != nil {
-		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
-		logger.Warnw(ctx, "adapter-restarted", log.Fields{"adapter": adpt.Id, "endpoint": adpt.Endpoint})
-
-		// First reset the adapter connection
 		agt, err := aMgr.getAgent(ctx, adpt.Id)
 		if err != nil {
 			logger.Errorw(ctx, "no-adapter-agent", log.Fields{"error": err})
 			return nil, err
 		}
-		agt.resetConnection(ctx)
+		if adapter.Version != adpt.Version {
+			// Rolling update scenario - could be downgrade or upgrade
+			logger.Infow(ctx, "rolling-update",
+				log.Fields{"adapter": adpt.Id, "endpoint": adpt.Endpoint, "old-version": adpt.Version, "new-version": adapter.Version})
+			// Stop the gRPC connection to the old adapter
+			agt.stop(ctx)
+			if err = aMgr.updateAdapter(ctx, adapter, true); err != nil {
+				return nil, err
+			}
+			aMgr.lockAdapterAgentsMap.RLock()
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			if err = aMgr.adapterAgents[adapter.Id].start(subCtx); err != nil {
+				logger.Errorw(subCtx, "failed-to-start-adapter", log.Fields{"error": err})
+				aMgr.lockAdapterAgentsMap.RUnlock()
+				return nil, err
+			}
+			aMgr.lockAdapterAgentsMap.RUnlock()
+
+		} else {
+			//	Adapter registered and version is the same. The adapter may have restarted.
+			//	Trigger the reconcile process for that adapter
+			logger.Warnw(ctx, "adapter-restarted", log.Fields{"adapter": adpt.Id, "endpoint": adpt.Endpoint})
+			agt.resetConnection(ctx)
+		}
 
 		go func() {
 			err := aMgr.onAdapterRestart(log.WithSpanFromContext(context.Background(), ctx), adpt.Endpoint)
