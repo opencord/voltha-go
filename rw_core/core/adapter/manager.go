@@ -53,6 +53,10 @@ type Manager struct {
 	lockAdapterEndPointsMap sync.RWMutex
 	liveProbeInterval       time.Duration
 	coreEndpoint            string
+	rollingUpdateMap        map[string]bool
+	rollingUpdateLock       sync.RWMutex
+	rxStreamCloseChMap      map[string]chan bool
+	rxStreamCloseChLock     sync.RWMutex
 }
 
 // SetAdapterRestartedCallback is used to set the callback that needs to be invoked on an adapter restart
@@ -68,14 +72,16 @@ func NewAdapterManager(
 	liveProbeInterval time.Duration,
 ) *Manager {
 	return &Manager{
-		adapterDbProxy:    dbPath.Proxy("adapters"),
-		deviceTypeDbProxy: dbPath.Proxy("device_types"),
-		deviceTypes:       make(map[string]*voltha.DeviceType),
-		adapterAgents:     make(map[string]*agent),
-		adapterEndpoints:  make(map[Endpoint]*agent),
-		endpointMgr:       NewEndpointManager(backend),
-		liveProbeInterval: liveProbeInterval,
-		coreEndpoint:      coreEndpoint,
+		adapterDbProxy:     dbPath.Proxy("adapters"),
+		deviceTypeDbProxy:  dbPath.Proxy("device_types"),
+		deviceTypes:        make(map[string]*voltha.DeviceType),
+		adapterAgents:      make(map[string]*agent),
+		adapterEndpoints:   make(map[Endpoint]*agent),
+		endpointMgr:        NewEndpointManager(backend),
+		liveProbeInterval:  liveProbeInterval,
+		coreEndpoint:       coreEndpoint,
+		rollingUpdateMap:   make(map[string]bool),
+		rxStreamCloseChMap: make(map[string]chan bool),
 	}
 }
 
@@ -196,6 +202,37 @@ func (aMgr *Manager) addAdapter(ctx context.Context, adapter *voltha.Adapter, sa
 	return nil
 }
 
+func (aMgr *Manager) updateAdapter(ctx context.Context, adapter *voltha.Adapter, saveToDb bool) error {
+	aMgr.lockAdapterAgentsMap.Lock()
+	defer aMgr.lockAdapterAgentsMap.Unlock()
+	logger.Debugw(ctx, "updating-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+		"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint,
+		"version": adapter.Version})
+	if _, exist := aMgr.adapterAgents[adapter.Id]; !exist {
+		logger.Errorw(ctx, "adapter-does-not-exist", log.Fields{"adapterName": adapter.Id})
+		return fmt.Errorf("does-not-exist")
+	}
+	if saveToDb {
+		// Update the adapter to the KV store
+		if err := aMgr.adapterDbProxy.Set(log.WithSpanFromContext(context.Background(), ctx), adapter.Id, adapter); err != nil {
+			logger.Errorw(ctx, "failed-to-update-adapter", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+				"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas,
+				"endpoint": adapter.Endpoint, "replica": adapter.CurrentReplica, "total": adapter.TotalReplicas,
+				"version": adapter.Version})
+			return err
+		}
+		logger.Debugw(ctx, "adapter-updated-to-KV-Store", log.Fields{"adapterId": adapter.Id, "vendor": adapter.Vendor,
+			"currentReplica": adapter.CurrentReplica, "totalReplicas": adapter.TotalReplicas, "endpoint": adapter.Endpoint,
+			"replica": adapter.CurrentReplica, "total": adapter.TotalReplicas, "version": adapter.Version})
+	}
+	clonedAdapter := (proto.Clone(adapter)).(*voltha.Adapter)
+	// Use a muted adapter restart handler which is invoked by the corresponding gRPC client on an adapter restart.
+	// This handler just log the restart event.  The actual action taken following an adapter restart
+	// will be done when an adapter re-registers itself.
+	aMgr.adapterAgents[adapter.Id] = newAdapterAgent(aMgr.coreEndpoint, clonedAdapter, aMgr.mutedAdapterRestartedHandler, aMgr.liveProbeInterval)
+	return nil
+}
+
 func (aMgr *Manager) addDeviceTypes(ctx context.Context, deviceTypes *voltha.DeviceTypes, saveToDb bool) error {
 	if deviceTypes == nil {
 		return fmt.Errorf("no-device-type")
@@ -304,16 +341,35 @@ func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *core_ada
 	}
 
 	if adpt, _ := aMgr.getAdapter(ctx, adapter.Id); adpt != nil {
-		//	Already registered - Adapter may have restarted.  Trigger the reconcile process for that adapter
-		logger.Warnw(ctx, "adapter-restarted", log.Fields{"adapter": adpt.Id, "endpoint": adpt.Endpoint})
-
-		// First reset the adapter connection
 		agt, err := aMgr.getAgent(ctx, adpt.Id)
 		if err != nil {
 			logger.Errorw(ctx, "no-adapter-agent", log.Fields{"error": err})
 			return nil, err
 		}
-		agt.resetConnection(ctx)
+		if adapter.Version != adpt.Version {
+			// Rolling update scenario - could be downgrade or upgrade
+			logger.Infow(ctx, "rolling-update",
+				log.Fields{"adapter": adpt.Id, "endpoint": adpt.Endpoint, "old-version": adpt.Version, "new-version": adapter.Version})
+			// Stop the gRPC connection to the old adapter
+			agt.stop(ctx)
+			if err = aMgr.updateAdapter(ctx, adapter, true); err != nil {
+				return nil, err
+			}
+			aMgr.lockAdapterAgentsMap.RLock()
+			subCtx := log.WithSpanFromContext(context.Background(), ctx)
+			if err = aMgr.adapterAgents[adapter.Id].start(subCtx); err != nil {
+				logger.Errorw(subCtx, "failed-to-start-adapter", log.Fields{"error": err})
+				aMgr.lockAdapterAgentsMap.RUnlock()
+				return nil, err
+			}
+			aMgr.lockAdapterAgentsMap.RUnlock()
+			aMgr.SetRollingUpdate(ctx, adapter.Endpoint, true)
+		} else {
+			//	Adapter registered and version is the same. The adapter may have restarted.
+			//	Trigger the reconcile process for that adapter
+			logger.Warnw(ctx, "adapter-restarted", log.Fields{"adapter": adpt.Id, "endpoint": adpt.Endpoint})
+			agt.resetConnection(ctx)
+		}
 
 		go func() {
 			err := aMgr.onAdapterRestart(log.WithSpanFromContext(context.Background(), ctx), adpt.Endpoint)
@@ -419,6 +475,69 @@ func (aMgr *Manager) ListAdapters(ctx context.Context, _ *empty.Empty) (*voltha.
 	}
 	logger.Debugw(ctx, "Listing adapters", log.Fields{"result": result})
 	return result, nil
+}
+
+func (aMgr *Manager) GetRollingUpdate(ctx context.Context, endpoint string) (bool, bool) {
+	aMgr.rollingUpdateLock.RLock()
+	defer aMgr.rollingUpdateLock.RUnlock()
+	val, ok := aMgr.rollingUpdateMap[endpoint]
+	return val, ok
+}
+
+func (aMgr *Manager) SetRollingUpdate(ctx context.Context, endpoint string, status bool) {
+	aMgr.rollingUpdateLock.Lock()
+	defer aMgr.rollingUpdateLock.Unlock()
+	if res, ok := aMgr.rollingUpdateMap[endpoint]; ok {
+		logger.Warnw(ctx, "possible duplicate rolling update - overwriting", log.Fields{"old-status": res, "endpoint": endpoint})
+	}
+	aMgr.rollingUpdateMap[endpoint] = status
+}
+
+func (aMgr *Manager) RegisterOnRxStreamCloseChMap(ctx context.Context, endpoint string) {
+	aMgr.rxStreamCloseChLock.Lock()
+	defer aMgr.rxStreamCloseChLock.Unlock()
+	if _, ok := aMgr.rxStreamCloseChMap[endpoint]; ok {
+		logger.Warnw(ctx, "duplicate entry on rxStreamCloseChMap - overwriting", log.Fields{"endpoint": endpoint})
+	}
+	aMgr.rxStreamCloseChMap[endpoint] = make(chan bool, 1)
+}
+
+func (aMgr *Manager) SignalOnRxStreamCloseCh(ctx context.Context, endpoint string) {
+	var closeCh chan bool
+	ok := false
+	aMgr.rxStreamCloseChLock.RLock()
+	if closeCh, ok = aMgr.rxStreamCloseChMap[endpoint]; !ok {
+		logger.Infow(ctx, "no entry on rxStreamCloseChMap", log.Fields{"endpoint": endpoint})
+		defer aMgr.rxStreamCloseChLock.RUnlock()
+		return
+	}
+	defer aMgr.rxStreamCloseChLock.RUnlock()
+
+	// close the rx channel
+	closeCh <- true
+
+	aMgr.rxStreamCloseChLock.Lock()
+	defer aMgr.rxStreamCloseChLock.Unlock()
+	delete(aMgr.rxStreamCloseChMap, endpoint)
+}
+
+func (aMgr *Manager) WaitOnRxStreamCloseCh(ctx context.Context, endpoint string) {
+	var closeCh chan bool
+	ok := false
+	aMgr.rxStreamCloseChLock.RLock()
+	if closeCh, ok = aMgr.rxStreamCloseChMap[endpoint]; !ok {
+		logger.Warnw(ctx, "no entry on rxStreamCloseChMap", log.Fields{"endpoint": endpoint})
+		defer aMgr.rxStreamCloseChLock.RUnlock()
+		return
+	}
+	defer aMgr.rxStreamCloseChLock.RUnlock()
+
+	select {
+	case <-closeCh:
+		logger.Infow(ctx, "rx stream closed for endpoint", log.Fields{"endpoint": endpoint})
+	case <-time.After(60 * time.Second):
+		logger.Warnw(ctx, "timeout waiting for rx stream close", log.Fields{"endpoint": endpoint})
+	}
 }
 
 func (aMgr *Manager) getAgent(ctx context.Context, adapterID string) (*agent, error) {
