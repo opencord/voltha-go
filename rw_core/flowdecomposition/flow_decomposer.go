@@ -354,12 +354,10 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(ctx context.Context
 			Actions: fu.GetActions(flow),
 		}
 
-		// Augment the metadata with innerTag if it is valid
 		innerTag := fu.GetInnerTagFromMetaData(ctx, flow)
 		if innerTag != 0 {
 			fa.MatchFields = append(fa.MatchFields, []*ofp.OfpOxmOfbField{fu.Metadata_ofp(uint64(innerTag))}...)
 		}
-
 		// Augment the matchfields with the ofpfields from the flow
 		fa.MatchFields = append(fa.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT, fu.METADATA)...)
 
