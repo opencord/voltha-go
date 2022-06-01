@@ -33,6 +33,24 @@
       "message": "Not sure if you need to update this.  Can the endpoint be changed on a rolling upgrade?   The endpoint is pretty much the adapter service URL.   One implicit assumption is that the total replicas of the adapter must not change, otherwise it will be an issue with the consistent hash ring (not relevant to your change).",
       "revId": "e4f4cda450c2fc256f96cc4e6a601519c4526d02",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7690b520_378d9708",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-06-01T06:55:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "02f12a51_46139d95",
+      "revId": "e4f4cda450c2fc256f96cc4e6a601519c4526d02",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
