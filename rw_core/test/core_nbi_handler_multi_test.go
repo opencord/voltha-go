@@ -1156,6 +1156,18 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi voltha.Volt
 	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vlFunction0, nbi)
 	assert.Nil(t, err)
 
+	oltAdapter, err := nb.getOLTAdapterInstance(t, nbi, oltDevice.Id)
+	assert.Nil(t, err)
+
+	oltAdapter.SetDeviceRebooted(oltDevice.Id)
+
+	var vlFunctionreb = func(d *voltha.Device) bool {
+		return d.ConnectStatus == voltha.ConnectStatus_REACHABLE && d.OperStatus == voltha.OperStatus_REBOOTED
+	}
+
+	err = waitUntilDeviceReadiness(oltDevice.Id, nb.maxTimeout, vlFunctionreb, nbi)
+	assert.Nil(t, err)
+
 	// Wait for the logical device to satisfy the expected condition
 	var vlFunction1 = func(ld *voltha.LogicalDevice) bool {
 		return ld == nil
@@ -1194,7 +1206,7 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi voltha.Volt
 
 	// Update the OLT Connection Status to REACHABLE and operation status to ACTIVE
 	// Normally, in a real adapter this happens after connection regain via a heartbeat mechanism with real hardware
-	oltAdapter, err := nb.getOLTAdapterInstance(t, nbi, oltDevice.Id)
+	oltAdapter, err = nb.getOLTAdapterInstance(t, nbi, oltDevice.Id)
 	assert.Nil(t, err)
 	oltAdapter.SetDeviceActive(oltDevice.Id)
 
@@ -1217,7 +1229,6 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi voltha.Volt
 	assert.Nil(t, err)
 	assert.NotNil(t, onuDevices)
 	assert.Equal(t, 0, len(onuDevices.Items))
-
 	//Remove the device
 	err = cleanUpDevices(nb.maxTimeout, nbi, oltDevice.Id, true)
 	assert.Nil(t, err)

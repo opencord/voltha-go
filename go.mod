@@ -18,7 +18,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/opencord/voltha-lib-go/v7 v7.1.8
-	github.com/opencord/voltha-protos/v5 v5.2.2
+	github.com/opencord/voltha-protos/v5 v5.2.5
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/stretchr/testify v1.7.0

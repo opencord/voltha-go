@@ -472,3 +472,20 @@ loop:
 	logger.Errorw(ctx, "connection-down", log.Fields{"remote-client": remoteClient, "error": err, "initial-conn-time": initialRequestTime})
 	return err
 }
+
+func (oltA *OLTAdapter) SetDeviceRebooted(deviceID string) {
+	c, err := oltA.GetCoreClient()
+	if err != nil {
+		return
+	}
+
+	if _, err := c.DeviceStateUpdate(context.TODO(), &ca.DeviceStateFilter{
+		DeviceId:   deviceID,
+		OperStatus: common.OperStatus_REBOOTED,
+		ConnStatus: common.ConnectStatus_REACHABLE,
+	}); err != nil {
+		logger.Warnw(context.Background(), "device-state-update-failed", log.Fields{"device-id": deviceID, "error": err})
+		return
+	}
+
+}
