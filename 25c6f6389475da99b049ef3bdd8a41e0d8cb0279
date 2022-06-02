@@ -35,6 +35,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "9f069e68_8fdbba79",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-06-02T16:37:35Z",
+      "side": 1,
+      "message": "It returns the value of  aMgr.rollingUpdateMap map, and result. So this is correct.",
+      "parentUuid": "e6818b92_5bdaa0d3",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "813c64e7_c460c175",
@@ -48,6 +66,24 @@
       "writtenOn": "2022-06-02T13:44:27Z",
       "side": 1,
       "message": "If there is a duplicate then should the \"chan bool\" be closed of the previous one?",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fc82b336_c6d4cf87",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-06-02T16:37:35Z",
+      "side": 1,
+      "message": "Yes, I think it should be closed. I will make a change.",
+      "parentUuid": "813c64e7_c460c175",
       "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -71,6 +107,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "58e63a5e_f0a084a9",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-06-02T16:37:35Z",
+      "side": 1,
+      "message": "There is a bug in this code. The initial piece (before sending on channel) uses only RLock, but and the later piece uses only Lock. There are some unintended \u0027defer\u0027 in the initial piece of the code. Let me fix this.",
+      "parentUuid": "9bafc4aa_526f1abe",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "6308e6e5_c6127105",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 6
@@ -88,6 +142,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "4876c9fd_f67fe7e6",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-06-02T16:37:35Z",
+      "side": 1,
+      "message": "I do not think it will work if adapter disconnect comes first. The reason is, on receive stream connection error, when it tries to call SignalOnRxStreamCloseCh, it will not find an entry in the rollingUpdateMap for endpoint. The endpoint is registered in the map only if the new adapter registers first.\nBasically this will work when the Image Update strategy is RollingUpdate, in which case the new adapter always registers first and then the old one goes down. If we use Recreate Image Update Strategy (which I initially thought we could use) this may not work - but I have not tried though. In Recreate the old one is down and then new one comes up.\nThe RollingUpdate is the default and suggested update strategy as it ensures less downtime. Should we support both scenarios? then I will have to think how to solve such use case.",
+      "parentUuid": "6308e6e5_c6127105",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "47d185a8_2aa853a3",
         "filename": "rw_core/core/device/manager_sbi.go",
         "patchSetId": 6
@@ -99,6 +171,24 @@
       "writtenOn": "2022-06-02T13:44:27Z",
       "side": 1,
       "message": "Not sure if we need to have the same above signal on a send close.  Maybe in the send close case, it gets acted on only if the adapter had initiated a register request before.",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9856a8f3_ad599b5a",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-06-02T16:37:35Z",
+      "side": 1,
+      "message": "I have not seen that case. But logically it makes sense, let me add it.",
+      "parentUuid": "47d185a8_2aa853a3",
       "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
