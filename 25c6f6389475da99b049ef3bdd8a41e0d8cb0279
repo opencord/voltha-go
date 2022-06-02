@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "468132b7_1385d9fd",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-06-02T13:44:27Z",
+      "side": 1,
+      "message": "Update looks good Girish.   One comment I have is if we need to include additional adapter attributes, other than endpoint, to ensure we ",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e6818b92_5bdaa0d3",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-06-02T13:44:27Z",
+      "side": 1,
+      "message": "Should the return be (string, bool)?",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "813c64e7_c460c175",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-06-02T13:44:27Z",
+      "side": 1,
+      "message": "If there is a duplicate then should the \"chan bool\" be closed of the previous one?",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9bafc4aa_526f1abe",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-06-02T13:44:27Z",
+      "side": 1,
+      "message": "nit:  just one \"defer aMgr.rxStreamCloseChLock.RUnlock()\" after \"aMgr.rxStreamCloseChLock.RLock()\" should be good.  same comment below.",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6308e6e5_c6127105",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-06-02T13:44:27Z",
+      "side": 1,
+      "message": "I presume this logic will still work no matter which order we receive the adapter registration event and the adapter disconnect event?",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "47d185a8_2aa853a3",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-06-02T13:44:27Z",
+      "side": 1,
+      "message": "Not sure if we need to have the same above signal on a send close.  Maybe in the send close case, it gets acted on only if the adapter had initiated a register request before.",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
