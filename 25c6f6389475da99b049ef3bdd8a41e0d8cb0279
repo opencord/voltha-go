@@ -123,6 +123,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "ff435e7f_aca6c0a8",
+        "filename": "rw_core/core/adapter/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-06-02T18:06:49Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "58e63a5e_f0a084a9",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "6308e6e5_c6127105",
