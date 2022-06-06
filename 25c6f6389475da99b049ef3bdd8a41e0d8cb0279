@@ -178,6 +178,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "2209354e_0f7a5c06",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2022-06-06T14:24:19Z",
+      "side": 1,
+      "message": "No need to support both scenarios if we are using rolling update strategy.  Maybe document it somewhere?",
+      "parentUuid": "4876c9fd_f67fe7e6",
+      "revId": "25c6f6389475da99b049ef3bdd8a41e0d8cb0279",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "47d185a8_2aa853a3",
         "filename": "rw_core/core/device/manager_sbi.go",
         "patchSetId": 6
