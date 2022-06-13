@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "11e719e3_f44e2040",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2022-06-13T08:09:53Z",
+      "side": 1,
+      "message": "Why are we changing this behaviour?",
+      "revId": "e7f58c233f9206c6a1d296e0266dbb2e1ba87b35",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cc198fe6_75b27130",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2022-06-13T08:09:53Z",
+      "side": 1,
+      "message": "You have removed the comment... is the comment wrong?",
+      "revId": "e7f58c233f9206c6a1d296e0266dbb2e1ba87b35",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
