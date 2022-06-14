@@ -36,6 +36,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "145ffa03_0e113d27",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2022-06-14T09:20:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6935667c_4f174308",
+      "revId": "e7f58c233f9206c6a1d296e0266dbb2e1ba87b35",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "cc198fe6_75b27130",
@@ -67,6 +85,24 @@
       "side": 1,
       "message": "it was a mistake, corrected it",
       "parentUuid": "cc198fe6_75b27130",
+      "revId": "e7f58c233f9206c6a1d296e0266dbb2e1ba87b35",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7c7e3279_3d96cada",
+        "filename": "rw_core/flowdecomposition/flow_decomposer.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2022-06-14T09:20:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c8188db7_977fa325",
       "revId": "e7f58c233f9206c6a1d296e0266dbb2e1ba87b35",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
