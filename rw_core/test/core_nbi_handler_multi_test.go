@@ -22,8 +22,14 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"os"
+	"runtime"
+	"runtime/pprof"
+	"strconv"
 	"strings"
 	"sync"
+	"testing"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -35,13 +41,6 @@ import (
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc"
-
-	"os"
-	"runtime"
-	"runtime/pprof"
-	"strconv"
-	"testing"
-	"time"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/opencord/voltha-go/rw_core/config"
@@ -683,7 +682,7 @@ func (nb *NBTest) testDeleteDeviceFailure(t *testing.T, nbi voltha.VolthaService
 
 	//Now remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
 
 	// Wait for the delete event
 	event := <-ch
