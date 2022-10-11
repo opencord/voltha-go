@@ -742,6 +742,12 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 		// Change the state to DELETING POST ADAPTER RESPONSE directly as adapters have no info of the device.
 		currentDeviceTransientState = core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE
 	}
+	// Update device and release lock
+	if err = agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device,
+		currentDeviceTransientState, previousDeviceTransientState); err != nil {
+		desc = err.Error()
+		return err
+	}
 	// If the device was in pre-prov state (only parent device are in that state) then do not send the request to the
 	// adapter
 	if previousAdminState != common.AdminState_PREPROVISIONED {
@@ -760,25 +766,14 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 		}
 		subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
 		requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
-		go func() {
-			defer cancel()
-			_, err := client.DeleteDevice(subCtx, device)
-			if err == nil {
-				agent.onDeleteSuccess(subCtx, nil, nil)
-			} else {
-				agent.onDeleteFailure(subCtx, err, nil, nil)
-			}
-		}()
+		if _, err = client.DeleteDevice(subCtx, device); err != nil {
+			agent.onDeleteFailure(subCtx, err, &previousAdminState, &agent.device.AdminState)
+		} else {
+			agent.onDeleteSuccess(subCtx, &previousAdminState, &agent.device.AdminState)
+		}
+		cancel()
 	}
-
-	// Update device and release lock
-	if err = agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device,
-		currentDeviceTransientState, previousDeviceTransientState); err != nil {
-		desc = err.Error()
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (agent *Agent) setParentID(ctx context.Context, device *voltha.Device, parentID string) error {
