@@ -1,4 +1,6 @@
-# Copyright 2016 the original author or authors.
+# -*- makefile -*-
+# -----------------------------------------------------------------------
+# Copyright 2016-2023 Open Networking Foundation (ONF) and the ONF Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,14 +13,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# -----------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Alternates to try when APK is having repository problems.
+# http://dl-cnd.alpinelinux.org
+# http://dl-3.alpinelinux.org
+# http://dl-4.alpinelinux.org
+# ---------------------------------------------------------------------------
+#9 0.263 fetch https://dl-cdn.alpinelinux.org/alpine/v3.13/main/x86_64/APKIND4EX.tar.gz
+#9 5.269 ERROR: https://dl-cdn.alpinelinux.org/alpine/v3.13/main: temporary error (try again later)
+#9 5.269 WARNING: Ignoring https://dl-cdn.alpinelinux.org/alpine/v3.13/main: No such file or directory
+#9 5.269 fetch https://dl-cdn.alpinelinux.org/alpine/v3.13/community/x86_64/APKINDEX.tar.gz
+# ---------------------------------------------------------------------------
 
 # -------------
 # Build stage
 
 FROM --platform=linux/amd64 golang:1.16.3-alpine3.13 AS dev
 
+# [TODO] update
+# FROM --platform=linux/amd64 golang:1.19.4-r0-alpine3.17 AS dev
+
 # Install required packages
-RUN apk add --no-cache build-base=0.5-r3
+
+RUN apk --update update # refresh the index
+RUN apk --update add --no-cache build-base=0.5-r3
 
 # Use Standard go build directory structure
 WORKDIR /go/src
@@ -26,6 +46,9 @@ WORKDIR /go/src
 # Copy common files.
 COPY db ./db
 COPY vendor ./vendor
+
+# go test -coverprofile fails w/o this.
+COPY tests/results/go-test-coverage.out ./tests/results/go-test-coverage.out
 
 # Copy files
 COPY rw_core ./rw_core

@@ -1,6 +1,7 @@
-#
-# Copyright 2016 the original author or authors.
-#
+# -*- makefile -*-
+# -----------------------------------------------------------------------#
+# Copyright 2016-2023 Open Networking Foundation (ONF) and the ONF Contributors
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,10 +13,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+# -----------------------------------------------------------------------
 
-# set default shell
-SHELL = bash -e -o pipefail
+.DEFAULT_GOAL := help
+
+TOP         ?= .
+MAKEDIR     ?= $(TOP)/makefiles
+
+$(if $(VERBOSE),$(eval export VERBOSE=$(VERBOSE))) # visible to include(s)
+
+##--------------------##
+##---]  INCLUDES  [---##
+##--------------------##
+include $(MAKEDIR)/include.mk
 
 # Variables
 VERSION                    ?= $(shell cat ./VERSION)
@@ -27,6 +37,7 @@ DOCKER_LABEL_VCS_DIRTY     = false
 ifneq ($(shell git ls-files --others --modified --exclude-standard 2>/dev/null | wc -l | sed -e 's/ //g'),0)
     DOCKER_LABEL_VCS_DIRTY = true
 endif
+
 ## Docker related
 DOCKER_EXTRA_ARGS          ?=
 DOCKER_REGISTRY            ?=
@@ -83,11 +94,22 @@ ifdef LOCAL_LIB_GO
 	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v7/pkg/
 endif
 
+## -----------------------------------------------------------------------
 ## Docker targets
+## -----------------------------------------------------------------------
 build: docker-build ## Alias for 'docker-build'
 
+docker-build-args += --debug
+docker-build-args += --log-level 'debug'
+docker-build-args := $(null)# comment line for debug mode
+
 docker-build: local-protos local-lib-go ## Build core docker image (set BUILD_PROFILED=true to also build the profiled image)
-	docker build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} --target ${DOCKER_TARGET} -f docker/Dockerfile.rw_core .
+	@echo "======================================================================="
+	@echo " ** TARGET: $@"
+	@echo "======================================================================="
+	$(MAKE) --no-print-directory init-test-results
+
+	docker $(docker-build-args) build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} --target ${DOCKER_TARGET} -f docker/Dockerfile.rw_core .
 ifdef BUILD_PROFILED
 # Force target to dev as profile build must be built with dynamic linking
 	docker build $(DOCKER_BUILD_ARGS) --target dev --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" --build-arg CGO_PARAMETER="CGO_ENABLED=1" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -f docker/Dockerfile.rw_core .
@@ -97,6 +119,8 @@ ifdef BUILD_RACE
 	docker build $(DOCKER_BUILD_ARGS) --target dev --build-arg GOLANG_IMAGE=golang:1.13.8-buster --build-arg CGO_PARAMETER="CGO_ENABLED=1" --build-arg DEPLOY_IMAGE=debian:buster-slim --build-arg EXTRA_GO_BUILD_TAGS="--race" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd -f docker/Dockerfile.rw_core .
 endif
 
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
 docker-push: ## Push the docker images to an external repository
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
 ifdef BUILD_PROFILED
@@ -124,35 +148,45 @@ lint-mod: ## Verify the Go dependencies
 	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Staged or modified files must be committed before running this test" && git status -- go.mod go.sum vendor && exit 1)
 	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files must be cleaned up before running this test" && git status -- go.mod go.sum vendor && exit 1)
 	${GO} mod tidy
+
+        # This command is destructive, vendor/ removed
 	${GO} mod vendor
+
 	@git status > /dev/null
 	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Modified files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
 	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
 	@echo "Vendor check OK."
 
-
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
 lint: lint-mod lint-dockerfile ## Run all lint targets
 
 sca: ## Runs static code analysis with the golangci-lint tool
-	@rm -rf ./sca-report
+	@$(RM) -r ./sca-report
 	@mkdir -p ./sca-report
 	@echo "Running static code analysis..."
-	@${GOLANGCI_LINT} run --deadline=6m --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
+	@${GOLANGCI_LINT} run --deadline=6m --out-format junit-xml ./... \
+	    | tee ./sca-report/sca-report.xml
 	@echo ""
 	@echo "Static code analysis OK"
 
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
+tests-dir      := ./tests/results
+tests-coverage := $(tests-dir)/go-test-coverage
+tests-results  := $(tests-dir)/go-test-results
 test: local-lib-go ## Run unit tests
-	@mkdir -p ./tests/results
-	@${GO} test -mod=vendor -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
+	$(MAKE) --no-print-directory init-test-results
+	$(HIDE)${GO} test -mod=vendor -v -coverprofile $(tests-coverage).out -covermode count ./... 2>&1 | tee $(tests-results).out ;\
 	RETURN=$$? ;\
-	${GO_JUNIT_REPORT} < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml ;\
-	${GOCOVER_COBERTURA} < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
+	${GO_JUNIT_REPORT} < $(tests-results).out > $(tests-results).xml ;\
+	${GOCOVER_COBERTURA} < $(tests-coverage).out > $(tests-coverage).xml ;\
 	exit $$RETURN
 
 clean: distclean ## Removes any local filesystem artifacts generated by a build
 
-distclean: ## Removes any local filesystem artifacts generated by a build or test run
-	rm -rf ./sca-report
+distclean sterile: ## Removes any local filesystem artifacts generated by a build or test run
+	$(RM) -r ./sca-report
 
 mod-update: ## Update go mod files
 	${GO} mod tidy
@@ -161,10 +195,29 @@ mod-update: ## Update go mod files
 fmt: ## Formats the soure code to go best practice style
 	@go fmt ${PACKAGES}
 
+## ---------------------------------------------------------------------------
+## Intent: Prep work, test -coverprofile fails w/o a file on disk ?!?
+## ---------------------------------------------------------------------------
+init-test-results:
+	@$(RM) -r tests/results
+	@mkdir -p tests/results
+	@touch $(tests-coverage).out
+
+## ---------------------------------------------------------------------------
 # For each makefile target, add ## <description> on the target line and it will be listed by 'make help'
+## ---------------------------------------------------------------------------
 help: ## Print help for each Makefile target
 	@echo "Usage: make [<target>]"
-	@echo "where available targets are:"
+	@echo "  help        This message"
+	@echo "  todo        Future enhancements"
+	@echo "  versions    Display version-by-tool used while building"
+  ifdef VERBOSE
 	@echo
-	@grep '^[[:alpha:]_-]*:.* ##' $(MAKEFILE_LIST) \
-		| sort | awk 'BEGIN {FS=":.* ## "}; {printf "%-25s : %s\n", $$1, $$2};'
+	@echo "  init-test-results    Massage tests/results to fix coverage reporting"
+  endif
+	@echo
+	@grep --no-filename '^[[:alpha:]_-]*:.* ##' $(MAKEFILE_LIST) \
+		| sort \
+		| awk 'BEGIN {FS=":.* ## "}; {printf "%-25s : %s\n", $$1, $$2};'
+
+# [EOF]
