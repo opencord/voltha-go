@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e2bc771c_ed350dee",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2022-12-29T12:24:48Z",
+      "side": 1,
+      "message": "Status: SUCCESS\nJob logs are clean aside from a few messages logged by every job that require research.",
+      "revId": "811e9544f229421bd8cc52271553fc18f40b54c5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
