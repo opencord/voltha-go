@@ -660,3 +660,39 @@ func (l clogger) V(level LogLevel) bool {
 func (l clogger) GetLogLevel() LogLevel {
 	return levelToLogLevel(cfgs[l.packageName].Level.Level())
 }
+
+//UpdateCallerSkipLevel create new loggers for specified registered pacakges with the default updated caller skipltFields.
+//This will enable to skip wrapper file caller in caller info and stacktrace
+func UpdateCallerSkipLevel(skipLevel int) (CLogger, error) {
+	pkgName, _, _, _ := getCallerInfo()
+	if cfg, exist := cfgs[pkgName]; exist {
+		l, err := cfg.Build(zp.AddCallerSkip(skipLevel))
+		if err != nil {
+			return loggers[pkgName], err
+		}
+
+		// Update the existing zap logger instance
+		loggers[pkgName].log = l.Sugar()
+		loggers[pkgName].parent = l
+
+		return loggers[pkgName], nil
+	}
+
+	return loggers[pkgName], errors.New("Package Not Found")
+}
+
+//UpdateAllCallerSkipLevel create new loggers for all registered pacakges with the default updated caller skipltFields.
+//This will enable to skip wrapper file caller in caller info and stacktrace
+func UpdateAllCallerSkipLevel(skipLevel int) error {
+	for pkgName, cfg := range cfgs {
+		l, err := cfg.Build(zp.AddCallerSkip(skipLevel))
+		if err != nil {
+			return err
+		}
+
+		// Update the existing zap logger instance
+		loggers[pkgName].log = l.Sugar()
+		loggers[pkgName].parent = l
+	}
+	return nil
+}
