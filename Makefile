@@ -120,6 +120,7 @@ ifdef BUILD_RACE
 endif
 
 ## -----------------------------------------------------------------------
+## Intent:
 ## -----------------------------------------------------------------------
 docker-push: ## Push the docker images to an external repository
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
