@@ -1,0 +1,9 @@
+Verified+1: Jenkins Technical User <do-not-reply@opennetworking.org>
+Code-Review+2: Mahir Gunyel <mahir.gunyel@netsia.com>
+Code-Review+1: Serkant Uluderya <serkant.uluderya@netsia.com>
+Code-Review+1: Amit Ghosh <amit.ghosh@radisys.com>
+Submitted-by: Mahir Gunyel <mahir.gunyel@netsia.com>
+Submitted-at: Thu, 23 Feb 2023 23:34:05 +0000
+Reviewed-on: https://gerrit.opencord.org/c/voltha-go/+/33301
+Project: voltha-go
+Branch: refs/heads/master
