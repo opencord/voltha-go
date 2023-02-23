@@ -1065,7 +1065,7 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 
 	// release lock before processing transition
 	agent.requestQueue.RequestComplete()
-	go func() {
+	 
 		subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
 		if err := agent.deviceMgr.stateTransitions.ProcessTransition(subCtx,
 			device, prevDevice, transientState, prevTransientState); err != nil {
@@ -1075,7 +1075,7 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 			agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION,
 				nil, time.Now().Unix())
 		}
-	}()
+	 
 	return nil
 }
 func (agent *Agent) updateDeviceReason(ctx context.Context, reason string) error {
@@ -1140,15 +1140,15 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 	}
 	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
 	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
-	go func() {
+	 
 		defer cancel()
-		_, err := client.ChildDeviceLost(subCtx, device)
+		_, err = client.ChildDeviceLost(subCtx, device)
 		if err == nil {
 			agent.onSuccess(subCtx, nil, nil, true)
 		} else {
 			agent.onFailure(subCtx, err, nil, nil, true)
 		}
-	}()
+ 
 	return nil
 }
 

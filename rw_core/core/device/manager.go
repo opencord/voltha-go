@@ -455,12 +455,12 @@ func (dMgr *Manager) AddPort(ctx context.Context, deviceID string, port *voltha.
 			return err
 		}
 		//	Setup peer ports in its own routine
-		go func() {
+		
 			subCtx := utils.WithSpanAndRPCMetadataFromContext(ctx)
 			if err := dMgr.addPeerPort(subCtx, deviceID, port); err != nil {
 				logger.Errorw(ctx, "unable-to-add-peer-port", log.Fields{"error": err, "device-id": deviceID})
 			}
-		}()
+		
 		return nil
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
@@ -596,7 +596,7 @@ func (dMgr *Manager) UpdatePortState(ctx context.Context, deviceID string, portT
 		// Notify the logical device manager to change the port state
 		// Do this for NNI and UNIs only. PON ports are not known by logical device
 		if portType == voltha.Port_ETHERNET_NNI || portType == voltha.Port_ETHERNET_UNI {
-			go func() {
+			 
 				subCtx := utils.WithSpanAndRPCMetadataFromContext(ctx)
 				err := dMgr.logicalDeviceMgr.updatePortState(subCtx, deviceID, portNo, operStatus)
 				if err != nil {
@@ -608,7 +608,7 @@ func (dMgr *Manager) UpdatePortState(ctx context.Context, deviceID string, portT
 					// TODO: VOL-2707
 					logger.Warnw(ctx, "unable-to-update-logical-port-state", log.Fields{"error": err})
 				}
-			}()
+			 
 		}
 		return nil
 	}
