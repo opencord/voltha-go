@@ -186,7 +186,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 		respChannels := agent.addFlowsAndGroupsToDevices(ctx, deviceRules)
 
 		// Create the go routines to wait
-		go func() {
+		 
 			// Wait for completion
 			if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChannels...); res != nil {
 				logger.Errorw(ctx, "failed-to-add-flow-will-attempt-deletion", log.Fields{
@@ -220,7 +220,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 					agent.logicalDeviceID, "failed-to-add-flow", context, "RPC_ERROR_RAISE_EVENT",
 					voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
 			}
-		}()
+		 
 	}
 	return changed, updated, nil
 }
@@ -257,7 +257,7 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, mod)
 
 	// Wait for the responses
-	go func() {
+	 
 		// Since this action is taken following an add failure, we may also receive a failure for the revert
 		if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
 			logger.Warnw(ctx, "failure-reverting-added-flows", log.Fields{
@@ -266,7 +266,7 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 				"errors":            res,
 			})
 		}
-	}()
+	 
 
 	return nil
 }
@@ -380,7 +380,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 		}
 
 		// Wait for the responses
-		go func() {
+		 
 			// Wait for completion
 			if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
 				logger.Errorw(ctx, "failure-updating-device-flows", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
@@ -400,7 +400,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 				// send event, and allow any queued events to be sent as well
 				agent.ldeviceMgr.SendFlowChangeEvent(ctx, agent.logicalDeviceID, res, flowUpdate.Xid, flowUpdate.FlowMod.Cookie)
 			}
-		}()
+		 
 	}
 	//TODO: send announcement on delete
 	return nil
