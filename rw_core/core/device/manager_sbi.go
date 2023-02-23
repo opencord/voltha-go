@@ -43,11 +43,11 @@ func (dMgr *Manager) PortCreated(ctx context.Context, port *voltha.Port) (*empty
 			return nil, err
 		}
 		//	Setup peer ports in its own routine
-		go func() {
+		 
 			if err := dMgr.addPeerPort(log.WithSpanFromContext(context.Background(), ctx), port.DeviceId, port); err != nil {
 				logger.Errorw(ctx, "unable-to-add-peer-port", log.Fields{"error": err, "device-id": port.DeviceId})
 			}
-		}()
+		 
 		return &empty.Empty{}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", port.DeviceId)
@@ -388,7 +388,7 @@ func (dMgr *Manager) PortStateUpdate(ctx context.Context, ps *ca.PortState) (*em
 		// Notify the logical device manager to change the port state
 		// Do this for NNI and UNIs only. PON ports are not known by logical device
 		if ps.PortType == voltha.Port_ETHERNET_NNI || ps.PortType == voltha.Port_ETHERNET_UNI {
-			go func() {
+			
 				err := dMgr.logicalDeviceMgr.updatePortState(log.WithSpanFromContext(context.Background(), ctx), ps.DeviceId, ps.PortNo, ps.OperStatus)
 				if err != nil {
 					// While we want to handle (catch) and log when
@@ -399,7 +399,7 @@ func (dMgr *Manager) PortStateUpdate(ctx context.Context, ps *ca.PortState) (*em
 					// TODO: VOL-2707
 					logger.Warnw(ctx, "unable-to-update-logical-port-state", log.Fields{"error": err})
 				}
-			}()
+			
 		}
 		return &empty.Empty{}, nil
 	}
@@ -418,12 +418,12 @@ func (dMgr *Manager) DeleteAllPorts(ctx context.Context, deviceID *common.ID) (*
 		// At this stage the device itself may gave been deleted already at a DeleteAllPorts
 		// typically is part of a device deletion phase.
 		if device, err := dMgr.getDeviceReadOnly(ctx, deviceID.Id); err == nil {
-			go func() {
+			 
 				subCtx := utils.WithSpanAndRPCMetadataFromContext(ctx)
 				if err := dMgr.logicalDeviceMgr.deleteAllLogicalPorts(subCtx, device); err != nil {
 					logger.Errorw(ctx, "unable-to-delete-logical-ports", log.Fields{"error": err})
 				}
-			}()
+			 
 		} else {
 			logger.Warnw(ctx, "failed-to-retrieve-device", log.Fields{"device-id": deviceID.Id})
 			return nil, err
@@ -506,7 +506,7 @@ func (dMgr *Manager) ReconcileChildDevices(ctx context.Context, parentDeviceID *
 	dMgr.deviceAgents.Range(func(key, value interface{}) bool {
 		deviceAgent, ok := value.(*Agent)
 		if ok && deviceAgent.parentID == parentDeviceID.Id {
-			go deviceAgent.ReconcileDevice(utils.WithNewSpanAndRPCMetadataContext(ctx, "ReconcileChildDevices"))
+			 deviceAgent.ReconcileDevice(utils.WithNewSpanAndRPCMetadataContext(ctx, "ReconcileChildDevices"))
 			numberOfDevicesToReconcile++
 		}
 		return true

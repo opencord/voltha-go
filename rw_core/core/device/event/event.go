@@ -133,7 +133,7 @@ loop:
 			})
 			if err := packetsIn.Send(&packet); err != nil {
 				logger.Errorw(ctx, "failed-to-send-packet", log.Fields{"error": err})
-				go q.Agent.GetAndSendRPCEvent(ctx, packet.Id, err.Error(),
+				q.Agent.GetAndSendRPCEvent(ctx, packet.Id, err.Error(),
 					nil, "RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION,
 					nil, time.Now().Unix())
 				// save the last failed packet in
@@ -234,7 +234,7 @@ loop:
 			logger.Debugw(ctx, "sending-change-event", log.Fields{"event": event})
 			if err := changeEvents.Send(&event); err != nil {
 				logger.Errorw(ctx, "failed-to-send-change-event", log.Fields{"error": err})
-				go q.Agent.GetAndSendRPCEvent(ctx, event.Id, err.Error(),
+				q.Agent.GetAndSendRPCEvent(ctx, event.Id, err.Error(),
 					nil, "RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION, nil,
 					time.Now().Unix())
 				// save last failed change event

@@ -461,7 +461,7 @@ func (agent *Agent) onImageFailure(ctx context.Context, imgErr error) {
 	defer func() {
 		eCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
 		rpce := agent.deviceMgr.NewRPCEvent(eCtx, agent.deviceID, imgErr.Error(), nil)
-		go agent.deviceMgr.SendRPCEvent(eCtx, "RPC_ERROR_RAISE_EVENT", rpce,
+		agent.deviceMgr.SendRPCEvent(eCtx, "RPC_ERROR_RAISE_EVENT", rpce,
 			voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
 		operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 		desc := "adapter-response"

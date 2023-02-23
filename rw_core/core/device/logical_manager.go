@@ -169,7 +169,7 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 		return nil, err
 	}
 
-	go func() {
+	
 		//TODO: either wait for the agent to be started before returning, or
 		//      implement locks in the agent to ensure request are not processed before start() is complete
 		ldCtx := utils.WithSpanAndRPCMetadataFromContext(ctx)
@@ -178,7 +178,6 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 			logger.Errorw(ctx, "unable-to-create-the-logical-device", log.Fields{"error": err})
 			ldMgr.deleteLogicalDeviceAgent(id)
 		}
-	}()
 
 	logger.Debug(ctx, "creating-logical-device-ends")
 	return &id, nil
