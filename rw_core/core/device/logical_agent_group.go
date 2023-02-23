@@ -90,7 +90,7 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 	respChnls := agent.addFlowsAndGroupsToDevices(ctx, deviceRules)
 
 	// Wait for completion
-	go func() {
+	 
 		if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
 			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 			context := make(map[string]string)
@@ -105,7 +105,7 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
 			//TODO: Revert flow changes
 		}
-	}()
+	 
 	return nil
 }
 
@@ -181,7 +181,7 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &ofp.OfpFlowMod{})
 
 	// Wait for completion
-	go func() {
+	 
 		if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
 			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 			context := make(map[string]string)
@@ -196,7 +196,7 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
 			//TODO: Revert flow changes
 		}
-	}()
+	 
 	return nil
 }
 
@@ -234,7 +234,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 	respChnls := agent.updateFlowsAndGroupsOfDevice(ctx, deviceRules, &ofp.FlowMetadata{})
 
 	// Wait for completion
-	go func() {
+	
 		if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
 			logger.Warnw(ctx, "failure-updating-device-flows-groups", log.Fields{"logical-device-id": agent.logicalDeviceID, "errors": res})
 			context := make(map[string]string)
@@ -249,6 +249,6 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
 			//TODO: Revert flow changes
 		}
-	}()
+ 
 	return nil
 }
