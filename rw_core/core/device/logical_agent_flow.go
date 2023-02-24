@@ -187,6 +187,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 
 		// Create the go routines to wait
 		go func() {
+
 			// Wait for completion
 			if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChannels...); res != nil {
 				logger.Errorw(ctx, "failed-to-add-flow-will-attempt-deletion", log.Fields{
@@ -257,16 +258,15 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, mod)
 
 	// Wait for the responses
-	go func() {
-		// Since this action is taken following an add failure, we may also receive a failure for the revert
-		if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
-			logger.Warnw(ctx, "failure-reverting-added-flows", log.Fields{
-				"logical-device-id": agent.logicalDeviceID,
-				"flow-cookie":       mod.Cookie,
-				"errors":            res,
-			})
-		}
-	}()
+
+	// Since this action is taken following an add failure, we may also receive a failure for the revert
+	if res := coreutils.WaitForNilOrErrorResponses(agent.internalTimeout, respChnls...); res != nil {
+		logger.Warnw(ctx, "failure-reverting-added-flows", log.Fields{
+			"logical-device-id": agent.logicalDeviceID,
+			"flow-cookie":       mod.Cookie,
+			"errors":            res,
+		})
+	}
 
 	return nil
 }
