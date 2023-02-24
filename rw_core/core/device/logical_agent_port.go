@@ -421,7 +421,7 @@ func (e *orderedEvents) waitForAllEventsToBeSent(ctx context.Context, cancel con
 func (e *orderedEvents) send(ctx context.Context, agent *LogicalAgent, deviceID string, reason ofp.OfpPortReason, desc *ofp.OfpPort) {
 	qp := e.assignQueuePosition()
 	subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
-	go qp.send(subCtx, agent, deviceID, reason, desc)
+	qp.send(subCtx, agent, deviceID, reason, desc)
 }
 
 // sendCompletion will make sure that given channel is notified when queue is empty
