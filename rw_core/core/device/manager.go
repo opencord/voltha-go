@@ -597,6 +597,7 @@ func (dMgr *Manager) UpdatePortState(ctx context.Context, deviceID string, portT
 		// Do this for NNI and UNIs only. PON ports are not known by logical device
 		if portType == voltha.Port_ETHERNET_NNI || portType == voltha.Port_ETHERNET_UNI {
 			go func() {
+
 				subCtx := utils.WithSpanAndRPCMetadataFromContext(ctx)
 				err := dMgr.logicalDeviceMgr.updatePortState(subCtx, deviceID, portNo, operStatus)
 				if err != nil {

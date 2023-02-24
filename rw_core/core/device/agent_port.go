@@ -82,14 +82,13 @@ func (agent *Agent) updatePortsOperState(ctx context.Context, portTypeFilter uin
 				// Notify the logical device manager to change the port state
 				// Do this for NNI and UNIs only. PON ports are not known by logical device
 				if newPort.Type == voltha.Port_ETHERNET_NNI || newPort.Type == voltha.Port_ETHERNET_UNI {
-					subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
+					//subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
 
-					go func(portID uint32, ctx context.Context) {
-						if err := agent.deviceMgr.logicalDeviceMgr.updatePortState(ctx, agent.deviceID, portID, operStatus); err != nil {
-							// TODO: VOL-2707
-							logger.Warnw(ctx, "unable-to-update-logical-port-state", log.Fields{"error": err})
-						}
-					}(portID, subCtx)
+					if err := agent.deviceMgr.logicalDeviceMgr.updatePortState(ctx, agent.deviceID, portID, operStatus); err != nil {
+						// TODO: VOL-2707
+						logger.Warnw(ctx, "unable-to-update-logical-port-state", log.Fields{"error": err})
+					}
+
 				}
 			}
 			portHandle.Unlock()
