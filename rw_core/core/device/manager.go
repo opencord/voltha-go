@@ -400,7 +400,7 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 						"device-type":        deviceAgent.deviceType,
 						"adapter-type":       adapter.Type,
 					})
-				go deviceAgent.ReconcileDevice(utils.WithNewSpanAndRPCMetadataContext(ctx, "ReconcileDevice"))
+				deviceAgent.ReconcileDevice(utils.WithNewSpanAndRPCMetadataContext(ctx, "ReconcileDevice"))
 				numberOfDevicesToReconcile++
 			} else {
 				logger.Errorw(ctx, "failed-aborting-exisiting-processing", log.Fields{"error": err})
