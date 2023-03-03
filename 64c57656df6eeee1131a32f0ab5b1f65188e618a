@@ -16,6 +16,24 @@
       "message": "Seems that the state transitions and writing to kafka affects the performance. Is it possible to do the test again with kafka events in go routine, so we can see if the kafka is the one affecting the results. If it is the kafka, then imho event notifications can be done in separate go routines.",
       "revId": "64c57656df6eeee1131a32f0ab5b1f65188e618a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a844e9a8_38223df0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-03-03T07:35:22Z",
+      "side": 1,
+      "message": "In the last column of the table attached on the commit message i have right now updated the tests with only the kafka event raises in go routines , from the tests it is evident that writing to kafka has the most significant impact on performance. Hence in the review raised i have kept the kafka writing in go routines and the other once which does not have an impact on performance I have removed from go routines",
+      "parentUuid": "5a92e3d7_91935272",
+      "revId": "64c57656df6eeee1131a32f0ab5b1f65188e618a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
