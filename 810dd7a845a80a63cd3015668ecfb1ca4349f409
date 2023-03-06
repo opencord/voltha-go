@@ -1,0 +1,257 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9468afdb_34bfb18b",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1064,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "Do we need this sub context here?",
+      "range": {
+        "startLine": 1064,
+        "startChar": 1,
+        "endLine": 1064,
+        "endChar": 7
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1668d03f_3b6646dd",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1070,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "SendRPCEvent sends the Event to Kafka. This still needs to be called with go(in a go routine)",
+      "range": {
+        "startLine": 1070,
+        "startChar": 0,
+        "endLine": 1070,
+        "endChar": 102
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "497057aa_5aefe271",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "Do we need a new context here anymore?",
+      "range": {
+        "startLine": 137,
+        "startChar": 2,
+        "endLine": 137,
+        "endChar": 8
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "363d9e15_bd5bceb0",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 176,
+        "startChar": 2,
+        "endLine": 176,
+        "endChar": 8
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f9325ea4_b7078c7a",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "Do we need to create anew context here again?",
+      "range": {
+        "startLine": 61,
+        "startChar": 2,
+        "endLine": 61,
+        "endChar": 8
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "099a1644_ecff9a9e",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 72,
+        "startChar": 2,
+        "endLine": 72,
+        "endChar": 8
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "24d9525a_d4985258",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 221,
+        "startChar": 1,
+        "endLine": 221,
+        "endChar": 7
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "db8cea59_d450e87b",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 252,
+        "startChar": 1,
+        "endLine": 252,
+        "endChar": 7
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3621c5df_c1054a52",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "No need to this comment anymore.",
+      "range": {
+        "startLine": 172,
+        "startChar": 1,
+        "endLine": 173,
+        "endChar": 100
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "53242684_61c7ed52",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "same as previous context related comments",
+      "range": {
+        "startLine": 174,
+        "startChar": 1,
+        "endLine": 174,
+        "endChar": 6
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ca175f44_d72884d8",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-06T21:52:07Z",
+      "side": 1,
+      "message": "no need this I guess",
+      "range": {
+        "startLine": 47,
+        "startChar": 29,
+        "endLine": 47,
+        "endChar": 79
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
