@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "acf7a45c_002b99a8",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T06:50:17Z",
+      "side": 1,
+      "message": "why is this commented",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "17f6b443_da2dc68a",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T06:50:17Z",
+      "side": 1,
+      "message": "remove the dummy changes",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "64021d17_d576965f",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T06:50:17Z",
+      "side": 1,
+      "message": "why is this moved down",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0cab260f_4b2a5f9e",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T06:50:17Z",
+      "side": 1,
+      "message": "same as above comment",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5f277296_9f686c03",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T06:50:17Z",
+      "side": 1,
+      "message": "remove the dummy lines",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f2c36eaf_92962a6c",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T06:50:17Z",
+      "side": 1,
+      "message": "perform ne test to restart the onu adapter on scale, with and without go routine",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
