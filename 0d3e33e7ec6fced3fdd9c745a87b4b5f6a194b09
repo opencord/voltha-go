@@ -36,6 +36,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "42224bc5_855d5b25",
+        "filename": "rw_core/core/device/agent_port.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T12:17:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ceed9645_9fa2d5b6",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "17f6b443_da2dc68a",
@@ -67,6 +85,24 @@
       "side": 1,
       "message": "okay",
       "parentUuid": "17f6b443_da2dc68a",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6275369a_c19f4c88",
+        "filename": "rw_core/core/device/logical_agent_group.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T12:17:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9174431c_f8b52b45",
       "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -106,6 +142,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "c4094d39_63a8d5dc",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T12:17:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fbb8c5de_93cce557",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "0cab260f_4b2a5f9e",
@@ -137,6 +191,24 @@
       "side": 1,
       "message": "adding this back to go routine in amended commit",
       "parentUuid": "0cab260f_4b2a5f9e",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3de60652_326ce1a0",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T12:17:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "935e8c6d_2b051337",
       "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -176,6 +248,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "7d206378_bd8d5cea",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T12:17:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1c2aa2c8_5119f3e8",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "f2c36eaf_92962a6c",
@@ -207,6 +297,24 @@
       "side": 1,
       "message": "this api is unused by the olt and onu adapters so adding the go routine back but the function adapterRestarted() in manager.go is triggered during adatptor restart and it has a deviceAgent.ReconcileDevice in go routine , will remove this and update the result of the test  mentioned",
       "parentUuid": "f2c36eaf_92962a6c",
+      "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "18f0e0ec_9909732b",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-03-06T12:17:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d34d7bf1_ddf8a6d3",
       "revId": "0d3e33e7ec6fced3fdd9c745a87b4b5f6a194b09",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
