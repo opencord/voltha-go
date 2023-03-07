@@ -1016,7 +1016,7 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previous-admin-state": prevDevice.AdminState, "current-admin-state": device.AdminState})
 		// Sending RPC EVENT here
 		rpce := agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, err.Error(), nil)
-		agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION,
+		go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION,
 			nil, time.Now().Unix())
 
 	}
@@ -1061,8 +1061,7 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 	// release lock before processing transition
 	agent.requestQueue.RequestComplete()
 
-	subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
-	if err := agent.deviceMgr.stateTransitions.ProcessTransition(subCtx,
+	if err := agent.deviceMgr.stateTransitions.ProcessTransition(ctx,
 		device, prevDevice, transientState, prevTransientState); err != nil {
 		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previous-admin-state": prevDevice.AdminState, "current-admin-state": device.AdminState})
 		// Sending RPC EVENT here

@@ -134,8 +134,7 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 
 		// Setup the logicalports - internal processing, no need to propagate the client context
 
-		subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
-		err = agent.setupLogicalPorts(subCtx)
+		err = agent.setupLogicalPorts(ctx)
 		if err != nil {
 			logger.Errorw(ctx, "unable-to-setup-logical-ports", log.Fields{"error": err})
 		}
@@ -173,8 +172,7 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 	// Setup the device routes. Building routes may fail if the pre-conditions are not satisfied (e.g. no PON ports present)
 	if logicalDeviceExist {
 
-		subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
-		if err := agent.buildRoutes(subCtx); err != nil {
+		if err := agent.buildRoutes(ctx); err != nil {
 			logger.Warn(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 		}
 

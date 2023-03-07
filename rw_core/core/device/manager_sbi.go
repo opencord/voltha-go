@@ -44,7 +44,7 @@ func (dMgr *Manager) PortCreated(ctx context.Context, port *voltha.Port) (*empty
 		}
 		//	Setup peer ports in its own routine
 
-		if err := dMgr.addPeerPort(log.WithSpanFromContext(context.Background(), ctx), port.DeviceId, port); err != nil {
+		if err := dMgr.addPeerPort(ctx, port.DeviceId, port); err != nil {
 			logger.Errorw(ctx, "unable-to-add-peer-port", log.Fields{"error": err, "device-id": port.DeviceId})
 		}
 

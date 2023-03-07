@@ -58,9 +58,7 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 	case voltha.Port_PON_OLT:
 		// Rebuilt the routes on Parent PON port addition
 
-		subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
-
-		if err := agent.buildRoutes(subCtx); err != nil {
+		if err := agent.buildRoutes(ctx); err != nil {
 			// Not an error - temporary state
 			logger.Infow(ctx, "failed-to-update-routes-after-adding-parent-pon-port", log.Fields{"device-id": device.Id, "port": port, "ports-count": len(devicePorts), "error": err})
 		}
@@ -69,8 +67,7 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 	case voltha.Port_PON_ONU:
 		// Add the routes corresponding to that child device
 
-		subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
-		if err := agent.updateAllRoutes(subCtx, device.Id, devicePorts); err != nil {
+		if err := agent.updateAllRoutes(ctx, device.Id, devicePorts); err != nil {
 			// Not an error - temporary state
 			logger.Infow(ctx, "failed-to-update-routes-after-adding-child-pon-port", log.Fields{"device-id": device.Id, "port": port, "ports-count": len(devicePorts), "error": err})
 		}
@@ -218,8 +215,7 @@ func (agent *LogicalAgent) deleteAllLogicalPorts(ctx context.Context) error {
 	}
 
 	// Reset the logical device routes
-	subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
-	if err := agent.removeRoutes(subCtx); err != nil {
+	if err := agent.removeRoutes(ctx); err != nil {
 		logger.Warnw(ctx, "error-removing-routes", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 	}
 
@@ -248,9 +244,7 @@ func (agent *LogicalAgent) deleteLogicalPorts(ctx context.Context, deviceID stri
 	}
 
 	// Reset the logical device routes
-
-	subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
-	if err := agent.buildRoutes(subCtx); err != nil {
+	if err := agent.buildRoutes(ctx); err != nil {
 		logger.Warnw(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
 	}
 
