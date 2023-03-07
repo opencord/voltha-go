@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "23512532_85e7478c",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-03-07T10:24:53Z",
+      "side": 0,
+      "message": "Ive missed adding this to the patch but the add peer port is also removed and tested in scale and the numbers in the commit message table is obtained with this change",
+      "range": {
+        "startLine": 458,
+        "startChar": 9,
+        "endLine": 458,
+        "endChar": 12
+      },
+      "revId": "9a0ed007e78504375cc4b507aaf794318d91b8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cf7a482e_2637a59c",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-03-07T10:24:53Z",
+      "side": 0,
+      "message": "Ive missed adding this to the patch but the updateportstate is also removed and tested in scale and the numbers in the commit message table is obtained with this change",
+      "revId": "9a0ed007e78504375cc4b507aaf794318d91b8ea",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
