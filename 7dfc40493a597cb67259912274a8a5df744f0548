@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2e897610_c717f455",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 19
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-03-08T19:35:23Z",
+      "side": 1,
+      "message": "Not includes interface changes, so increased the patch version only.Changed version to 3.1.9",
+      "revId": "7dfc40493a597cb67259912274a8a5df744f0548",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
