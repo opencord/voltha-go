@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0f47c910_d408cb8e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 18
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-03-08T17:59:26Z",
+      "side": 1,
+      "message": "updated version from 3.1.9 to 3.2.0",
+      "revId": "33a080f0132887f2c043601801bf0ba2b7b5545d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}

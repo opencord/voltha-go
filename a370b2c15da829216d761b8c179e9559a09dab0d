@@ -16,6 +16,24 @@
       "message": "could you please edit the VERSION file as well?",
       "revId": "a370b2c15da829216d761b8c179e9559a09dab0d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3e9d6da5_10c4ba2c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 17
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-03-08T17:59:26Z",
+      "side": 1,
+      "message": "updated version to 3.2.0 from 3.1.9",
+      "parentUuid": "fde12d52_21767023",
+      "revId": "a370b2c15da829216d761b8c179e9559a09dab0d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
