@@ -48,6 +48,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "73b075c1_fb591f63",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1064,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f0b3aee_0dae71f6",
+      "range": {
+        "startLine": 1064,
+        "startChar": 1,
+        "endLine": 1064,
+        "endChar": 7
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "1668d03f_3b6646dd",
@@ -85,6 +109,30 @@
       "side": 1,
       "message": "moving it to go routine",
       "parentUuid": "1668d03f_3b6646dd",
+      "range": {
+        "startLine": 1070,
+        "startChar": 0,
+        "endLine": 1070,
+        "endChar": 102
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "95f19e7c_8a2e73c7",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 1070,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a1112755_8f6c2ba6",
       "range": {
         "startLine": 1070,
         "startChar": 0,
@@ -142,6 +190,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "76c8b398_ae3de32d",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0a3b1150_4cb140d4",
+      "range": {
+        "startLine": 137,
+        "startChar": 2,
+        "endLine": 137,
+        "endChar": 8
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "363d9e15_bd5bceb0",
@@ -179,6 +251,30 @@
       "side": 1,
       "message": "yes this is not needed, fixing this in new patch in amended commit, tested this change in scale setup and its working fine",
       "parentUuid": "363d9e15_bd5bceb0",
+      "range": {
+        "startLine": 176,
+        "startChar": 2,
+        "endLine": 176,
+        "endChar": 8
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8e39306a_e136d45f",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "317e911a_03d82fae",
       "range": {
         "startLine": 176,
         "startChar": 2,
@@ -236,6 +332,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d8f47f5c_7992ecec",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fdc11042_290ee7af",
+      "range": {
+        "startLine": 61,
+        "startChar": 2,
+        "endLine": 61,
+        "endChar": 8
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "099a1644_ecff9a9e",
@@ -273,6 +393,30 @@
       "side": 1,
       "message": "yes this is not needed, fixing this in new patch in amended commit, tested this change in scale setup and its working fine",
       "parentUuid": "099a1644_ecff9a9e",
+      "range": {
+        "startLine": 72,
+        "startChar": 2,
+        "endLine": 72,
+        "endChar": 8
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "836699bd_ec111709",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "01116139_3c83cef9",
       "range": {
         "startLine": 72,
         "startChar": 2,
@@ -330,6 +474,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "df5cbd7c_4d4bf7b4",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5af92d39_3111a7bc",
+      "range": {
+        "startLine": 221,
+        "startChar": 1,
+        "endLine": 221,
+        "endChar": 7
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "db8cea59_d450e87b",
@@ -367,6 +535,30 @@
       "side": 1,
       "message": "yes this is not needed, fixing this in new patch in amended commit, tested this change in scale setup and its working fine",
       "parentUuid": "db8cea59_d450e87b",
+      "range": {
+        "startLine": 252,
+        "startChar": 1,
+        "endLine": 252,
+        "endChar": 7
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ff772b3e_4b03f760",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0e51afb_97728607",
       "range": {
         "startLine": 252,
         "startChar": 1,
@@ -424,6 +616,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "296d6398_78f94756",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4003f8f7_785a4023",
+      "range": {
+        "startLine": 172,
+        "startChar": 1,
+        "endLine": 173,
+        "endChar": 100
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "53242684_61c7ed52",
@@ -471,6 +687,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "777838b0_110d1680",
+        "filename": "rw_core/core/device/logical_manager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a64e17a_94c52caa",
+      "range": {
+        "startLine": 174,
+        "startChar": 1,
+        "endLine": 174,
+        "endChar": 6
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "ca175f44_d72884d8",
@@ -508,6 +748,30 @@
       "side": 1,
       "message": "yes this is not needed, fixing this in new patch in amended commit, tested this change in scale setup and its working fine",
       "parentUuid": "ca175f44_d72884d8",
+      "range": {
+        "startLine": 47,
+        "startChar": 29,
+        "endLine": 47,
+        "endChar": 79
+      },
+      "revId": "810dd7a845a80a63cd3015668ecfb1ca4349f409",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e02ce10c_efc39eb0",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-03-09T08:03:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bd570f4d_cfbc63e8",
       "range": {
         "startLine": 47,
         "startChar": 29,
