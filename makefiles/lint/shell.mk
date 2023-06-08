@@ -13,51 +13,53 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# SPDX-FileCopyrightText: 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
-# SPDX-License-Identifier: Apache-2.0
 # -----------------------------------------------------------------------
 # https://gerrit.opencord.org/plugins/gitiles/onf-make
 # ONF.makefile.version = 1.0
 # -----------------------------------------------------------------------
 
-$(if $(DEBUG),$(warning ENTER))
+##-------------------##
+##---]  GLOBALS  [---##
+##-------------------##
 
-# include makefiles/constants.mk
-export dot          :=.
-export null         :=#
-export space        := $(null) $(null)
-export quote-single := $(null)'$(null)#'
-export quote-double := $(null)"$(null)#"
+# Gather sources to check
+# TODO: implement deps, only check modified files
+shell-check-find := find .
+# vendor scripts but they really should be lintable
+shell-check-find += -name 'vendor' -prune
+shell-check-find += -o \( -name '*.sh' \)
+shell-check-find += -type f -print0
 
-# [DEBUG] make {target} HIDE=
-HIDE           ?= @
+# shell-check    := $(env-clean) pylint
+shell-check      := shellcheck
 
-env-clean      ?= /usr/bin/env --ignore-environment
-xargs-n1       := xargs -0 -t -n1 --no-run-if-empty
-xargs-n1-clean := $(env-clean) $(xargs-n1)
+shell-check-args += --check-sourced
+shell-check-args += --extenal-sources
+
+##-------------------##
+##---]  TARGETS  [---##
+##-------------------##
+ifndef NO-LINT-SHELL
+  lint : lint-shell
+endif
 
 ## -----------------------------------------------------------------------
-## Intent: NOP command for targets whose dependencies do all heavy lifting
+## Intent: Perform a lint check on command line script sources
 ## -----------------------------------------------------------------------
-## usage: foo bar tans
-## <tab>$(nop-command)
-## -----------------------------------------------------------------------
-nop-cmd        := :
+lint-shell:
+	$(shell-check) -V
+	@echo
+	$(HIDE)$(env-clean) $(shell-check-find) \
+	    | $(xargs-n1) $(shell-check) $(shell-check-args)
 
 ## -----------------------------------------------------------------------
-## Default shell:
-##   o set -e            enable error checking
-##   o set -u            report undefined errors
-##   o set -o pipefail   propogate shell pipeline failures.
+## Intent: Display command help
 ## -----------------------------------------------------------------------
-SHELL ?= /bin/bash
-have-shell-bash := $(filter bash,$(subst /,$(space),$(SHELL)))
-$(if $(have-shell-bash),$(null),\
-  $(eval export SHELL := bash -euo pipefail))
+help-summary ::
+	@echo '  lint-shell          Syntax check shell sources'
 
-export SHELL ?= bash -euo pipefail
-
-$(if $(DEBUG),$(warning LEAVE))
+# [SEE ALSO]
+# -----------------------------------------------------------------------
+#   o https://www.shellcheck.net/wiki/Directive
 
 # [EOF]
