@@ -14,49 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# SPDX-FileCopyrightText: 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
+# SPDX-FileCopyrightText: 2022 Open Networking Foundation (ONF) and the ONF Contributors
 # SPDX-License-Identifier: Apache-2.0
-# -----------------------------------------------------------------------
-# https://gerrit.opencord.org/plugins/gitiles/onf-make
-# ONF.makefile.version = 1.0
 # -----------------------------------------------------------------------
 
 $(if $(DEBUG),$(warning ENTER))
 
-# include makefiles/constants.mk
-export dot          :=.
-export null         :=#
-export space        := $(null) $(null)
-export quote-single := $(null)'$(null)#'
-export quote-double := $(null)"$(null)#"
-
-# [DEBUG] make {target} HIDE=
-HIDE           ?= @
-
-env-clean      ?= /usr/bin/env --ignore-environment
-xargs-n1       := xargs -0 -t -n1 --no-run-if-empty
-xargs-n1-clean := $(env-clean) $(xargs-n1)
+## -----------------------------------------------------------------------
+## Intent: Revert sandbox into a pristine checkout stage
+## -----------------------------------------------------------------------
+##   Note: Sterile target behavior differs from clean around handling of
+##         persistent content.  For ex removal of a python virtualenv adds
+##         extra overhead to development iteration:
+##           make clean   - preserve a virtual env
+##           make sterile - force reinstallation
+## -----------------------------------------------------------------------
+.PHONY: sterile
+sterile :: clean
 
 ## -----------------------------------------------------------------------
-## Intent: NOP command for targets whose dependencies do all heavy lifting
 ## -----------------------------------------------------------------------
-## usage: foo bar tans
-## <tab>$(nop-command)
-## -----------------------------------------------------------------------
-nop-cmd        := :
-
-## -----------------------------------------------------------------------
-## Default shell:
-##   o set -e            enable error checking
-##   o set -u            report undefined errors
-##   o set -o pipefail   propogate shell pipeline failures.
-## -----------------------------------------------------------------------
-SHELL ?= /bin/bash
-have-shell-bash := $(filter bash,$(subst /,$(space),$(SHELL)))
-$(if $(have-shell-bash),$(null),\
-  $(eval export SHELL := bash -euo pipefail))
-
-export SHELL ?= bash -euo pipefail
+help-verbose += help-sterile
+help-sterile ::
+	@echo
+	@echo '[MAKE: sterile]'
+	@echo '  sterile             make clean, also remove persistent content (~venv)'
 
 $(if $(DEBUG),$(warning LEAVE))
 
