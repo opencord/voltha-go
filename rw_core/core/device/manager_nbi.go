@@ -26,6 +26,8 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/extension"
 	"github.com/opencord/voltha-protos/v5/go/omci"
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
+	"github.com/opencord/voltha-protos/v5/go/voip_system_profile"
+	"github.com/opencord/voltha-protos/v5/go/voip_user_profile"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -903,4 +905,20 @@ func (dMgr *Manager) SimulateAlarm(ctx context.Context, simulateReq *voltha.Simu
 		return nil, err
 	}
 	return &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}, nil
+}
+
+func (dMgr *Manager) PutVoipUserProfile(ctx context.Context, voipUserProfileRequest *voip_user_profile.VoipUserProfileRequest) (*empty.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "put-voip-user-profile-not-implemented")
+}
+
+func (dMgr *Manager) DeleteVoipUserProfile(ctx context.Context, key *common.Key) (*empty.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "delete-voip-user-profile-not-implemented")
+}
+
+func (dMgr *Manager) PutVoipSystemProfile(ctx context.Context, voipSystemProfileRequest *voip_system_profile.VoipSystemProfileRequest) (*empty.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "put-voip-system-profile-not-implemented")
+}
+
+func (dMgr *Manager) DeleteVoipSystemProfile(ctx context.Context, key *common.Key) (*empty.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "delete-voip-system-profile-not-implemented")
 }
