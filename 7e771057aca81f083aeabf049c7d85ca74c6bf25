@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c9bbe974_6a82ff76",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-06-12T18:08:13Z",
+      "side": 1,
+      "message": "LGTM - make lint runs cleanly on the patch and updated vendor package version can be retrieved.",
+      "revId": "7e771057aca81f083aeabf049c7d85ca74c6bf25",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
