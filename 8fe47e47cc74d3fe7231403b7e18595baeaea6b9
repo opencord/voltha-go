@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "716a3d00_a3c7bf75",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2023-06-12T17:49:11Z",
+      "side": 1,
+      "message": "I\u0027ll defer the merge to the TST",
+      "revId": "8fe47e47cc74d3fe7231403b7e18595baeaea6b9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
