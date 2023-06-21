@@ -262,9 +262,6 @@ func (c *Client) monitorConnection(ctx context.Context) {
 		c.stateLock.Lock()
 		if !c.done && (c.state == stateConnected || c.state == stateValidatingConnection) {
 			// Handle only connected state here.  We need the validating state to know if we need to backoff before a retry
-			if c.state == stateConnected {
-				c.state = stateDisconnected
-			}
 			logger.Warnw(ctx, "sending-disconnect-event", log.Fields{"api-endpoint": c.serverEndPoint, "client": c.clientEndpoint, "curr-state": stateConnected, "new-state": c.state})
 			c.events <- eventDisconnected
 		} else {
@@ -532,7 +529,7 @@ loop:
 				connectionValidationFail := false
 				c.stateLock.Lock()
 				logger.Debugw(ctx, "endpoint-disconnected", log.Fields{"api-endpoint": c.serverEndPoint, "curr-state": c.state, "client": c.clientEndpoint})
-				if c.state == stateValidatingConnection {
+				if c.state == stateConnected || c.state == stateValidatingConnection {
 					connectionValidationFail = true
 					c.state = stateDisconnected
 				}
@@ -554,7 +551,7 @@ loop:
 				}
 				c.connectionLock.RLock()
 				if !c.done {
-					c.events <- eventConnecting
+					c.events <- eventValidatingConnection
 				}
 				c.connectionLock.RUnlock()
 
