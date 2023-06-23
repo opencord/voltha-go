@@ -16,6 +16,24 @@
       "message": "Please change the version to 3.3.0",
       "revId": "3a73896733f855ee436972e48b91679428b798a2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "325746df_78d4762a",
+        "filename": "VERSION",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-06-23T07:40:26Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "75c6ebc8_f3900900",
+      "revId": "3a73896733f855ee436972e48b91679428b798a2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
