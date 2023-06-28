@@ -143,7 +143,7 @@ func (core *Core) Start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	dbPath := model.NewDBPath(backend)
 
 	// load adapters & device types while other things are starting
-	adapterMgr := adapter.NewAdapterManager(cf.GrpcSBIAddress, dbPath, id, backend, cf.LiveProbeInterval)
+	adapterMgr := adapter.NewAdapterManager(cf.GrpcSBIAddress, dbPath, id, backend, cf.LiveProbeInterval, cf.MaxRetries, cf.PerRPCRetryTimeout)
 	adapterMgr.Start(ctx, adapterService)
 
 	// We do not do a defer adapterMgr.Stop() here as we want this to be ran as soon as
