@@ -60,6 +60,8 @@ type RWCoreFlags struct {
 	BackoffRetryInitialInterval time.Duration
 	BackoffRetryMaxElapsedTime  time.Duration
 	BackoffRetryMaxInterval     time.Duration
+	PerRPCRetryTimeout          time.Duration
+	MaxRetries                  uint
 }
 
 // ParseCommandArguments parses the arguments when running read-write core service
@@ -201,6 +203,13 @@ func (cf *RWCoreFlags) ParseCommandArguments(args []string) {
 		"backoff_retry_max_interval",
 		1*time.Minute,
 		"The maximum number of milliseconds of an exponential backoff interval")
-
+	fs.DurationVar(&cf.PerRPCRetryTimeout,
+		"per_rpc_retry_timeout",
+		0*time.Second,
+		"The default timeout per RPC retry")
+	fs.UintVar(&cf.MaxRetries,
+		"max_grpc_client_retry",
+		0,
+		"The maximum number of times olt adaptor will retry in case grpc request timeouts")
 	_ = fs.Parse(args)
 }
