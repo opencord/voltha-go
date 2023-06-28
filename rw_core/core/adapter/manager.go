@@ -52,6 +52,8 @@ type Manager struct {
 	lockDeviceTypesMap      sync.RWMutex
 	lockAdapterEndPointsMap sync.RWMutex
 	liveProbeInterval       time.Duration
+	PerRPCRetryTimeout      time.Duration
+	MaxRetries              uint
 	coreEndpoint            string
 	rollingUpdateMap        map[string]bool
 	rollingUpdateLock       sync.RWMutex
@@ -70,6 +72,8 @@ func NewAdapterManager(
 	coreInstanceID string,
 	backend *db.Backend,
 	liveProbeInterval time.Duration,
+	maxRetries uint,
+	perRPCRetryTimeout time.Duration,
 ) *Manager {
 	return &Manager{
 		adapterDbProxy:     dbPath.Proxy("adapters"),
@@ -80,6 +84,8 @@ func NewAdapterManager(
 		endpointMgr:        NewEndpointManager(backend),
 		liveProbeInterval:  liveProbeInterval,
 		coreEndpoint:       coreEndpoint,
+		MaxRetries:         maxRetries,
+		PerRPCRetryTimeout: perRPCRetryTimeout,
 		rollingUpdateMap:   make(map[string]bool),
 		rxStreamCloseChMap: make(map[string]chan bool),
 	}
@@ -196,7 +202,7 @@ func (aMgr *Manager) addAdapter(ctx context.Context, adapter *voltha.Adapter, sa
 		// Use a muted adapter restart handler which is invoked by the corresponding gRPC client on an adapter restart.
 		// This handler just log the restart event.  The actual action taken following an adapter restart
 		// will be done when an adapter re-registers itself.
-		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(aMgr.coreEndpoint, clonedAdapter, aMgr.mutedAdapterRestartedHandler, aMgr.liveProbeInterval)
+		aMgr.adapterAgents[adapter.Id] = newAdapterAgent(aMgr.coreEndpoint, clonedAdapter, aMgr.mutedAdapterRestartedHandler, aMgr.liveProbeInterval, aMgr.MaxRetries, aMgr.PerRPCRetryTimeout)
 		aMgr.adapterEndpoints[Endpoint(adapter.Endpoint)] = aMgr.adapterAgents[adapter.Id]
 	}
 	return nil
@@ -229,7 +235,7 @@ func (aMgr *Manager) updateAdapter(ctx context.Context, adapter *voltha.Adapter,
 	// Use a muted adapter restart handler which is invoked by the corresponding gRPC client on an adapter restart.
 	// This handler just log the restart event.  The actual action taken following an adapter restart
 	// will be done when an adapter re-registers itself.
-	aMgr.adapterAgents[adapter.Id] = newAdapterAgent(aMgr.coreEndpoint, clonedAdapter, aMgr.mutedAdapterRestartedHandler, aMgr.liveProbeInterval)
+	aMgr.adapterAgents[adapter.Id] = newAdapterAgent(aMgr.coreEndpoint, clonedAdapter, aMgr.mutedAdapterRestartedHandler, aMgr.liveProbeInterval, aMgr.MaxRetries, aMgr.PerRPCRetryTimeout)
 	aMgr.adapterEndpoints[Endpoint(adapter.Endpoint)] = aMgr.adapterAgents[adapter.Id]
 	return nil
 }

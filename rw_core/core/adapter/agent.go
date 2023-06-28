@@ -19,14 +19,15 @@ package adapter
 import (
 	"context"
 	"errors"
-	"sync"
-	"time"
-
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	"sync"
+	"time"
 )
 
 // agent represents adapter agent
@@ -39,6 +40,8 @@ type agent struct {
 	onAdapterRestart   vgrpc.RestartedHandler
 	liveProbeInterval  time.Duration
 	coreEndpoint       string
+	maxRetries         uint
+	perRPCRetryTimeout time.Duration
 }
 
 func getAdapterServiceClientHandler(ctx context.Context, conn *grpc.ClientConn) interface{} {
@@ -48,13 +51,15 @@ func getAdapterServiceClientHandler(ctx context.Context, conn *grpc.ClientConn) 
 	return adapter_service.NewAdapterServiceClient(conn)
 }
 
-func newAdapterAgent(coreEndpoint string, adapter *voltha.Adapter, onAdapterRestart vgrpc.RestartedHandler, liveProbeInterval time.Duration) *agent {
+func newAdapterAgent(coreEndpoint string, adapter *voltha.Adapter, onAdapterRestart vgrpc.RestartedHandler, liveProbeInterval time.Duration, maxRetries uint, perRPCRetryTimeout time.Duration) *agent {
 	return &agent{
 		adapter:            adapter,
 		onAdapterRestart:   onAdapterRestart,
 		adapterAPIEndPoint: adapter.Endpoint,
 		liveProbeInterval:  liveProbeInterval,
 		coreEndpoint:       coreEndpoint,
+		maxRetries:         maxRetries,
+		perRPCRetryTimeout: perRPCRetryTimeout,
 	}
 }
 
@@ -71,8 +76,14 @@ func (aa *agent) start(ctx context.Context) error {
 
 	// Add a liveness communication update
 	aa.vClient.SubscribeForLiveness(aa.updateCommunicationTime)
-
-	go aa.vClient.Start(ctx, getAdapterServiceClientHandler)
+	backoffCtxOption := grpc_retry.WithBackoff(grpc_retry.BackoffLinearWithJitter(aa.perRPCRetryTimeout, 0.2))
+	retryCodes := []codes.Code{
+		codes.Unavailable,      // server is currently unavailable
+		codes.DeadlineExceeded, // deadline for the operation was exceeded
+	}
+	grpcRetryOptions := grpc_retry.UnaryClientInterceptor(grpc_retry.WithMax(aa.maxRetries), grpc_retry.WithPerRetryTimeout(aa.perRPCRetryTimeout), grpc_retry.WithCodes(retryCodes...), backoffCtxOption)
+	logger.Debug(ctx, "Configuration values", log.Fields{"RETRY": aa.maxRetries, "TIMEOUT": aa.perRPCRetryTimeout})
+	go aa.vClient.Start(ctx, getAdapterServiceClientHandler, grpcRetryOptions)
 	return nil
 }
 
