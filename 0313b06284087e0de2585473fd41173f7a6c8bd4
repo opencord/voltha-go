@@ -16,6 +16,24 @@
       "message": "Please set the version to 3.4.0",
       "revId": "0313b06284087e0de2585473fd41173f7a6c8bd4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ce3b97a5_c4828410",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-06-28T11:43:22Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "fb23a6cc_8fc10e8f",
+      "revId": "0313b06284087e0de2585473fd41173f7a6c8bd4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
