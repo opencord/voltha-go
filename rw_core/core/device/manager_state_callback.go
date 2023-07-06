@@ -1,17 +1,17 @@
 /*
- * Copyright 2021-2023 Open Networking Foundation (ONF) and the ONF Contributors
+* Copyright 2021-2023 Open Networking Foundation (ONF) and the ONF Contributors
 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 
- * http://www.apache.org/licenses/LICENSE-2.0
+* http://www.apache.org/licenses/LICENSE-2.0
 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
  */
 package device
 
@@ -26,8 +26,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//
-//CreateLogicalDevice creates logical device in core
+// CreateLogicalDevice creates logical device in core
 func (dMgr *Manager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Info(ctx, "create-logical-device")
 	// Verify whether the logical device has already been created
@@ -103,7 +102,7 @@ func (dMgr *Manager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.De
 	return nil
 }
 
-//DeleteAllLogicalPorts is invoked as a callback when the parent device's connection status moves to UNREACHABLE
+// DeleteAllLogicalPorts is invoked as a callback when the parent device's connection status moves to UNREACHABLE
 func (dMgr *Manager) DeleteAllLogicalPorts(ctx context.Context, parentDevice *voltha.Device) error {
 	logger.Debugw(ctx, "delete-all-logical-ports", log.Fields{"parent-device-id": parentDevice.Id})
 	if err := dMgr.logicalDeviceMgr.deleteAllLogicalPorts(ctx, parentDevice); err != nil {
@@ -150,7 +149,7 @@ func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice
 	return nil
 }
 
-//DeleteAllDeviceFlows is invoked as a callback when the parent device's connection status moves to UNREACHABLE
+// DeleteAllDeviceFlows is invoked as a callback when the parent device's connection status moves to UNREACHABLE
 func (dMgr *Manager) DeleteAllDeviceFlows(ctx context.Context, parentDevice *voltha.Device) error {
 	logger.Debugw(ctx, "delete-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
 	if agent := dMgr.getDeviceAgent(ctx, parentDevice.Id); agent != nil {

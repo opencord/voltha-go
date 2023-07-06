@@ -2117,7 +2117,7 @@ func WaitForCoreConnectionToAdapters(ctx context.Context, t *testing.T, nb *NBTe
 	nb.testAdapterRegistration(t, nbi)
 }
 
-//TestLogDeviceUpdate is used to extract and format device updates.  Not to be run on jenkins.
+// TestLogDeviceUpdate is used to extract and format device updates.  Not to be run on jenkins.
 func TestLogDeviceUpdate(t *testing.T) {
 	t.Skip()
 	var inputFile = os.Getenv("LGF")

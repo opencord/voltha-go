@@ -160,7 +160,8 @@ func (h *Handle) Unlock() {
 
 // ListIDs returns a snapshot of all the managed meter IDs
 // TODO: iterating through meters safely is expensive now, since all meters are stored & locked separately
-//       should avoid this where possible
+//
+//	should avoid this where possible
 func (loader *Loader) ListIDs() map[uint32]struct{} {
 	loader.lock.RLock()
 	defer loader.lock.RUnlock()

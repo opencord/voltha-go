@@ -32,6 +32,7 @@ $(if $(DEBUG),$(warning ENTER))
 onf-mk-abs    ?= $(abspath $(lastword $(MAKEFILE_LIST)))
 onf-mk-top    := $(subst /include.mk,$(null),$(onf-mk-abs))
 ONF_MAKEDIR   := $(onf-mk-top)
+MAKEDIR	      := $(ONF_MAKEDIR)
 
 include $(ONF_MAKEDIR)/consts.mk
 include $(ONF_MAKEDIR)/help/include.mk       # render target help
@@ -49,7 +50,7 @@ include $(ONF_MAKEDIR)/help/variables.mk
 ##---------------------##
 ##---]  ON_DEMAND  [---##
 ##---------------------##
-$(if $(USE_DOCKER_MK),$(eval $(ONF_MAKEDIR)/docker/include.mk))
+$(if $(USE_DOCKER_MK),$(eval include $(ONF_MAKEDIR)/docker/include.mk))
 
 ##-------------------##
 ##---]  TARGETS  [---##

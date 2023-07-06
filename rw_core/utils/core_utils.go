@@ -108,11 +108,11 @@ func (r Response) Done() {
 	}
 }
 
-//WaitForNilOrErrorResponses waits on a variadic number of channels for either a nil response or an error
-//response. If an error is received from a given channel then the returned error array will contain that error.
-//The error will be at the index corresponding to the order in which the channel appear in the parameter list.
-//If no errors is found then nil is returned.  This method also takes in a timeout in milliseconds. If a
-//timeout is obtained then this function will stop waiting for the remaining responses and abort.
+// WaitForNilOrErrorResponses waits on a variadic number of channels for either a nil response or an error
+// response. If an error is received from a given channel then the returned error array will contain that error.
+// The error will be at the index corresponding to the order in which the channel appear in the parameter list.
+// If no errors is found then nil is returned.  This method also takes in a timeout in milliseconds. If a
+// timeout is obtained then this function will stop waiting for the remaining responses and abort.
 func WaitForNilOrErrorResponses(timeout time.Duration, responses ...Response) []error {
 	timedOut := make(chan struct{})
 	timer := time.AfterFunc(timeout, func() { close(timedOut) })

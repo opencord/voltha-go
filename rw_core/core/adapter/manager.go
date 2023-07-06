@@ -275,7 +275,7 @@ func (aMgr *Manager) addDeviceTypes(ctx context.Context, deviceTypes *voltha.Dev
 	return nil
 }
 
-//loadAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
+// loadAdaptersAndDevicetypesInMemory loads the existing set of adapters and device types in memory
 func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory(ctx context.Context) error {
 	// Load the adapters
 	var adapters []*voltha.Adapter

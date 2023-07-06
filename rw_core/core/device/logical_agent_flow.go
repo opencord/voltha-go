@@ -48,7 +48,7 @@ func (agent *LogicalAgent) listLogicalDeviceFlows() map[uint64]*ofp.OfpFlowStats
 	return flows
 }
 
-//updateFlowTable updates the flow table of that logical device
+// updateFlowTable updates the flow table of that logical device
 func (agent *LogicalAgent) updateFlowTable(ctx context.Context, flow *ofp.FlowTableUpdate) error {
 	logger.Debug(ctx, "update-flow-table")
 	if flow == nil {
@@ -71,7 +71,7 @@ func (agent *LogicalAgent) updateFlowTable(ctx context.Context, flow *ofp.FlowTa
 		"unhandled-command: lDeviceId:%s, command:%s", agent.logicalDeviceID, flow.FlowMod.GetCommand())
 }
 
-//flowAdd adds a flow to the flow table of that logical device
+// flowAdd adds a flow to the flow table of that logical device
 func (agent *LogicalAgent) flowAdd(ctx context.Context, flowUpdate *ofp.FlowTableUpdate) error {
 	mod := flowUpdate.FlowMod
 	logger.Debugw(ctx, "flow-add", log.Fields{"flow": mod})
@@ -271,7 +271,7 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	return nil
 }
 
-//flowDelete deletes a flow from the flow table of that logical device
+// flowDelete deletes a flow from the flow table of that logical device
 func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowTableUpdate) error {
 	logger.Debug(ctx, "flow-delete")
 	mod := flowUpdate.FlowMod
@@ -406,7 +406,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 	return nil
 }
 
-//flowDeleteStrict deletes a flow from the flow table of that logical device
+// flowDeleteStrict deletes a flow from the flow table of that logical device
 func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp.FlowTableUpdate) error {
 	var flowHandle *flow.Handle
 	var have bool
@@ -528,12 +528,12 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 	return nil
 }
 
-//flowModify modifies a flow from the flow table of that logical device
+// flowModify modifies a flow from the flow table of that logical device
 func (agent *LogicalAgent) flowModify(flowUpdate *ofp.FlowTableUpdate) error {
 	return errors.New("flowModify not implemented")
 }
 
-//flowModifyStrict deletes a flow from the flow table of that logical device
+// flowModifyStrict deletes a flow from the flow table of that logical device
 func (agent *LogicalAgent) flowModifyStrict(flowUpdate *ofp.FlowTableUpdate) error {
 	return errors.New("flowModifyStrict not implemented")
 }

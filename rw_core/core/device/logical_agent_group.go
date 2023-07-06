@@ -43,7 +43,7 @@ func (agent *LogicalAgent) listLogicalDeviceGroups() map[uint32]*ofp.OfpGroupEnt
 	return groups
 }
 
-//updateGroupTable updates the group table of that logical device
+// updateGroupTable updates the group table of that logical device
 func (agent *LogicalAgent) updateGroupTable(ctx context.Context, groupMod *ofp.OfpGroupMod) error {
 	logger.Debug(ctx, "update-group-table")
 	if groupMod == nil {

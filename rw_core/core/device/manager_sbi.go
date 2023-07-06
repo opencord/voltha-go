@@ -1,17 +1,17 @@
 /*
- * Copyright 2021-2023 Open Networking Foundation (ONF) and the ONF Contributors
+* Copyright 2021-2023 Open Networking Foundation (ONF) and the ONF Contributors
 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 
- * http://www.apache.org/licenses/LICENSE-2.0
+* http://www.apache.org/licenses/LICENSE-2.0
 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
  */
 package device
 
@@ -251,8 +251,8 @@ func (dMgr *Manager) PortsStateUpdate(ctx context.Context, ps *ca.PortStateFilte
 	return &empty.Empty{}, nil
 }
 
-//ChildDevicesLost is invoked by an adapter to indicate that a parent device is in a state (Disabled) where it
-//cannot manage the child devices.  This will trigger the Core to disable all the child devices.
+// ChildDevicesLost is invoked by an adapter to indicate that a parent device is in a state (Disabled) where it
+// cannot manage the child devices.  This will trigger the Core to disable all the child devices.
 func (dMgr *Manager) ChildDevicesLost(ctx context.Context, parentID *common.ID) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildDevicesLost")
 	logger.Debugw(ctx, "child-devices-lost", log.Fields{"parent-id": parentID.Id})
@@ -268,7 +268,7 @@ func (dMgr *Manager) ChildDevicesLost(ctx context.Context, parentID *common.ID) 
 	return &empty.Empty{}, nil
 }
 
-//ChildDevicesDetected is invoked by an adapter when child devices are found, typically after after a
+// ChildDevicesDetected is invoked by an adapter when child devices are found, typically after after a
 // disable/enable sequence.  This will trigger the Core to Enable all the child devices of that parent.
 func (dMgr *Manager) ChildDevicesDetected(ctx context.Context, parentDeviceID *common.ID) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildDevicesDetected")

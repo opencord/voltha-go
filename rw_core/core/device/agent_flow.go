@@ -377,7 +377,7 @@ func (agent *Agent) updateFlowsToAdapter(ctx context.Context, updatedFlows []*of
 	return response, nil
 }
 
-//filterOutFlows removes flows from a device using the uni-port as filter
+// filterOutFlows removes flows from a device using the uni-port as filter
 func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMetadata *ofp.FlowMetadata) error {
 	var flowsToDelete []*ofp.OfpFlowStats
 	// If an existing flow has the uniPort as an InPort or OutPort or as a Tunnel ID then it needs to be removed
@@ -406,7 +406,7 @@ func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMeta
 	return nil
 }
 
-//deleteAllFlows deletes all flows in the device table
+// deleteAllFlows deletes all flows in the device table
 func (agent *Agent) deleteAllFlows(ctx context.Context) error {
 	logger.Debugw(ctx, "deleteAllFlows", log.Fields{"device-id": agent.deviceID})
 

@@ -50,7 +50,7 @@ func NewFlowDecomposer(getDevice GetDeviceFunc) *FlowDecomposer {
 	return &FlowDecomposer{getDevice: getDevice}
 }
 
-//DecomposeRules decomposes per-device flows and flow-groups from the flows and groups defined on a logical device
+// DecomposeRules decomposes per-device flows and flow-groups from the flows and groups defined on a logical device
 func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent LogicalDeviceAgent, flows map[uint64]*ofp.OfpFlowStats, groups map[uint32]*ofp.OfpGroupEntry) (*fu.DeviceRules, error) {
 	deviceRules := *fu.NewDeviceRules()
 	devicesToUpdate := make(map[string]string)
@@ -110,7 +110,7 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevice(
 	return newDeviceRules, nil
 }
 
-//processControllerBoundFlow decomposes trap flows
+// processControllerBoundFlow decomposes trap flows
 func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent LogicalDeviceAgent, path []route.Hop,
 	inPortNo uint32, outPortNo uint32, flow *ofp.OfpFlowStats) (*fu.DeviceRules, error) {
 

@@ -85,7 +85,7 @@ type Agent struct {
 	transientStateLoader *transientstate.Loader
 }
 
-//newAgent creates a new device agent. The device will be initialized when start() is called.
+// newAgent creates a new device agent. The device will be initialized when start() is called.
 func newAgent(device *voltha.Device, deviceMgr *Manager, dbPath *model.Path, deviceProxy *model.Proxy, internalTimeout, rpcTimeout, flowTimeout time.Duration) *Agent {
 	deviceID := device.Id
 	if deviceID == "" {
@@ -319,7 +319,8 @@ func (agent *Agent) onDeleteSuccess(ctx context.Context, prevState, currState *c
 }
 
 // onDeleteFailure is a common callback for scenarios where we receive an error response following a delete request
-//  to an adapter and the only action required is to return the error response.
+//
+//	to an adapter and the only action required is to return the error response.
 func (agent *Agent) onDeleteFailure(ctx context.Context, err error, prevState, currState *common.AdminState_Types) {
 	logger.Errorw(ctx, "rpc-failed", log.Fields{"rpc": coreutils.GetRPCMetadataFromContext(ctx), "device-id": agent.deviceID, "error": err})
 
@@ -483,8 +484,8 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	return nil
 }
 
-//addFlowsAndGroups adds the "newFlows" and "newGroups" from the existing flows/groups and sends the update to the
-//adapters
+// addFlowsAndGroups adds the "newFlows" and "newGroups" from the existing flows/groups and sends the update to the
+// adapters
 func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
@@ -503,8 +504,8 @@ func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFl
 	return nil
 }
 
-//deleteFlowsAndGroups removes the "flowsToDel" and "groupsToDel" from the existing flows/groups and sends the update to the
-//adapters
+// deleteFlowsAndGroups removes the "flowsToDel" and "groupsToDel" from the existing flows/groups and sends the update to the
+// adapters
 func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
@@ -521,8 +522,8 @@ func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.
 	return nil
 }
 
-//updateFlowsAndGroups replaces the existing flows and groups with "updatedFlows" and "updatedGroups" respectively. It
-//also sends the updates to the adapters
+// updateFlowsAndGroups replaces the existing flows and groups with "updatedFlows" and "updatedGroups" respectively. It
+// also sends the updates to the adapters
 func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
@@ -539,7 +540,7 @@ func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*of
 	return nil
 }
 
-//disableDevice disable a device
+// disableDevice disable a device
 func (agent *Agent) disableDevice(ctx context.Context) error {
 	var err error
 	var desc string

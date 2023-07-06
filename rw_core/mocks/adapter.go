@@ -278,7 +278,7 @@ func (ta *Adapter) UpdateFlowsIncrementally(ctx context.Context, incrFlows *ca.I
 	return &empty.Empty{}, nil
 }
 
-//Packets
+// Packets
 func (ta *Adapter) SendPacketOut(ctx context.Context, packet *ca.PacketOut) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }

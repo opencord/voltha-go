@@ -32,6 +32,6 @@ NO-LINT-YAML      := true#               # Note[1]
 ##---------------------------------##
 ##---] Conditional make logic  [---##
 ##---------------------------------##
-# USE_DOCKER_MK    := true
+USE_DOCKER_MK    := true
 
 # [EOF]

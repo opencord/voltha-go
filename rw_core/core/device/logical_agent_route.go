@@ -90,7 +90,7 @@ func (agent *LogicalAgent) GetDeviceRoutes() *route.DeviceRoutes {
 	return agent.deviceRoutes
 }
 
-//rebuildRoutes rebuilds the device routes
+// rebuildRoutes rebuilds the device routes
 func (agent *LogicalAgent) buildRoutes(ctx context.Context) error {
 	logger.Debugf(ctx, "building-routes", log.Fields{"logical-device-id": agent.logicalDeviceID})
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
@@ -118,7 +118,7 @@ func (agent *LogicalAgent) removeRoutes(ctx context.Context) error {
 	return nil
 }
 
-//updateRoutes updates the device routes
+// updateRoutes updates the device routes
 func (agent *LogicalAgent) updateRoutes(ctx context.Context, deviceID string, devicePorts map[uint32]*voltha.Port, lp *voltha.LogicalPort, lps map[uint32]*voltha.LogicalPort) error {
 	logger.Debugw(ctx, "updateRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": deviceID, "port:": lp})
 
@@ -131,7 +131,7 @@ func (agent *LogicalAgent) updateRoutes(ctx context.Context, deviceID string, de
 	return nil
 }
 
-//updateAllRoutes updates the device routes using all the logical ports on that device
+// updateAllRoutes updates the device routes using all the logical ports on that device
 func (agent *LogicalAgent) updateAllRoutes(ctx context.Context, deviceID string, devicePorts map[uint32]*voltha.Port) error {
 	logger.Debugw(ctx, "updateAllRoutes", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-id": deviceID, "ports-count": len(devicePorts)})
 

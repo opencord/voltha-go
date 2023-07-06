@@ -174,7 +174,8 @@ func (h *Handle) Unlock() {
 
 // ListIDs returns a snapshot of all the managed port IDs
 // TODO: iterating through ports safely is expensive now, since all ports are stored & locked separately
-//       should avoid this where possible
+//
+//	should avoid this where possible
 func (loader *Loader) ListIDs() map[uint32]struct{} {
 	loader.lock.RLock()
 	defer loader.lock.RUnlock()

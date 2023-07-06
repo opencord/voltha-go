@@ -47,7 +47,14 @@ WORKDIR /go/src
 COPY db ./db
 COPY vendor ./vendor
 
-# go test -coverprofile fails w/o this.
+# -----------------------------------------------------------------------
+# Chicken-n-egg problem: See Dockerfile.rw_core
+#   required by testing (-coverprofile fails w/o this)
+#   test output, does not exist during build
+# -----------------------------------------------------------------------
+# [TODO] Create two distinct docker files to break the artifical
+#        dependency loop
+# -----------------------------------------------------------------------
 COPY tests/results/go-test-coverage.out ./tests/results/go-test-coverage.out
 
 # Copy files

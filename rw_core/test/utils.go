@@ -165,7 +165,7 @@ func omciLog(inputFile string, deviceID string) {
 	fmt.Println("RepeatedIDs", repeatedTrnsID, "TransID:", len(uniqueTnsIDs))
 }
 
-//CreateMockAdapter creates mock OLT and ONU adapters - this will automatically the grpc service hosted by that
+// CreateMockAdapter creates mock OLT and ONU adapters - this will automatically the grpc service hosted by that
 // adapter
 func CreateMockAdapter(
 	ctx context.Context,
@@ -189,7 +189,7 @@ func CreateMockAdapter(
 	return adpt, nil
 }
 
-//CreateAndRegisterAdapters creates mock ONU and OLT adapters and registers them to rw-core
+// CreateAndRegisterAdapters creates mock ONU and OLT adapters and registers them to rw-core
 func CreateAndRegisterAdapters(
 	ctx context.Context,
 	t *testing.T,
@@ -282,7 +282,7 @@ func CreateAndRegisterAdapters(
 	return oltAdaptersMap, onuAdaptersMap
 }
 
-//StartEmbeddedEtcdServer creates and starts an Embedded etcd server locally.
+// StartEmbeddedEtcdServer creates and starts an Embedded etcd server locally.
 func StartEmbeddedEtcdServer(ctx context.Context, configName, storageDir, logLevel string) (*mock_etcd.EtcdServer, int, error) {
 	kvClientPort, err := freeport.GetFreePort()
 	if err != nil {
@@ -299,14 +299,14 @@ func StartEmbeddedEtcdServer(ctx context.Context, configName, storageDir, logLev
 	return etcdServer, kvClientPort, nil
 }
 
-//StopEmbeddedEtcdServer stops the embedded etcd server
+// StopEmbeddedEtcdServer stops the embedded etcd server
 func StopEmbeddedEtcdServer(ctx context.Context, server *mock_etcd.EtcdServer) {
 	if server != nil {
 		server.Stop(ctx)
 	}
 }
 
-//SetupKVClient creates a new etcd client
+// SetupKVClient creates a new etcd client
 func SetupKVClient(ctx context.Context, cf *config.RWCoreFlags, coreInstanceID string) kvstore.Client {
 	client, err := kvstore.NewEtcdClient(ctx, cf.KVStoreAddress, cf.KVStoreTimeout, log.FatalLevel)
 	if err != nil {
@@ -315,7 +315,7 @@ func SetupKVClient(ctx context.Context, cf *config.RWCoreFlags, coreInstanceID s
 	return client
 }
 
-//getRandomMacAddress returns a random mac address
+// getRandomMacAddress returns a random mac address
 func getRandomMacAddress() string {
 	rand.Seed(time.Now().UnixNano() / int64(rand.Intn(255)+1))
 	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",

@@ -424,8 +424,10 @@ func (e *orderedEvents) sendCompletion(ch chan struct{}) {
 }
 
 // TODO: shouldn't need to guarantee event ordering like this
-//       event ordering should really be protected by per-LogicalPort lock
-//       once routing uses on-demand calculation only, this should be changed
+//
+//	event ordering should really be protected by per-LogicalPort lock
+//	once routing uses on-demand calculation only, this should be changed
+//
 // assignQueuePosition ensures that no events will be sent until this thread calls send() on the returned queuePosition
 func (e *orderedEvents) assignQueuePosition() queuePosition {
 	e.mutex.Lock()
@@ -498,7 +500,7 @@ func (agent *LogicalAgent) getAnyNNIPort() (uint32, error) {
 	return 0, status.Error(codes.NotFound, "No NNI port found")
 }
 
-//GetNNIPorts returns all NNI ports
+// GetNNIPorts returns all NNI ports
 func (agent *LogicalAgent) GetNNIPorts() map[uint32]struct{} {
 	return agent.portLoader.ListIDsForDevice(agent.rootDeviceID)
 }

@@ -79,7 +79,7 @@ func NewDeviceRoutes(logicalDeviceID, rootDeviceID string, deviceMgr listDeviceP
 	}
 }
 
-//IsRootPort returns true if the port is a root port on a logical device
+// IsRootPort returns true if the port is a root port on a logical device
 func (dr *DeviceRoutes) IsRootPort(port uint32) bool {
 	dr.rootPortsLock.RLock()
 	defer dr.rootPortsLock.RUnlock()
@@ -124,7 +124,7 @@ func (dr *DeviceRoutes) RemoveRoutes() {
 	dr.reset()
 }
 
-//ComputeRoutes calculates all the routes between the logical ports.  This will clear up any existing route
+// ComputeRoutes calculates all the routes between the logical ports.  This will clear up any existing route
 func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps map[uint32]*voltha.LogicalPort) error {
 	dr.routeBuildLock.Lock()
 	defer dr.routeBuildLock.Unlock()
@@ -414,7 +414,7 @@ func (dr *DeviceRoutes) GetHalfRoute(nniAsEgress bool, ingress, egress uint32) (
 	return routes, fmt.Errorf("no half route found for ingress port %d, egress port %d and nni as egress %t", ingress, egress, nniAsEgress)
 }
 
-//getDeviceWithCacheUpdate returns the from the model and updates the PON ports map of that device.
+// getDeviceWithCacheUpdate returns the from the model and updates the PON ports map of that device.
 func (dr *DeviceRoutes) getDeviceWithCacheUpdate(ctx context.Context, deviceID string) (map[uint32]*voltha.Port, error) {
 	devicePorts, err := dr.listDevicePorts(ctx, deviceID)
 	if err != nil {
@@ -425,7 +425,7 @@ func (dr *DeviceRoutes) getDeviceWithCacheUpdate(ctx context.Context, deviceID s
 	return devicePorts, nil
 }
 
-//copyFromExistingNNIRoutes copies routes from an existing set of NNI routes
+// copyFromExistingNNIRoutes copies routes from an existing set of NNI routes
 func (dr *DeviceRoutes) copyFromExistingNNIRoutes(newNNIPort *voltha.LogicalPort, copyFromNNIPort *voltha.LogicalPort) {
 	updatedRoutes := make(map[PathID][]Hop)
 	for key, val := range dr.Routes {
@@ -457,12 +457,12 @@ func (dr *DeviceRoutes) reset() {
 	dr.childConnectionPort = make(map[string]uint32)
 }
 
-//concatDeviceIdPortId formats a portid using the device id and the port number
+// concatDeviceIdPortId formats a portid using the device id and the port number
 func concatDeviceIDPortID(deviceID string, portNo uint32) string {
 	return fmt.Sprintf("%s:%d", deviceID, portNo)
 }
 
-//getReverseRoute returns the reverse of the route
+// getReverseRoute returns the reverse of the route
 func getReverseRoute(route []Hop) []Hop {
 	reverse := make([]Hop, len(route))
 	for i, j := 0, len(route)-1; j >= 0; i, j = i+1, j-1 {

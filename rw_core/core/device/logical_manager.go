@@ -119,7 +119,7 @@ func (ldMgr *LogicalManager) GetLogicalDevice(ctx context.Context, id *voltha.ID
 	return nil, status.Errorf(codes.NotFound, "%s", id)
 }
 
-//ListLogicalDevices returns the list of all logical devices
+// ListLogicalDevices returns the list of all logical devices
 func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *empty.Empty) (*voltha.LogicalDevices, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "ListLogicalDevices")
 	logger.Debug(ctx, "list-all-logical-devices")
@@ -202,7 +202,7 @@ func (ldMgr *LogicalManager) stopManagingLogicalDeviceWithDeviceID(ctx context.C
 	return ldID
 }
 
-//getLogicalDeviceFromModel retrieves the logical device data from the model.
+// getLogicalDeviceFromModel retrieves the logical device data from the model.
 func (ldMgr *LogicalManager) getLogicalDeviceFromModel(ctx context.Context, lDeviceID string) (*voltha.LogicalDevice, error) {
 	logicalDevice := &voltha.LogicalDevice{}
 	if have, err := ldMgr.ldProxy.Get(ctx, lDeviceID, logicalDevice); err != nil {

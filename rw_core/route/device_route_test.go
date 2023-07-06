@@ -40,13 +40,13 @@ const testSetupPhase contextKey = "testSetupPhase"
 
 type contextKey string
 
-//portRegistration is a message sent from an OLT device to a logical device to create a logical port
+// portRegistration is a message sent from an OLT device to a logical device to create a logical port
 type portRegistration struct {
 	port     *voltha.Port
 	rootPort bool
 }
 
-//onuRegistration is a message sent from an ONU device to an OLT device to register an ONU
+// onuRegistration is a message sent from an ONU device to an OLT device to register an ONU
 type onuRegistration struct {
 	onuID    string
 	onuPorts map[uint32]*voltha.Port

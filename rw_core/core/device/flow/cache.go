@@ -135,7 +135,8 @@ func (h *Handle) Unlock() {
 
 // ListIDs returns a snapshot of all the managed flow IDs
 // TODO: iterating through flows safely is expensive now, since all flows are stored & locked separately
-//       should avoid this where possible
+//
+//	should avoid this where possible
 func (cache *Cache) ListIDs() map[uint64]struct{} {
 	cache.lock.RLock()
 	defer cache.lock.RUnlock()

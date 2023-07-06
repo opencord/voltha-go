@@ -19,14 +19,12 @@ $(if $(DEBUG),$(warning ENTER))
 
 VOLTHA_TOOLS_VERSION ?= 2.4.0
 
-include $(MAKEDIR)/docker/versions.mk
-
 # ---------------------------
 # Macros: command refactoring
 # ---------------------------
 docker-iam     ?= --user $$(id -u):$$(id -g)#          # override for local use
 docker-run     = docker run --rm $(docker-iam)#        # Docker command stem
-docker-run-is  = $(docker-run) $(is-stdin)             # Attach streams when interactive
+docker-run-is  = $(docker-run) $(is-stdin)#            # Attach streams when interactive
 docker-run-app = $(docker-run-is) -v ${CURDIR}:/app#   # w/filesystem mount
 
 # -----------------------------------------------------------------------
@@ -66,6 +64,23 @@ ifdef voltha-protos-v5
    PROTOC_SH += --workdir=$(voltha-protos-v5)
 endif
 PROTOC_SH += $(vee-citools)-protoc sh -c
+
+# Usage: GO_JUNIT_REPORT := $(call get-docker-go-junit-repo)
+# get-docker-go-junit-repo = $(docker-run-app) $(vee-citools)-go-junit-report go-junit-report
+# GO_JUNIT_REPORT   ?= $(call get-docker-go-junit-repo)
+
+# Usage: GOCOVER_COBERTURA := $(call get-docker-gocover-cobertura)
+# get-docker-gocover-cobertura = $(docker-run-app)/src/github.com/opencord/voltha-openolt-adapter $(vee-citools)-gocover-cobertura gocover-cobertura
+# GOCOVER_COBERTURA ?= $(call get-docker-gocover-cobertura)
+
+GO_JUNIT_REPORT   = $(docker-run) -v ${CURDIR}:/app -i $(vee-citools)-go-junit-report go-junit-report
+GOCOVER_COBERTURA = $(docker-run) -v ${CURDIR}:/app/src/github.com/opencord/voltha-openolt-adapter -i $(vee-citools)-gocover-cobertura gocover-cobertura
+
+get-golangci-lint = $(docker-run-app) -v gocache:/.cache $(vee-golang) $(vee-citools)-golangci-lint golangci-lint
+GOLANGCI_LINT     ?= $(call get-golangci-lint)
+
+get-docker-hadolint = $(docker-run-app) $(vee-citools)-hadolint hadolint
+HADOLINT          ?= $(call get-docker-hadolint)
 
 $(if $(DEBUG),$(warning LEAVE))
 

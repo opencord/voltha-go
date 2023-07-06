@@ -135,7 +135,8 @@ func (h *Handle) Unlock() {
 
 // ListIDs returns a snapshot of all the managed group IDs
 // TODO: iterating through groups safely is expensive now, since all groups are stored & locked separately
-//       should avoid this where possible
+//
+//	should avoid this where possible
 func (cache *Cache) ListIDs() map[uint32]struct{} {
 	cache.lock.RLock()
 	defer cache.lock.RUnlock()

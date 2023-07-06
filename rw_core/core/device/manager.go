@@ -61,7 +61,7 @@ type Manager struct {
 	doneCh                  chan struct{}
 }
 
-//NewManagers creates the Manager and the Logical Manager.
+// NewManagers creates the Manager and the Logical Manager.
 func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, cf *config.RWCoreFlags, coreInstanceID string, eventProxy *events.EventProxy) (*Manager, *LogicalManager) {
 	deviceMgr := &Manager{
 		rootDevices:             make(map[string]bool),
@@ -228,7 +228,7 @@ func (dMgr *Manager) IsDeviceInCache(id string) bool {
 	return exist
 }
 
-//isParentDeviceExist checks whether device is already preprovisioned.
+// isParentDeviceExist checks whether device is already preprovisioned.
 func (dMgr *Manager) isParentDeviceExist(ctx context.Context, newDevice *voltha.Device) (bool, error) {
 	hostPort := newDevice.GetHostAndPort()
 	var devices []*voltha.Device
@@ -251,7 +251,7 @@ func (dMgr *Manager) isParentDeviceExist(ctx context.Context, newDevice *voltha.
 	return false, nil
 }
 
-//getDeviceFromModelretrieves the device data from the model.
+// getDeviceFromModelretrieves the device data from the model.
 func (dMgr *Manager) getDeviceFromModel(ctx context.Context, deviceID string) (*voltha.Device, error) {
 	device := &voltha.Device{}
 	if have, err := dMgr.dProxy.Get(ctx, deviceID, device); err != nil {
@@ -609,7 +609,7 @@ func (dMgr *Manager) UpdatePortState(ctx context.Context, deviceID string, portT
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
 
-//UpdatePortsState updates all ports on the device
+// UpdatePortsState updates all ports on the device
 func (dMgr *Manager) UpdatePortsState(ctx context.Context, deviceID string, portTypeFilter uint32, state voltha.OperStatus_Types) error {
 	logger.Debugw(ctx, "update-ports-state", log.Fields{"device-id": deviceID})
 	agent := dMgr.getDeviceAgent(ctx, deviceID)
@@ -678,7 +678,7 @@ All the functions below are callback functions where they are invoked with the l
 therefore use the data as is without trying to get the latest from the model.
 */
 
-//DisableAllChildDevices is invoked as a callback when the parent device is disabled
+// DisableAllChildDevices is invoked as a callback when the parent device is disabled
 func (dMgr *Manager) DisableAllChildDevices(ctx context.Context, parentCurrDevice *voltha.Device) error {
 	logger.Debug(ctx, "disable-all-child-devices")
 	ports, _ := dMgr.listDevicePorts(ctx, parentCurrDevice.Id)
@@ -693,7 +693,7 @@ func (dMgr *Manager) DisableAllChildDevices(ctx context.Context, parentCurrDevic
 	return nil
 }
 
-//getAllChildDeviceIds is a helper method to get all the child device IDs from the device passed as parameter
+// getAllChildDeviceIds is a helper method to get all the child device IDs from the device passed as parameter
 func (dMgr *Manager) getAllChildDeviceIds(ctx context.Context, parentDevicePorts map[uint32]*voltha.Port) map[string]struct{} {
 	logger.Debug(ctx, "get-all-child-device-ids")
 	childDeviceIds := make(map[string]struct{}, len(parentDevicePorts))
@@ -706,7 +706,7 @@ func (dMgr *Manager) getAllChildDeviceIds(ctx context.Context, parentDevicePorts
 	return childDeviceIds
 }
 
-//GgtAllChildDevices is a helper method to get all the child device IDs from the device passed as parameter
+// GgtAllChildDevices is a helper method to get all the child device IDs from the device passed as parameter
 func (dMgr *Manager) getAllChildDevices(ctx context.Context, parentDeviceID string) (*voltha.Devices, error) {
 	logger.Debugw(ctx, "get-all-child-devices", log.Fields{"parent-device-id": parentDeviceID})
 	if parentDevicePorts, err := dMgr.listDevicePorts(ctx, parentDeviceID); err == nil {
