@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Open Networking Foundation
+ * Copyright 2018-2023 Open Networking Foundation (ONF) and the ONF Contributors
 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -272,7 +272,7 @@ func SetDefaultLogger(outputType string, level LogLevel, defaultFields Fields) (
 // outputType is JSON, level is the lowest level log to output with this logger and defaultFields is a map of
 // key-value pairs to always add to the output.
 // Note: AddPackage also returns a reference to the actual logger.  If a calling package uses this reference directly
-//instead of using the publicly available functions in this log package then a number of functionalities will not
+// instead of using the publicly available functions in this log package then a number of functionalities will not
 // be available to it, notably log tracing with filename.functionname.linenumber annotation.
 //
 // pkgNames parameter should be used for testing only as this function detects the caller's package.
@@ -312,7 +312,7 @@ func RegisterPackage(outputType string, level LogLevel, defaultFields Fields, pk
 	return loggers[pkgName], nil
 }
 
-//UpdateAllLoggers create new loggers for all registered pacakges with the defaultFields.
+// UpdateAllLoggers create new loggers for all registered pacakges with the defaultFields.
 func UpdateAllLoggers(defaultFields Fields) error {
 	for pkgName, cfg := range cfgs {
 		for k, v := range defaultFields {
@@ -392,7 +392,7 @@ func setLevel(cfg zp.Config, level LogLevel) {
 	}
 }
 
-//SetPackageLogLevel dynamically sets the log level of a given package to level.  This is typically invoked at an
+// SetPackageLogLevel dynamically sets the log level of a given package to level.  This is typically invoked at an
 // application level during debugging
 func SetPackageLogLevel(packageName string, level LogLevel) {
 	// Get proper config
@@ -401,7 +401,7 @@ func SetPackageLogLevel(packageName string, level LogLevel) {
 	}
 }
 
-//SetAllLogLevel sets the log level of all registered packages to level
+// SetAllLogLevel sets the log level of all registered packages to level
 func SetAllLogLevel(level LogLevel) {
 	// Get proper config
 	for _, cfg := range cfgs {
@@ -409,7 +409,7 @@ func SetAllLogLevel(level LogLevel) {
 	}
 }
 
-//GetPackageLogLevel returns the current log level of a package.
+// GetPackageLogLevel returns the current log level of a package.
 func GetPackageLogLevel(packageName ...string) (LogLevel, error) {
 	var name string
 	if len(packageName) == 1 {
@@ -423,12 +423,12 @@ func GetPackageLogLevel(packageName ...string) (LogLevel, error) {
 	return 0, fmt.Errorf("unknown-package-%s", name)
 }
 
-//GetDefaultLogLevel gets the log level used for packages that don't have specific loggers
+// GetDefaultLogLevel gets the log level used for packages that don't have specific loggers
 func GetDefaultLogLevel() LogLevel {
 	return levelToLogLevel(cfg.Level.Level())
 }
 
-//SetLogLevel sets the log level for the logger corresponding to the caller's package
+// SetLogLevel sets the log level for the logger corresponding to the caller's package
 func SetLogLevel(level LogLevel) error {
 	pkgName, _, _, _ := getCallerInfo()
 	if _, exist := cfgs[pkgName]; !exist {
@@ -439,7 +439,7 @@ func SetLogLevel(level LogLevel) error {
 	return nil
 }
 
-//SetDefaultLogLevel sets the log level used for packages that don't have specific loggers
+// SetDefaultLogLevel sets the log level used for packages that don't have specific loggers
 func SetDefaultLogLevel(level LogLevel) {
 	setLevel(cfg, level)
 }
@@ -661,8 +661,8 @@ func (l clogger) GetLogLevel() LogLevel {
 	return levelToLogLevel(cfgs[l.packageName].Level.Level())
 }
 
-//UpdateCallerSkipLevel create new loggers for specified registered pacakges with the default updated caller skipltFields.
-//This will enable to skip wrapper file caller in caller info and stacktrace
+// UpdateCallerSkipLevel create new loggers for specified registered pacakges with the default updated caller skipltFields.
+// This will enable to skip wrapper file caller in caller info and stacktrace
 func UpdateCallerSkipLevel(skipLevel int) (CLogger, error) {
 	pkgName, _, _, _ := getCallerInfo()
 	if cfg, exist := cfgs[pkgName]; exist {
@@ -681,8 +681,8 @@ func UpdateCallerSkipLevel(skipLevel int) (CLogger, error) {
 	return loggers[pkgName], errors.New("Package Not Found")
 }
 
-//UpdateAllCallerSkipLevel create new loggers for all registered pacakges with the default updated caller skipltFields.
-//This will enable to skip wrapper file caller in caller info and stacktrace
+// UpdateAllCallerSkipLevel create new loggers for all registered pacakges with the default updated caller skipltFields.
+// This will enable to skip wrapper file caller in caller info and stacktrace
 func UpdateAllCallerSkipLevel(skipLevel int) error {
 	for pkgName, cfg := range cfgs {
 		l, err := cfg.Build(zp.AddCallerSkip(skipLevel))

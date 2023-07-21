@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Open Networking Foundation
+ * Copyright 2018-2023 Open Networking Foundation (ONF) and the ONF Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -533,7 +533,7 @@ func GetTunnelId(flow *ofp.OfpFlowStats) uint64 {
 	return 0
 }
 
-//GetMetaData - legacy get method (only want lower 32 bits)
+// GetMetaData - legacy get method (only want lower 32 bits)
 func GetMetaData(ctx context.Context, flow *ofp.OfpFlowStats) uint32 {
 	if flow == nil {
 		return 0
@@ -1118,7 +1118,7 @@ func MkMulticastGroupMod(groupId uint32, buckets []*ofp.OfpBucket, command *ofp.
 	return group
 }
 
-//SetVariadicModAttributes sets only uint64 or uint32 fields of the ofp_flow_mod message
+// SetVariadicModAttributes sets only uint64 or uint32 fields of the ofp_flow_mod message
 func setVariadicModAttributes(mod *ofp.OfpFlowMod, args OfpFlowModArgs) *ofp.OfpFlowMod {
 	if args == nil {
 		return mod
@@ -1319,7 +1319,7 @@ func (fg *FlowsAndGroups) AddGroup(group *ofp.OfpGroupEntry) {
 	}
 }
 
-//AddFrom add flows and groups from the argument into this structure only if they do not already exist
+// AddFrom add flows and groups from the argument into this structure only if they do not already exist
 func (fg *FlowsAndGroups) AddFrom(from *FlowsAndGroups) {
 	iter := from.Flows.IterFunc()
 	for kv, ok := iter(); ok; kv, ok = iter() {
@@ -1451,7 +1451,7 @@ func (dr *DeviceRules) CreateEntryIfNotExist(deviceId string) {
  *  Common flow routines
  */
 
-//FindOverlappingFlows return a list of overlapping flow(s) where mod is the flow request
+// FindOverlappingFlows return a list of overlapping flow(s) where mod is the flow request
 func FindOverlappingFlows(flows []*ofp.OfpFlowStats, mod *ofp.OfpFlowMod) []*ofp.OfpFlowStats {
 	return nil //TODO - complete implementation
 }
@@ -1476,14 +1476,14 @@ func FindFlows(flows []*ofp.OfpFlowStats, flow *ofp.OfpFlowStats) int {
 	return -1
 }
 
-//FlowMatch returns true if two flows matches on the following flow attributes:
-//TableId, Priority, Flags, Cookie, Match
+// FlowMatch returns true if two flows matches on the following flow attributes:
+// TableId, Priority, Flags, Cookie, Match
 func FlowMatch(f1 *ofp.OfpFlowStats, f2 *ofp.OfpFlowStats) bool {
 	return f1 != nil && f2 != nil && f1.Id == f2.Id
 }
 
-//FlowMatchesMod returns True if given flow is "covered" by the wildcard flow_mod, taking into consideration of
-//both exact matches as well as masks-based match fields if any. Otherwise return False
+// FlowMatchesMod returns True if given flow is "covered" by the wildcard flow_mod, taking into consideration of
+// both exact matches as well as masks-based match fields if any. Otherwise return False
 func FlowMatchesMod(flow *ofp.OfpFlowStats, mod *ofp.OfpFlowMod) bool {
 	if flow == nil || mod == nil {
 		return false
@@ -1520,7 +1520,7 @@ func FlowMatchesMod(flow *ofp.OfpFlowStats, mod *ofp.OfpFlowMod) bool {
 
 }
 
-//FlowHasOutPort returns True if flow has a output command with the given out_port
+// FlowHasOutPort returns True if flow has a output command with the given out_port
 func FlowHasOutPort(flow *ofp.OfpFlowStats, outPort uint32) bool {
 	if flow == nil {
 		return false
@@ -1543,7 +1543,7 @@ func FlowHasOutPort(flow *ofp.OfpFlowStats, outPort uint32) bool {
 	return false
 }
 
-//FlowHasOutGroup return True if flow has a output command with the given out_group
+// FlowHasOutGroup return True if flow has a output command with the given out_group
 func FlowHasOutGroup(flow *ofp.OfpFlowStats, groupID uint32) bool {
 	if flow == nil {
 		return false
@@ -1566,7 +1566,7 @@ func FlowHasOutGroup(flow *ofp.OfpFlowStats, groupID uint32) bool {
 	return false
 }
 
-//FindGroup returns index of group if found, else returns -1
+// FindGroup returns index of group if found, else returns -1
 func FindGroup(groups []*ofp.OfpGroupEntry, groupId uint32) int {
 	for idx, group := range groups {
 		if group.Desc.GroupId == groupId {
@@ -1595,13 +1595,13 @@ func ToOfpOxmField(from []*ofp.OfpOxmOfbField) []*ofp.OfpOxmField {
 	return matchFields
 }
 
-//IsMulticastIp returns true if the ip starts with the byte sequence of 1110;
-//false otherwise.
+// IsMulticastIp returns true if the ip starts with the byte sequence of 1110;
+// false otherwise.
 func IsMulticastIp(ip uint32) bool {
 	return ip>>28 == 14
 }
 
-//ConvertToMulticastMacInt returns equivalent mac address of the given multicast ip address
+// ConvertToMulticastMacInt returns equivalent mac address of the given multicast ip address
 func ConvertToMulticastMacInt(ip uint32) uint64 {
 	//get last 23 bits of ip address by ip & 00000000011111111111111111111111
 	theLast23BitsOfIp := ip & 8388607
@@ -1609,7 +1609,7 @@ func ConvertToMulticastMacInt(ip uint32) uint64 {
 	return 1101088686080 | uint64(theLast23BitsOfIp)
 }
 
-//ConvertToMulticastMacBytes returns equivalent mac address of the given multicast ip address
+// ConvertToMulticastMacBytes returns equivalent mac address of the given multicast ip address
 func ConvertToMulticastMacBytes(ip uint32) []byte {
 	mac := ConvertToMulticastMacInt(ip)
 	var b bytes.Buffer

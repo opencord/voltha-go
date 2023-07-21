@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-present Open Networking Foundation
+ * Copyright 2020-2023 Open Networking Foundation (ONF) and the ONF Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ const (
 	Clear EventAction = "CLEAR_EVENT"
 )
 
-//CreateDeviceStateChangeEvent forms and returns a new DeviceStateChange Event
+// CreateDeviceStateChangeEvent forms and returns a new DeviceStateChange Event
 func CreateDeviceStateChangeEvent(serialNumber string, deviceID string, parentID string,
 	prevOperStatus common.OperStatus_Types, prevConnStatus common.ConnectStatus_Types, prevAdminStatus common.AdminState_Types,
 	operStatus common.OperStatus_Types, connStatus common.ConnectStatus_Types, adminStatus common.AdminState_Types,
@@ -98,7 +98,7 @@ func CreateDeviceStateChangeEvent(serialNumber string, deviceID string, parentID
 	}
 }
 
-//CreateDeviceDeletedEvent forms and returns a new DeviceState Event
+// CreateDeviceDeletedEvent forms and returns a new DeviceState Event
 func CreateDeviceDeletedEvent(serialNumber string, deviceID string, parentID string,
 	onuId uint32, parentPonPort uint32, isRoot bool) *voltha.DeviceEvent {
 

@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Open Networking Foundation
+* Copyright 2018-2023 Open Networking Foundation (ONF) and the ONF Contributors
 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 
- * http://www.apache.org/licenses/LICENSE-2.0
+* http://www.apache.org/licenses/LICENSE-2.0
 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
  */
 package kafka
 
@@ -33,7 +33,7 @@ import (
 
 // consumerChannels represents one or more consumers listening on a kafka topic.  Once a message is received on that
 // topic, the consumer(s) broadcasts the message to all the listening channels.   The consumer can be a partition
-//consumer or a group consumer
+// consumer or a group consumer
 type consumerChannels struct {
 	consumers []interface{}
 	channels  []chan proto.Message
@@ -315,7 +315,7 @@ func (sc *SaramaClient) Stop(ctx context.Context) {
 	logger.Info(ctx, "sarama-client-stopped")
 }
 
-//createTopic is an internal function to create a topic on the Kafka Broker. No locking is required as
+// createTopic is an internal function to create a topic on the Kafka Broker. No locking is required as
 // the invoking function must hold the lock
 func (sc *SaramaClient) createTopic(ctx context.Context, topic *Topic, numPartition int, repFactor int) error {
 	// Set the topic details
@@ -344,7 +344,7 @@ func (sc *SaramaClient) createTopic(ctx context.Context, topic *Topic, numPartit
 	return nil
 }
 
-//CreateTopic is a public API to create a topic on the Kafka Broker.  It uses a lock on a specific topic to
+// CreateTopic is a public API to create a topic on the Kafka Broker.  It uses a lock on a specific topic to
 // ensure no two go routines are performing operations on the same topic
 func (sc *SaramaClient) CreateTopic(ctx context.Context, topic *Topic, numPartition int, repFactor int) error {
 	sc.lockTopic(topic)
@@ -353,7 +353,7 @@ func (sc *SaramaClient) CreateTopic(ctx context.Context, topic *Topic, numPartit
 	return sc.createTopic(ctx, topic, numPartition, repFactor)
 }
 
-//DeleteTopic removes a topic from the kafka Broker
+// DeleteTopic removes a topic from the kafka Broker
 func (sc *SaramaClient) DeleteTopic(ctx context.Context, topic *Topic) error {
 	sc.lockTopic(topic)
 	defer sc.unLockTopic(topic)
@@ -441,7 +441,7 @@ func (sc *SaramaClient) Subscribe(ctx context.Context, topic *Topic, kvArgs ...*
 	return consumerListeningChannel, nil
 }
 
-//UnSubscribe unsubscribe a consumer from a given topic
+// UnSubscribe unsubscribe a consumer from a given topic
 func (sc *SaramaClient) UnSubscribe(ctx context.Context, topic *Topic, ch <-chan proto.Message) error {
 	sc.lockTopic(topic)
 	defer sc.unLockTopic(topic)
@@ -760,7 +760,7 @@ func (sc *SaramaClient) addChannelToConsumerChannelMap(ctx context.Context, topi
 	logger.Warnw(ctx, "consumers-channel-not-exist", log.Fields{"topic": topic.Name})
 }
 
-//closeConsumers closes a list of sarama consumers.  The consumers can either be a partition consumers or a group consumers
+// closeConsumers closes a list of sarama consumers.  The consumers can either be a partition consumers or a group consumers
 func closeConsumers(ctx context.Context, consumers []interface{}) error {
 	var err error
 	for _, consumer := range consumers {
@@ -830,7 +830,7 @@ func (sc *SaramaClient) clearTopicFromConsumerChannelMap(ctx context.Context, to
 	return nil
 }
 
-//createPublisher creates the publisher which is used to send a message onto kafka
+// createPublisher creates the publisher which is used to send a message onto kafka
 func (sc *SaramaClient) createPublisher(ctx context.Context) error {
 	// This Creates the publisher
 	config := sarama.NewConfig()
@@ -1028,8 +1028,8 @@ func (sc *SaramaClient) startConsumers(ctx context.Context, topic *Topic) error 
 	return nil
 }
 
-//// setupConsumerChannel creates a consumerChannels object for that topic and add it to the consumerChannels map
-//// for that topic.  It also starts the routine that listens for messages on that topic.
+// // setupConsumerChannel creates a consumerChannels object for that topic and add it to the consumerChannels map
+// // for that topic.  It also starts the routine that listens for messages on that topic.
 func (sc *SaramaClient) setupPartitionConsumerChannel(ctx context.Context, topic *Topic, initialOffset int64) (chan proto.Message, error) {
 	var pConsumers []sarama.PartitionConsumer
 	var err error

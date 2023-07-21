@@ -1,17 +1,17 @@
 /*
- * Copyright 2019-present Open Networking Foundation
+* Copyright 2019-2023 Open Networking Foundation (ONF) and the ONF Contributors
 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 
- * http://www.apache.org/licenses/LICENSE-2.0
+* http://www.apache.org/licenses/LICENSE-2.0
 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
  */
 package etcd
 
@@ -31,7 +31,7 @@ const (
 	defaultLocalPersistentStorage = "voltha.test.embed.etcd"
 )
 
-//EtcdServer represents an embedded Etcd server.  It is used for testing only.
+// EtcdServer represents an embedded Etcd server.  It is used for testing only.
 type EtcdServer struct {
 	server *embed.Etcd
 }
@@ -87,7 +87,7 @@ func MKConfig(ctx context.Context, configName string, clientPort, peerPort int, 
 	return cfg
 }
 
-//getDefaultCfg specifies the default config
+// getDefaultCfg specifies the default config
 func getDefaultCfg() *embed.Config {
 	cfg := embed.NewConfig()
 	cfg.Debug = false
@@ -97,8 +97,8 @@ func getDefaultCfg() *embed.Config {
 	return cfg
 }
 
-//StartEtcdServer creates and starts an embedded Etcd server.  A local directory to store data is created for the
-//embedded server lifetime (for the duration of a unit test.  The server runs at localhost:2379.
+// StartEtcdServer creates and starts an embedded Etcd server.  A local directory to store data is created for the
+// embedded server lifetime (for the duration of a unit test.  The server runs at localhost:2379.
 func StartEtcdServer(ctx context.Context, cfg *embed.Config) *EtcdServer {
 	// If the server is already running, just return
 	if cfg == nil {
@@ -128,7 +128,7 @@ func StartEtcdServer(ctx context.Context, cfg *embed.Config) *EtcdServer {
 	return &EtcdServer{server: e}
 }
 
-//Stop closes the embedded Etcd server and removes the local data directory as well
+// Stop closes the embedded Etcd server and removes the local data directory as well
 func (es *EtcdServer) Stop(ctx context.Context) {
 	if es != nil {
 		storage := es.server.Config().Dir
