@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Open Networking Foundation
+* Copyright 2018-2023 Open Networking Foundation (ONF) and the ONF Contributors
 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 
- * http://www.apache.org/licenses/LICENSE-2.0
+* http://www.apache.org/licenses/LICENSE-2.0
 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
  */
 package kafka
 
@@ -72,7 +72,8 @@ func NewResponse(messageType RpcMType, err error, body *any.Any) *RpcResponse {
 
 // TODO:  Remove and provide better may to get the device id
 // GetDeviceIdFromTopic extract the deviceId from the topic name.  The topic name is formatted either as:
-//			<any string> or <any string>_<deviceId>.  The device Id is 24 characters long.
+//
+//	<any string> or <any string>_<deviceId>.  The device Id is 24 characters long.
 func GetDeviceIdFromTopic(topic Topic) string {
 	pos := strings.LastIndex(topic.Name, TopicSeparator)
 	if pos == -1 {
@@ -113,7 +114,8 @@ func StartAndWaitUntilKafkaConnectionIsUp(ctx context.Context, kClient Client, c
 	return nil
 }
 
-/**
+/*
+*
 MonitorKafkaReadiness checks the liveliness and readiness of the kafka service
 and update the status in the probe.
 */
