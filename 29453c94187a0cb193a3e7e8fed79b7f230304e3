@@ -33,6 +33,24 @@
       "message": "Good addition: I have more patches in flight but they have not been merged yet (similar unit test failure)\n\nfyi\u003e The lint failure also relates to:\n  o locally modified files appearing in job workspace.\n  o \"go mod update\" likely failing -- which leaves the sandbox un-buildable after the vendor/ directory has been removed:\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n05:02:28 \tmodified:   vendor/github.com/opencord/voltha-lib-go/v7/pkg/probe/probe.go\n05:02:28 \tmodified:   vendor/github.com/opencord/voltha-lib-go/v7/pkg/version/version.go\n05:02:28 \n05:02:28 Untracked files:\n05:02:28   (use \"git add \u003cfile\u003e...\" to include in what will be committed)\n05:02:28 \n05:02:28 \tvendor/github.com/opencord/voltha-protos/v5/LICENSE",
       "revId": "29453c94187a0cb193a3e7e8fed79b7f230304e3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c712e2d6_80b7c394",
+        "filename": "go.mod",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-07-24T13:38:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "feeed008_a6930237",
+      "revId": "29453c94187a0cb193a3e7e8fed79b7f230304e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
