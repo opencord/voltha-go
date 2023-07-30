@@ -79,6 +79,26 @@ func (dMgr *Manager) DeviceStateUpdate(ctx context.Context, ds *ca.DeviceStateFi
 	return nil, status.Errorf(codes.NotFound, "%s", ds.DeviceId)
 }
 
+func (dMgr *Manager) CheckIfChildDeviceExist(SerialNumber string, ParentPortNo uint32) (bool, *voltha.Device, *Agent) {
+	var ExistingDevice *voltha.Device
+	var ExistingAgent *Agent
+	var found bool
+	found = false
+	dMgr.deviceAgents.Range(func(key, value interface{}) bool {
+
+		if value.(*Agent).device.SerialNumber == SerialNumber && value.(*Agent).device.ParentPortNo == ParentPortNo {
+			ExistingDevice = value.(*Agent).device
+			ExistingAgent = value.(*Agent)
+			found = true
+			return false
+		}
+
+		found = false
+		return true
+	})
+	return found, ExistingDevice, ExistingAgent
+}
+
 func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ca.DeviceDiscovery) (*voltha.Device, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildDeviceDetected")
 	logger.Debugw(ctx, "child-device-detected",
@@ -124,16 +144,26 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ca.DeviceDisco
 		logger.Errorw(ctx, "device-type-not-set", log.Fields{"parent-device": pDevice, "error": err})
 		return nil, status.Errorf(codes.FailedPrecondition, "device Type not set %s", dd.ParentId)
 	}
+	// check if device exists in deviceAgents map
+	found, ExistingDevice, ExistingAgent := dMgr.CheckIfChildDeviceExist(dd.SerialNumber, dd.ParentPortNo)
 
-	if device, err := dMgr.GetChildDevice(ctx, &ca.ChildDeviceFilter{
-		ParentId:     dd.ParentId,
-		SerialNumber: dd.SerialNumber,
-		OnuId:        dd.OnuId,
-		ParentPortNo: dd.ParentPortNo}); err == nil {
+	if found {
+		if ExistingDevice.AdminState == voltha.AdminState_PREPROVISIONED {
+			logger.Debug(ctx, "device already exists in voltha in preprovisioned state", log.Fields{"parent-device-id": ExistingDevice.ParentId, "child-device-id": ExistingDevice.Id, "sno": ExistingDevice.SerialNumber})
+			// Activate the preprovisioned device
+			go func() {
+				err := ExistingAgent.enableDevice(utils.WithSpanAndRPCMetadataFromContext(ctx))
+				if err != nil {
+					logger.Errorw(ctx, "unable-to-enable-device", log.Fields{"error": err, "device-id": ExistingAgent.deviceID})
+				}
+			}()
+
+			return ExistingDevice, nil
+		}
+
 		logger.Warnw(ctx, "child-device-exists", log.Fields{"parent-device-id": dd.ParentId, "serialNumber": dd.SerialNumber})
-		return device, status.Errorf(codes.AlreadyExists, "%s", dd.SerialNumber)
+		return ExistingDevice, status.Errorf(codes.AlreadyExists, "%s", dd.SerialNumber)
 	}
-
 	//Get parent endpoint
 	pEndPoint, err := dMgr.adapterMgr.GetAdapterEndpoint(ctx, pAgent.deviceID, pAgent.deviceType)
 	if err != nil {
