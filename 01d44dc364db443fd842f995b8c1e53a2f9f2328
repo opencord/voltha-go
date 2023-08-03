@@ -33,6 +33,23 @@
       "message": "\u003e Patch Set 2:\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1838/ : FAILURE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_licensed/3002/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-lint/2748/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-tests/2752/ : SUCCESS\n\nrecheck",
       "revId": "01d44dc364db443fd842f995b8c1e53a2f9f2328",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "62741a22_01e2bfba",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-03T19:45:30Z",
+      "side": 1,
+      "message": "recheck\n\nDebugging why groovy string concatenation triggered this mess:\nhudson.remoting.ProxyException: groovy.lang.MissingMethodException: No signature of method: java.lang.String.positive() is applicable for argument types: () values: []",
+      "revId": "01d44dc364db443fd842f995b8c1e53a2f9f2328",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
