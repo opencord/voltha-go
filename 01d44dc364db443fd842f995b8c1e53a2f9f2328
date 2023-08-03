@@ -67,6 +67,23 @@
       "message": "retry\n\nNow retry with the kind mkdir patch merged in.",
       "revId": "01d44dc364db443fd842f995b8c1e53a2f9f2328",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "810350a1_9f6f1328",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-03T21:18:30Z",
+      "side": 1,
+      "message": "recheck",
+      "revId": "01d44dc364db443fd842f995b8c1e53a2f9f2328",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
