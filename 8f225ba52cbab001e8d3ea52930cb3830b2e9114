@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7a211cc2_164f462e",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-04T15:20:13Z",
+      "side": 1,
+      "message": "Lines 93, 97 and 99 have variant returns (scalar -vs- list).\nWill the calling syntax be OK, wondering if variant returns might give test suites indigestion when they are encountered.\n\nOne way around the problem is remove the inlined return statements, assign defaults for ExistingDevice/ExistingAgent (assigned defaults at the top) then always return consistent values through line 99.",
+      "revId": "8f225ba52cbab001e8d3ea52930cb3830b2e9114",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
