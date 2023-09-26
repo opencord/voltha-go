@@ -16,6 +16,23 @@
       "message": "recheck\n\nLets see what set of scripts this patch will trigger, /voltha-2.12/ is no longer valid.",
       "revId": "0f2d3af67e8e4b98c6ce99f616e1729189f8cf66",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0b8b85c1_d9311771",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-09-26T21:51:29Z",
+      "side": 1,
+      "message": "needs jjb/pipeline/voltha/voltha-2.12/bbsim-tests.groovy",
+      "revId": "0f2d3af67e8e4b98c6ce99f616e1729189f8cf66",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
