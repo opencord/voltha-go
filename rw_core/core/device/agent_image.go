@@ -395,7 +395,7 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 		return err
 	}
 
-	logger.Debugw(ctx, "updating-image-download", log.Fields{"device-id": agent.deviceID, "img": img})
+	logger.Info(ctx, "updating-image-download", log.Fields{"device-id": agent.deviceID, "img": img})
 
 	cloned := agent.cloneDeviceWithoutLock()
 
@@ -426,7 +426,7 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 }
 
 func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
-	logger.Debugw(ctx, "get-image-download", log.Fields{"device-id": agent.deviceID})
+	logger.Info(ctx, "get-image-download", log.Fields{"device-id": agent.deviceID})
 
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
@@ -441,7 +441,7 @@ func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownl
 }
 
 func (agent *Agent) listImageDownloads(ctx context.Context, deviceID string) (*voltha.ImageDownloads, error) {
-	logger.Debugw(ctx, "list-image-downloads", log.Fields{"device-id": agent.deviceID})
+	logger.Info(ctx, "list-image-downloads", log.Fields{"device-id": agent.deviceID})
 
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
@@ -581,7 +581,7 @@ func (agent *Agent) downloadImageToDevice(ctx context.Context, request *voltha.D
 		return nil, err
 	}
 
-	logger.Debugw(ctx, "download-image-to-device", log.Fields{"device-id": agent.deviceID})
+	logger.Info(ctx, "download-image-to-device", log.Fields{"device-id": agent.deviceID})
 	if agent.device.Root {
 		agent.requestQueue.RequestComplete()
 		return nil, status.Errorf(codes.FailedPrecondition, "device-id:%s, is an OLT. Image update "+
@@ -620,7 +620,7 @@ func (agent *Agent) getImageStatus(ctx context.Context, request *voltha.DeviceIm
 		return nil, err
 	}
 
-	logger.Debugw(ctx, "get-image-status", log.Fields{"device-id": agent.deviceID})
+	logger.Info(ctx, "get-image-status", log.Fields{"device-id": agent.deviceID})
 
 	cloned := agent.cloneDeviceWithoutLock()
 	if !agent.proceedWithRequest(cloned) {
@@ -655,7 +655,7 @@ func (agent *Agent) activateImageOnDevice(ctx context.Context, request *voltha.D
 		return nil, err
 	}
 
-	logger.Debugw(ctx, "activate-image-on-device", log.Fields{"device-id": agent.deviceID})
+	logger.Info(ctx, "activate-image-on-device", log.Fields{"device-id": agent.deviceID})
 
 	cloned := agent.cloneDeviceWithoutLock()
 
@@ -691,7 +691,7 @@ func (agent *Agent) abortImageUpgradeToDevice(ctx context.Context, request *volt
 		return nil, err
 	}
 
-	logger.Debugw(ctx, "abort-image-on-device", log.Fields{"device-id": agent.deviceID})
+	logger.Info(ctx, "abort-image-on-device", log.Fields{"device-id": agent.deviceID})
 
 	cloned := agent.cloneDeviceWithoutLock()
 
@@ -726,7 +726,7 @@ func (agent *Agent) commitImage(ctx context.Context, request *voltha.DeviceImage
 		return nil, err
 	}
 
-	logger.Debugw(ctx, "commit-image-on-device", log.Fields{"device-id": agent.deviceID})
+	logger.Info(ctx, "commit-image-on-device", log.Fields{"device-id": agent.deviceID})
 
 	cloned := agent.cloneDeviceWithoutLock()
 

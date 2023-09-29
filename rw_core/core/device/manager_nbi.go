@@ -40,7 +40,7 @@ func (dMgr *Manager) CreateDevice(ctx context.Context, device *voltha.Device) (*
 		return &voltha.Device{}, errors.New("no-device-info-present; MAC or HOSTIP&PORT")
 	}
 	ctx = utils.WithRPCMetadataContext(ctx, "CreateDevice")
-	logger.Debugw(ctx, "create-device", log.Fields{"device": *device})
+	logger.Info(ctx, "create-device", log.Fields{"device": *device})
 
 	deviceExist, err := dMgr.isParentDeviceExist(ctx, device)
 	if err != nil {
@@ -51,7 +51,6 @@ func (dMgr *Manager) CreateDevice(ctx context.Context, device *voltha.Device) (*
 		logger.Errorf(ctx, "device-is-pre-provisioned-already-with-same-ip-port-or-mac-address")
 		return nil, errors.New("device is already pre-provisioned")
 	}
-	logger.Debugw(ctx, "create-device", log.Fields{"device": device})
 
 	// Ensure this device is set as root
 	device.Root = true
@@ -71,7 +70,7 @@ func (dMgr *Manager) EnableDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 	ctx = utils.WithRPCMetadataContext(ctx, "EnableDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
-	logger.Debugw(ctx, "enable-device", log.Fields{"device-id": id.Id})
+	logger.Info(ctx, "enable-device", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
@@ -84,7 +83,7 @@ func (dMgr *Manager) DisableDevice(ctx context.Context, id *voltha.ID) (*empty.E
 	ctx = utils.WithRPCMetadataContext(ctx, "DisableDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
-	logger.Debugw(ctx, "disable-device", log.Fields{"device-id": id.Id})
+	logger.Info(ctx, "disable-device", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
@@ -97,7 +96,7 @@ func (dMgr *Manager) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 	ctx = utils.WithRPCMetadataContext(ctx, "RebootDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
-	logger.Debugw(ctx, "reboot-device", log.Fields{"device-id": id.Id})
+	logger.Info(ctx, "reboot-device", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
@@ -110,7 +109,7 @@ func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 	ctx = utils.WithRPCMetadataContext(ctx, "DeleteDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
-	logger.Debugw(ctx, "delete-device", log.Fields{"device-id": id.Id})
+	logger.Info(ctx, "delete-device", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
@@ -123,7 +122,7 @@ func (dMgr *Manager) ForceDeleteDevice(ctx context.Context, id *voltha.ID) (*emp
 	ctx = utils.WithRPCMetadataContext(ctx, "ForceDeleteDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
-	logger.Debugw(ctx, "force-delete-device", log.Fields{"device-id": id.Id})
+	logger.Info(ctx, "force-delete-device", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
@@ -166,7 +165,7 @@ func (dMgr *Manager) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*em
 		numDevices = len(ids.Items)
 	}
 
-	logger.Debugw(ctx, "reconcile-devices", log.Fields{"num-devices": numDevices})
+	logger.Info(ctx, "reconcile-devices", log.Fields{"num-devices": numDevices})
 	if ids != nil && len(ids.Items) != 0 {
 		toReconcile := len(ids.Items)
 		reconciled := 0
@@ -204,7 +203,7 @@ func (dMgr *Manager) DownloadImage(ctx context.Context, img *voltha.ImageDownloa
 	ctx = utils.WithRPCMetadataContext(ctx, "DownloadImage")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
 
-	logger.Debugw(ctx, "download-image", log.Fields{"device-id": img.Id, "image-name": img.Name})
+	logger.Info(ctx, "download-image", log.Fields{"device-id": img.Id, "image-name": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
 		return operationFailureResp, status.Errorf(codes.NotFound, "%s", img.Id)
@@ -221,7 +220,7 @@ func (dMgr *Manager) CancelImageDownload(ctx context.Context, img *voltha.ImageD
 	ctx = utils.WithRPCMetadataContext(ctx, "CancelImageDownload")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
 
-	logger.Debugw(ctx, "cancel-image-download", log.Fields{"device-id": img.Id, "image-name": img.Name})
+	logger.Info(ctx, "cancel-image-download", log.Fields{"device-id": img.Id, "image-name": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
 		return operationFailureResp, status.Errorf(codes.NotFound, "%s", img.Id)
@@ -238,7 +237,7 @@ func (dMgr *Manager) ActivateImageUpdate(ctx context.Context, img *voltha.ImageD
 	ctx = utils.WithRPCMetadataContext(ctx, "ActivateImageUpdate")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
 
-	logger.Debugw(ctx, "activate-image-update", log.Fields{"device-id": img.Id, "image-name": img.Name})
+	logger.Info(ctx, "activate-image-update", log.Fields{"device-id": img.Id, "image-name": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
 		return operationFailureResp, status.Errorf(codes.NotFound, "%s", img.Id)
@@ -255,7 +254,7 @@ func (dMgr *Manager) RevertImageUpdate(ctx context.Context, img *voltha.ImageDow
 	ctx = utils.WithRPCMetadataContext(ctx, "RevertImageUpdate")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
 
-	logger.Debugw(ctx, "rever-image-update", log.Fields{"device-id": img.Id, "image-name": img.Name})
+	logger.Info(ctx, "rever-image-update", log.Fields{"device-id": img.Id, "image-name": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
 		return operationFailureResp, status.Errorf(codes.NotFound, "%s", img.Id)
@@ -665,7 +664,7 @@ func (dMgr *Manager) GetImageDownloadStatus(ctx context.Context, img *voltha.Ima
 	ctx = utils.WithRPCMetadataContext(ctx, "GetImageDownloadStatus")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
 
-	logger.Debugw(ctx, "get-image-download-status", log.Fields{"device-id": img.Id, "image-name": img.Name})
+	logger.Info(ctx, "get-image-download-status", log.Fields{"device-id": img.Id, "image-name": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
 		return imageDownloadFailureResp, status.Errorf(codes.NotFound, "%s", img.Id)
@@ -682,7 +681,7 @@ func (dMgr *Manager) GetImageDownload(ctx context.Context, img *voltha.ImageDown
 	ctx = utils.WithRPCMetadataContext(ctx, "GetImageDownload")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
 
-	logger.Debugw(ctx, "get-image-download", log.Fields{"device-id": img.Id, "image-name": img.Name})
+	logger.Info(ctx, "get-image-download", log.Fields{"device-id": img.Id, "image-name": img.Name})
 	agent := dMgr.getDeviceAgent(ctx, img.Id)
 	if agent == nil {
 		return imageDownloadFailureResp, status.Errorf(codes.NotFound, "%s", img.Id)
@@ -716,7 +715,7 @@ func (dMgr *Manager) GetImages(ctx context.Context, id *voltha.ID) (*voltha.Imag
 	ctx = utils.WithRPCMetadataContext(ctx, "GetImages")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
-	logger.Debugw(ctx, "get-images", log.Fields{"device-id": id.Id})
+	logger.Info(ctx, "get-images", log.Fields{"device-id": id.Id})
 	device, err := dMgr.getDeviceReadOnly(ctx, id.Id)
 	if err != nil {
 		return nil, err
@@ -813,7 +812,7 @@ func (dMgr *Manager) EnablePort(ctx context.Context, port *voltha.Port) (*empty.
 	ctx = utils.WithRPCMetadataContext(ctx, "EnablePort")
 	log.EnrichSpan(ctx, log.Fields{"device-id": port.DeviceId})
 
-	logger.Debugw(ctx, "enable-port", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
+	logger.Info(ctx, "enable-port", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
 	agent := dMgr.getDeviceAgent(ctx, port.DeviceId)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", port.DeviceId)
@@ -825,7 +824,7 @@ func (dMgr *Manager) DisablePort(ctx context.Context, port *voltha.Port) (*empty
 	ctx = utils.WithRPCMetadataContext(ctx, "DisablePort")
 	log.EnrichSpan(ctx, log.Fields{"device-id": port.DeviceId})
 
-	logger.Debugw(ctx, "disable-port", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
+	logger.Info(ctx, "disable-port", log.Fields{"device-id": port.DeviceId, "port-no": port.PortNo})
 	agent := dMgr.getDeviceAgent(ctx, port.DeviceId)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", port.DeviceId)
@@ -837,7 +836,7 @@ func (dMgr *Manager) GetExtValue(ctx context.Context, value *extension.ValueSpec
 	ctx = utils.WithRPCMetadataContext(ctx, "GetExtValue")
 	log.EnrichSpan(ctx, log.Fields{"device-id": value.Id})
 
-	logger.Debugw(ctx, "get-ext-value", log.Fields{"onu-id": value.Id})
+	logger.Info(ctx, "get-ext-value", log.Fields{"onu-id": value.Id})
 	cDevice, err := dMgr.getDeviceReadOnly(ctx, value.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
@@ -851,7 +850,7 @@ func (dMgr *Manager) GetExtValue(ctx context.Context, value *extension.ValueSpec
 		if err != nil {
 			return nil, err
 		}
-		logger.Debugw(ctx, "get-ext-value-result", log.Fields{"result": resp})
+		logger.Info(ctx, "get-ext-value-result", log.Fields{"result": resp})
 		return resp, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
@@ -861,7 +860,7 @@ func (dMgr *Manager) GetExtValue(ctx context.Context, value *extension.ValueSpec
 // SetExtValue  set some given configs or value
 func (dMgr *Manager) SetExtValue(ctx context.Context, value *extension.ValueSet) (*empty.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "SetExtValue")
-	logger.Debugw(ctx, "set-ext-value", log.Fields{"onu-id": value.Id})
+	logger.Info(ctx, "set-ext-value", log.Fields{"onu-id": value.Id})
 
 	device, err := dMgr.getDeviceReadOnly(ctx, value.Id)
 	if err != nil {
@@ -872,7 +871,7 @@ func (dMgr *Manager) SetExtValue(ctx context.Context, value *extension.ValueSet)
 		if err != nil {
 			return nil, err
 		}
-		logger.Debugw(ctx, "set-ext-value-result", log.Fields{"result": resp})
+		logger.Info(ctx, "set-ext-value-result", log.Fields{"result": resp})
 		return resp, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", value.Id)
