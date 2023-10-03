@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "248019f1_d4ee1296",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-10-03T18:01:53Z",
+      "side": 1,
+      "message": "Why do we prefer a new search function looping in agent map, instead of the existing dMgr.GetChildDevice function?",
+      "range": {
+        "startLine": 147,
+        "startChar": 0,
+        "endLine": 148,
+        "endChar": 103
+      },
+      "revId": "0e43b3c4a90126f253f47b7e8c16bd06a35cbc74",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
