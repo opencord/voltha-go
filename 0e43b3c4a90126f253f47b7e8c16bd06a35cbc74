@@ -22,6 +22,30 @@
       },
       "revId": "0e43b3c4a90126f253f47b7e8c16bd06a35cbc74",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "820b5ac0_c41da2af",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-10-03T22:41:57Z",
+      "side": 1,
+      "message": "This is because the device is first added to the agent map and then to the parent devices ports as child device so i have encountered situations where the device is shown as not present even though the entry is there in voltha.",
+      "parentUuid": "248019f1_d4ee1296",
+      "range": {
+        "startLine": 147,
+        "startChar": 0,
+        "endLine": 148,
+        "endChar": 103
+      },
+      "revId": "0e43b3c4a90126f253f47b7e8c16bd06a35cbc74",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
