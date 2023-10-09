@@ -46,6 +46,53 @@
       },
       "revId": "0e43b3c4a90126f253f47b7e8c16bd06a35cbc74",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7425d0b3_95a95003",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-10-09T06:07:49Z",
+      "side": 1,
+      "message": "Got it.",
+      "parentUuid": "820b5ac0_c41da2af",
+      "range": {
+        "startLine": 147,
+        "startChar": 0,
+        "endLine": 148,
+        "endChar": 103
+      },
+      "revId": "0e43b3c4a90126f253f47b7e8c16bd06a35cbc74",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "33fe8ed5_b2cfadda",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-10-09T06:07:49Z",
+      "side": 1,
+      "message": "What is the case here? Why wasn\u0027t the device enabled before(when it is created)? A device agent is enabled just after it is created and started successfully below at lines 186 and 187. If you get into this \u0027if found\u0027 check, then this means that the device agent is already created and it is about to be enabled, or the agent couldn\u0027t be started properly,  which in both cases means you shouldn\u0027t enable it.",
+      "range": {
+        "startLine": 155,
+        "startChar": 11,
+        "endLine": 155,
+        "endChar": 37
+      },
+      "revId": "0e43b3c4a90126f253f47b7e8c16bd06a35cbc74",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
