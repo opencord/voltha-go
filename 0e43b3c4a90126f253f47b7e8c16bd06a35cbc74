@@ -93,6 +93,30 @@
       },
       "revId": "0e43b3c4a90126f253f47b7e8c16bd06a35cbc74",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "69195010_e233be5e",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-10-09T06:34:32Z",
+      "side": 1,
+      "message": "this case is encountered when the device is added to the agent map and the voltha core crashes due to some reason , before the device enable happened, now as a part of the olt adaptor grpc retry when the childdevicedetected is retried this device have to be eanbled again",
+      "parentUuid": "33fe8ed5_b2cfadda",
+      "range": {
+        "startLine": 155,
+        "startChar": 11,
+        "endLine": 155,
+        "endChar": 37
+      },
+      "revId": "0e43b3c4a90126f253f47b7e8c16bd06a35cbc74",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
