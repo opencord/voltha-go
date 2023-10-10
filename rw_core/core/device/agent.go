@@ -405,7 +405,7 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err
 	}
-	logger.Debugw(ctx, "enable-device", log.Fields{"device-id": agent.deviceID})
+	logger.Infow(ctx, "enable-device", log.Fields{"device-id": agent.deviceID})
 
 	oldDevice := agent.getDeviceReadOnlyWithoutLock()
 	prevAdminState = oldDevice.AdminState
@@ -890,14 +890,14 @@ func (agent *Agent) updateDeviceStatus(ctx context.Context, operStatus voltha.Op
 	cloned := agent.cloneDeviceWithoutLock()
 	// Ensure the enums passed in are valid - they will be invalid if they are not set when this function is invoked
 	if s, ok := voltha.ConnectStatus_Types_name[int32(connStatus)]; ok {
-		logger.Debugw(ctx, "update-device-conn-status", log.Fields{"ok": ok, "val": s})
+		logger.Infow(ctx, "update-device-conn-status", log.Fields{"ok": ok, "val": s})
 		cloned.ConnectStatus = connStatus
 	}
 	if s, ok := voltha.OperStatus_Types_name[int32(operStatus)]; ok {
-		logger.Debugw(ctx, "update-device-oper-status", log.Fields{"ok": ok, "val": s})
+		logger.Infow(ctx, "update-device-oper-status", log.Fields{"ok": ok, "val": s})
 		cloned.OperStatus = operStatus
 	}
-	logger.Debugw(ctx, "update-device-status", log.Fields{"device-id": cloned.Id, "oper-status": cloned.OperStatus, "connect-status": cloned.ConnectStatus})
+	logger.Infow(ctx, "update-device-status", log.Fields{"device-id": cloned.Id, "oper-status": cloned.OperStatus, "connect-status": cloned.ConnectStatus})
 	// Store the device
 	if err = agent.updateDeviceAndReleaseLock(ctx, cloned); err == nil {
 		opStatus.Code = common.OperationResp_OPERATION_SUCCESS
@@ -1467,7 +1467,7 @@ retry:
 func (agent *Agent) ReconcileDevice(ctx context.Context) {
 	// Do not reconcile if the device was in DELETE_FAILED transient state.  Just invoke the force delete on that device.
 	state := agent.getTransientState()
-	logger.Debugw(ctx, "starting-reconcile", log.Fields{"device-id": agent.deviceID, "state": state})
+	logger.Infow(ctx, "starting-reconcile", log.Fields{"device-id": agent.deviceID, "state": state})
 	if agent.getTransientState() == core.DeviceTransientState_DELETE_FAILED {
 		if err := agent.DeleteDevicePostAdapterRestart(ctx); err != nil {
 			logger.Errorw(ctx, "delete-post-restart-failed", log.Fields{"error": err, "device-id": agent.deviceID})
@@ -1486,7 +1486,7 @@ func (agent *Agent) ReconcileDevice(ctx context.Context) {
 	device := agent.getDeviceReadOnlyWithoutLock()
 	if device.AdminState == voltha.AdminState_PREPROVISIONED {
 		agent.requestQueue.RequestComplete()
-		logger.Debugw(ctx, "device-in-preprovisioning-state-reconcile-not-needed", log.Fields{"device-id": device.Id})
+		logger.Infow(ctx, "device-in-preprovisioning-state-reconcile-not-needed", log.Fields{"device-id": device.Id})
 		return
 	}
 
@@ -1548,7 +1548,7 @@ retry:
 
 		backoffTimer = time.NewTimer(duration)
 
-		logger.Debugw(ctx, "retrying-reconciling", log.Fields{"deviceID": device.Id, "endpoint": device.AdapterEndpoint})
+		logger.Infow(ctx, "retrying-reconciling", log.Fields{"deviceID": device.Id, "endpoint": device.AdapterEndpoint})
 		// Release lock before sending request to adapter
 		agent.requestQueue.RequestComplete()
 
@@ -1590,7 +1590,7 @@ retry:
 		break retry
 	}
 
-	logger.Debugw(ctx, "reconcile-retry-ends", log.Fields{"adapter-endpoint": agent.adapterEndpoint})
+	logger.Infow(ctx, "reconcile-retry-ends", log.Fields{"adapter-endpoint": agent.adapterEndpoint})
 
 	// Retry loop is broken, so stop any timers and drain the channel
 	if backoffTimer != nil && !backoffTimer.Stop() {

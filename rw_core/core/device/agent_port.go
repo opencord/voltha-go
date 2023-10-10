@@ -168,7 +168,7 @@ func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
 
 	oldPort := portHandle.GetReadOnly()
 	if oldPort.Label != "" || oldPort.Type != voltha.Port_PON_OLT {
-		logger.Debugw(ctx, "port-already-exists", log.Fields{"port": port})
+		logger.Infow(ctx, "port-already-exists", log.Fields{"port": port})
 		desc = fmt.Sprintf("port already exists, port : %s", port)
 		operStatus.Code = common.OperationResp_OPERATION_SUCCESS
 		return nil
@@ -226,7 +226,7 @@ func (agent *Agent) addPeerPort(ctx context.Context, peerPort *voltha.Port_PeerP
 		portHandle = h
 	}
 
-	logger.Debugw(ctx, "found-peer", log.Fields{"device-id": agent.deviceID, "portNo": peerPort.PortNo, "deviceId": agent.deviceID})
+	logger.Infow(ctx, "found-peer", log.Fields{"device-id": agent.deviceID, "portNo": peerPort.PortNo, "deviceId": agent.deviceID})
 
 	newPort := proto.Clone(portHandle.GetReadOnly()).(*voltha.Port)
 	newPort.Peers = append(newPort.Peers, peerPort)
