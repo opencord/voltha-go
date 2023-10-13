@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7b999fc3_2ec8456a",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-10-13T16:15:13Z",
+      "side": 1,
+      "message": "Do we need these infos, these will spew out lot of messages",
+      "revId": "ef02ab638b90a1515e3a9df9e08445bc9f505ef1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8c64484f_dcd986f8",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-10-13T16:15:13Z",
+      "side": 1,
+      "message": "same as above comment here",
+      "revId": "ef02ab638b90a1515e3a9df9e08445bc9f505ef1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
