@@ -16,6 +16,24 @@
       "message": "The changes look ok for me, but i have to admit that do not really understand what is done here (and in the other repos with similar looking patches). This repo seems to bump the version of \"voltha-proto\" in the go.mod and go.sum file and additionally change a commented out line in the vendor/modules.txt file. Looking at some of the other similar changes with more or less the same commit message, i wonder why there is no change in the VERSION file here and if the change in vendor/modules.txt was something done by some script, if it is lint or even docs related. Maybe the commit message could be used here to explain which files where updated (i know that the current commit message includes a list of the files, but that is not really helpful for me) and why, to allow me (and other reviewers) to understand this change a bit better. A commit message which would be easier to understand for me could include explanations like: \"Use command xyz to regenerate file foo.bar after explicitly setting version for bar-baz.module to A.B.C\".\nSince i think copy pasting the same review comment to all other repos with similar changes is not very useful, i will leave it here for now and go through all changes again after it has been adressed everywhere.",
       "revId": "191a7d75a31836c7de802eceaa8dcfe3f1a1f627",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7c7f0b87_4e440a16",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-10-25T15:49:24Z",
+      "side": 1,
+      "message": "\u003e\u003e i wonder why there is no change in the VERSION file here\n\nVERSION file omission was an oversight.\nInteresting the jenkins job did not report an error in this case, will need to check if this repository is configured to perform the check (consistency needed here across repositories).\n\n\nThese patches are simply fixing a discrepancy caught at release time.\nIdeally edits would have been made when individual repositories were changed.\nFully documenting what/how/when/why feels a bit out of scope for the edits made.\n\nGenerally per-repo version dependencies need to be maintained so consumer repositories can use the latest code.  Even more important, the intent of \"consistent voltha proto use\" is literally that -- during release ensure the voltha project is using the same data structures guarded by versioning.\n\n\u003e\u003e vendor/modules.txt was something done by some script\n\nYes the vendor directory is maintained automatically by tools.\nFrom the commit message, the tool used for automation was `go mod vendor`.\nFor detail on what/why file edits are being made beneath the vendor/ directory the best resource would be consulting golang documentation VS duplicating details in the commit message:\n\n    https://go.dev/ref/mod#go-mod-vendor\n\nWould including a URL like this with the prototype/version commit message be helpful ?",
+      "parentUuid": "c634d22d_7ecdf1a5",
+      "revId": "191a7d75a31836c7de802eceaa8dcfe3f1a1f627",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
