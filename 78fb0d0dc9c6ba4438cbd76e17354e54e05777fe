@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ee25389b_64ab7b33",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-11-01T12:57:21Z",
+      "side": 1,
+      "message": "LGTM - fixed casualty from makefile cleanup.\n",
+      "revId": "78fb0d0dc9c6ba4438cbd76e17354e54e05777fe",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
