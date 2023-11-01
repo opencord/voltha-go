@@ -118,7 +118,7 @@ docker-push: ## Push the docker images to an external repository
 
 	$(call banner-enter,$@)
 
-  docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
+	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}
 ifdef BUILD_PROFILED
 	docker push ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile
 endif
