@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f20f2a8b_7c3892ab",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-11-01T15:59:04Z",
+      "side": 1,
+      "message": "LGTM -- installing a language editor plugin/mode can help with makefile syntax problems.",
+      "revId": "07d5bb1f3cd340a8e8e8dc1b84f014d6250f4634",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
