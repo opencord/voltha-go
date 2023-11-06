@@ -187,6 +187,12 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
 			deviceType:    parent,
+			previousState: deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_NONE},
+			currentState:  deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_REBOOTED, Transient: core.DeviceTransientState_NONE},
+			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+	transitionMap.transitions = append(transitionMap.transitions,
+		transition{
+			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_NONE},
 			currentState:  deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_NONE},
 			handlers:      []transitionHandler{}})
