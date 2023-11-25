@@ -314,7 +314,7 @@ func (dMgr *Manager) loadDevice(ctx context.Context, deviceID string) (*Agent, e
 }
 
 // loadRootDeviceParentAndChildren loads the children and parents of a root device in memory
-func (dMgr *Manager) loadRootDeviceParentAndChildren(ctx context.Context, device *voltha.Device, devicePorts map[uint32]*voltha.Port) error {
+func (dMgr *Manager) loadRootDeviceParentAndChildren(ctx context.Context, device *voltha.Device) error {
 	logger.Debugw(ctx, "loading-parent-and-children", log.Fields{"device-id": device.Id})
 	if device.Root {
 		// Scenario A
@@ -327,7 +327,7 @@ func (dMgr *Manager) loadRootDeviceParentAndChildren(ctx context.Context, device
 			logger.Debugw(ctx, "no-parent-to-load", log.Fields{"device-id": device.Id})
 		}
 		// Load all child devices, if needed
-		childDeviceIds := dMgr.getAllChildDeviceIds(ctx, devicePorts)
+		childDeviceIds := dMgr.getAllChildDeviceIds(ctx, device.Id)
 		for childDeviceID := range childDeviceIds {
 			if _, err := dMgr.loadDevice(ctx, childDeviceID); err != nil {
 				logger.Warnw(ctx, "failure-loading-device", log.Fields{"device-id": childDeviceID, "error": err})
@@ -364,10 +364,9 @@ func (dMgr *Manager) load(ctx context.Context, deviceID string) error {
 
 	// Now we face two scenarios
 	if device.Root {
-		devicePorts := dAgent.listDevicePorts()
 
 		// Load all children as well as the parent of this device (logical_device)
-		if err := dMgr.loadRootDeviceParentAndChildren(ctx, device, devicePorts); err != nil {
+		if err := dMgr.loadRootDeviceParentAndChildren(ctx, device); err != nil {
 			logger.Warnw(ctx, "failure-loading-device-parent-and-children", log.Fields{"device-id": deviceID})
 			return err
 		}
@@ -569,13 +568,9 @@ func (dMgr *Manager) UpdateDeviceStatus(ctx context.Context, deviceID string, op
 
 func (dMgr *Manager) UpdateChildrenStatus(ctx context.Context, deviceID string, operStatus voltha.OperStatus_Types, connStatus voltha.ConnectStatus_Types) error {
 	logger.Debugw(ctx, "update-children-status", log.Fields{"parent-device-id": deviceID, "oper-status": operStatus, "conn-status": connStatus})
-	parentDevicePorts, err := dMgr.listDevicePorts(ctx, deviceID)
-	if err != nil {
-		return status.Errorf(codes.Aborted, "%s", err.Error())
-	}
-	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, parentDevicePorts) {
+	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, deviceID) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
-			if err = agent.updateDeviceStatus(ctx, operStatus, connStatus); err != nil {
+			if err := agent.updateDeviceStatus(ctx, operStatus, connStatus); err != nil {
 				return status.Errorf(codes.Aborted, "childDevice:%s, error:%s", childDeviceID, err.Error())
 			}
 		}
@@ -681,8 +676,7 @@ therefore use the data as is without trying to get the latest from the model.
 // DisableAllChildDevices is invoked as a callback when the parent device is disabled
 func (dMgr *Manager) DisableAllChildDevices(ctx context.Context, parentCurrDevice *voltha.Device) error {
 	logger.Debug(ctx, "disable-all-child-devices")
-	ports, _ := dMgr.listDevicePorts(ctx, parentCurrDevice.Id)
-	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, ports) {
+	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, parentCurrDevice.Id) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
 			if err := agent.disableDevice(ctx); err != nil {
 				// Just log the error - this error happens only if the child device was already in deleted state.
@@ -694,31 +688,29 @@ func (dMgr *Manager) DisableAllChildDevices(ctx context.Context, parentCurrDevic
 }
 
 // getAllChildDeviceIds is a helper method to get all the child device IDs from the device passed as parameter
-func (dMgr *Manager) getAllChildDeviceIds(ctx context.Context, parentDevicePorts map[uint32]*voltha.Port) map[string]struct{} {
+func (dMgr *Manager) getAllChildDeviceIds(ctx context.Context, parentDeviceID string) map[string]struct{} {
 	logger.Debug(ctx, "get-all-child-device-ids")
-	childDeviceIds := make(map[string]struct{}, len(parentDevicePorts))
-	for _, port := range parentDevicePorts {
-		for _, peer := range port.Peers {
-			childDeviceIds[peer.DeviceId] = struct{}{}
+	childDeviceIds := make(map[string]struct{})
+	dMgr.deviceAgents.Range(func(_, value interface{}) bool {
+		if value.(*Agent).device.ParentId == parentDeviceID && !value.(*Agent).device.Root {
+			childDeviceIds[value.(*Agent).device.Id] = struct{}{}
 		}
-	}
-	logger.Debugw(ctx, "returning-getAllChildDeviceIds", log.Fields{"childDeviceIds": childDeviceIds})
+		return true
+	})
+	logger.Debugw(ctx, "returning-getAllChildDeviceIds.", log.Fields{"childDeviceIds": childDeviceIds})
 	return childDeviceIds
 }
 
 // GgtAllChildDevices is a helper method to get all the child device IDs from the device passed as parameter
 func (dMgr *Manager) getAllChildDevices(ctx context.Context, parentDeviceID string) (*voltha.Devices, error) {
 	logger.Debugw(ctx, "get-all-child-devices", log.Fields{"parent-device-id": parentDeviceID})
-	if parentDevicePorts, err := dMgr.listDevicePorts(ctx, parentDeviceID); err == nil {
-		childDevices := make([]*voltha.Device, 0)
-		for deviceID := range dMgr.getAllChildDeviceIds(ctx, parentDevicePorts) {
-			if d, e := dMgr.getDeviceReadOnly(ctx, deviceID); e == nil && d != nil {
-				childDevices = append(childDevices, d)
-			}
+	childDevices := make([]*voltha.Device, 0)
+	for deviceID := range dMgr.getAllChildDeviceIds(ctx, parentDeviceID) {
+		if d, e := dMgr.getDeviceReadOnly(ctx, deviceID); e == nil && d != nil {
+			childDevices = append(childDevices, d)
 		}
-		return &voltha.Devices{Items: childDevices}, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "%s", parentDeviceID)
+	return &voltha.Devices{Items: childDevices}, nil
 }
 
 func (dMgr *Manager) NotifyInvalidTransition(ctx context.Context, device *voltha.Device) error {
