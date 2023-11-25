@@ -178,11 +178,7 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, df *ca.ChildDeviceFilte
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "GetChildDevice")
 	logger.Debugw(ctx, "get-child-device", log.Fields{"filter": df})
 
-	parentDevicePorts, err := dMgr.listDevicePorts(ctx, df.ParentId)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
-	}
-	childDeviceIds := dMgr.getAllChildDeviceIds(ctx, parentDevicePorts)
+	childDeviceIds := dMgr.getAllChildDeviceIds(ctx,df.ParentId)
 	if len(childDeviceIds) == 0 {
 		logger.Debugw(ctx, "no-child-devices", log.Fields{"parent-device-id": df.ParentId, "serial-number": df.SerialNumber, "onu-id": df.OnuId})
 		return nil, status.Errorf(codes.NotFound, "%s", df.ParentId)
@@ -274,12 +270,8 @@ func (dMgr *Manager) ChildDevicesDetected(ctx context.Context, parentDeviceID *c
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildDevicesDetected")
 	logger.Debugw(ctx, "child-devices-detected", log.Fields{"parent-device-id": parentDeviceID})
 
-	parentDevicePorts, err := dMgr.listDevicePorts(ctx, parentDeviceID.Id)
-	if err != nil {
-		logger.Warnw(ctx, "failed-getting-device", log.Fields{"device-id": parentDeviceID.Id, "error": err})
-		return nil, err
-	}
-	childDeviceIds := dMgr.getAllChildDeviceIds(ctx, parentDevicePorts)
+	var err error
+	childDeviceIds := dMgr.getAllChildDeviceIds(ctx,parentDeviceID.Id)
 	if len(childDeviceIds) == 0 {
 		logger.Debugw(ctx, "no-child-device", log.Fields{"parent-device-id": parentDeviceID.Id})
 	}
@@ -311,11 +303,8 @@ func (dMgr *Manager) GetChildDeviceWithProxyAddress(ctx context.Context, proxyAd
 
 	logger.Debugw(ctx, "get-child-device-with-proxy-address", log.Fields{"proxyAddress": proxyAddress})
 
-	parentDevicePorts, err := dMgr.listDevicePorts(ctx, proxyAddress.DeviceId)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
-	}
-	childDeviceIds := dMgr.getAllChildDeviceIds(ctx, parentDevicePorts)
+
+	childDeviceIds := dMgr.getAllChildDeviceIds(ctx,proxyAddress.DeviceId)
 	if len(childDeviceIds) == 0 {
 		logger.Debugw(ctx, "no-child-devices", log.Fields{"parent-device-id": proxyAddress.DeviceId})
 		return nil, status.Errorf(codes.NotFound, "%s", proxyAddress)
@@ -362,13 +351,10 @@ func (dMgr *Manager) ChildrenStateUpdate(ctx context.Context, ds *ca.DeviceState
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildrenStateUpdate")
 	logger.Debugw(ctx, "children-state-update", log.Fields{"parent-device-id": ds.ParentDeviceId, "operStatus": ds.OperStatus, "connStatus": ds.ConnStatus})
 
-	parentDevicePorts, err := dMgr.listDevicePorts(ctx, ds.ParentDeviceId)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "%s", err.Error())
-	}
-	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, parentDevicePorts) {
+
+	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx,ds.ParentDeviceId) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
-			if err = agent.updateDeviceStatus(ctx, ds.OperStatus, ds.ConnStatus); err != nil {
+			if err := agent.updateDeviceStatus(ctx, ds.OperStatus, ds.ConnStatus); err != nil {
 				return nil, status.Errorf(codes.Aborted, "childDevice:%s, error:%s", childDeviceID, err.Error())
 			}
 		}
