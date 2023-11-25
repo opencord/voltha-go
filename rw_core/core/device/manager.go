@@ -709,16 +709,29 @@ func (dMgr *Manager) getAllChildDeviceIds(ctx context.Context, parentDevicePorts
 // GgtAllChildDevices is a helper method to get all the child device IDs from the device passed as parameter
 func (dMgr *Manager) getAllChildDevices(ctx context.Context, parentDeviceID string) (*voltha.Devices, error) {
 	logger.Debugw(ctx, "get-all-child-devices", log.Fields{"parent-device-id": parentDeviceID})
+	childDevices := make([]*voltha.Device, 0)
+	childDeviceIds := make(map[string]struct{})
 	if parentDevicePorts, err := dMgr.listDevicePorts(ctx, parentDeviceID); err == nil {
-		childDevices := make([]*voltha.Device, 0)
 		for deviceID := range dMgr.getAllChildDeviceIds(ctx, parentDevicePorts) {
 			if d, e := dMgr.getDeviceReadOnly(ctx, deviceID); e == nil && d != nil {
 				childDevices = append(childDevices, d)
+				childDeviceIds[d.Id] = struct{}{}
 			}
 		}
-		return &voltha.Devices{Items: childDevices}, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "%s", parentDeviceID)
+	dMgr.deviceAgents.Range(func(_, value interface{}) bool {
+		if value.(*Agent).device.ParentId == parentDeviceID {
+			d := value.(*Agent).device
+			_, ok := childDeviceIds[d.Id]
+			if !ok {
+				childDeviceIds[d.Id] = struct{}{}
+				childDevices = append(childDevices, d)
+			}
+		}
+		return true
+	})
+
+	return &voltha.Devices{Items: childDevices}, nil
 }
 
 func (dMgr *Manager) NotifyInvalidTransition(ctx context.Context, device *voltha.Device) error {
