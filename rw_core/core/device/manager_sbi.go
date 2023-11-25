@@ -227,6 +227,18 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, df *ca.ChildDeviceFilte
 		return foundChildDevice, nil
 	}
 
+	dMgr.deviceAgents.Range(func(_, value interface{}) bool {
+		if value.(*Agent).device.SerialNumber == df.SerialNumber && value.(*Agent).device.ParentPortNo == uint32(df.ParentPortNo) {
+			foundChildDevice = value.(*Agent).device
+			return false
+		}
+		return true
+	})
+	if foundChildDevice != nil {
+		logger.Debugw(ctx, "child-device-found", log.Fields{"parent-device-id": df.ParentId, "foundChildDevice": foundChildDevice})
+		return foundChildDevice, nil
+	}
+
 	logger.Debugw(ctx, "child-device-not-found", log.Fields{"parent-device-id": df.ParentId,
 		"serialNumber": df.SerialNumber, "onuId": df.OnuId, "parentPortNo": df.ParentPortNo})
 	return nil, status.Errorf(codes.NotFound, "%s", df.ParentId)
