@@ -124,8 +124,7 @@ func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice
 		return status.Errorf(codes.NotFound, "%s", parentCurrDevice.Id)
 	}
 
-	ports, _ := dMgr.listDevicePorts(ctx, parentCurrDevice.Id)
-	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, ports) {
+	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, parentCurrDevice.Id) {
 		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
 			logger.Debugw(ctx, "invoking-delete-device", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id})
 			if err := agent.deleteDeviceForce(ctx); err != nil {
