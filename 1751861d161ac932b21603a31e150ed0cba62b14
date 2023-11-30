@@ -3,6 +3,23 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "fb7281ae_6e3cab1b",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-11-30T10:04:10Z",
+      "side": 1,
+      "message": "is this still needed, understand you might have had this so that existing wont break. But can you check without this check",
+      "revId": "1751861d161ac932b21603a31e150ed0cba62b14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "68608437_df580330",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 4
