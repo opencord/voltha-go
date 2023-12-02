@@ -20,6 +20,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "53534ecc_962a66f6",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-12-02T17:23:40Z",
+      "side": 1,
+      "message": "using the search on the deviceAgents in the getchilddeviceids, so that same logic is applied everywhere, tested this in scale and mc, and manually",
+      "parentUuid": "fb7281ae_6e3cab1b",
+      "revId": "1751861d161ac932b21603a31e150ed0cba62b14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "68608437_df580330",
         "filename": "rw_core/core/device/manager.go",
         "patchSetId": 4
@@ -43,6 +61,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "ef24c9a8_19505dd0",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-12-02T17:23:40Z",
+      "side": 1,
+      "message": "using the search on the deviceAgents in the getchilddeviceids, so that same logic is applied everywhere",
+      "parentUuid": "68608437_df580330",
+      "range": {
+        "startLine": 722,
+        "startChar": 0,
+        "endLine": 734,
+        "endChar": 0
+      },
+      "revId": "1751861d161ac932b21603a31e150ed0cba62b14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "57d88e33_20dcbab7",
         "filename": "rw_core/core/device/manager_sbi.go",
         "patchSetId": 4
@@ -54,6 +96,30 @@
       "writtenOn": "2023-11-30T06:36:03Z",
       "side": 1,
       "message": "Filter may include serial number but not the port or the vice versa. In this case an \u0026\u0026 fails the if check.\nAlso if we can say that the search on deviceAgents gives the correct result, then why do we still keep the loop above?",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 230,
+        "endChar": 58
+      },
+      "revId": "1751861d161ac932b21603a31e150ed0cba62b14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "aed54833_120b10c6",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-12-02T17:23:40Z",
+      "side": 1,
+      "message": "using the search on the deviceAgents in the getchilddeviceids, so that same logic is applied everywhere",
+      "parentUuid": "57d88e33_20dcbab7",
       "range": {
         "startLine": 230,
         "startChar": 0,
