@@ -299,6 +299,13 @@ func TestValidTransitions(t *testing.T) {
 	assert.Equal(t, 1, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.ReconcilingCleanup).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 
+	previousDevice = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_REBOOTED)
+	device = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_RECONCILING)
+	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, core.DeviceTransientState_RECONCILE_IN_PROGRESS,
+		core.DeviceTransientState_RECONCILE_IN_PROGRESS)
+	assert.Equal(t, 1, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.CreateLogicalDevice).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+
 	var deleteDeviceTest = struct {
 		previousDevices        []*voltha.Device
 		devices                []*voltha.Device
@@ -422,10 +429,6 @@ func TestNoOpTransitions(t *testing.T) {
 	assertNoOpTransition(t, device, previousDevice, core.DeviceTransientState_NONE)
 
 	previousDevice = getDevice(true, voltha.AdminState_DOWNLOADING_IMAGE, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_UNKNOWN)
-	device = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_RECONCILING)
-	assertNoOpTransition(t, device, previousDevice, core.DeviceTransientState_RECONCILE_IN_PROGRESS)
-
-	previousDevice = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
 	device = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_RECONCILING)
 	assertNoOpTransition(t, device, previousDevice, core.DeviceTransientState_RECONCILE_IN_PROGRESS)
 
