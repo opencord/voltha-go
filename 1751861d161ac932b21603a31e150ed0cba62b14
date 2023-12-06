@@ -101,6 +101,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "83722a62_4c9d2078",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-12-06T04:57:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef24c9a8_19505dd0",
+      "range": {
+        "startLine": 722,
+        "startChar": 0,
+        "endLine": 734,
+        "endChar": 0
+      },
+      "revId": "1751861d161ac932b21603a31e150ed0cba62b14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "57d88e33_20dcbab7",
@@ -138,6 +162,30 @@
       "side": 1,
       "message": "using the search on the deviceAgents in the getchilddeviceids, so that same logic is applied everywhere",
       "parentUuid": "57d88e33_20dcbab7",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 230,
+        "endChar": 58
+      },
+      "revId": "1751861d161ac932b21603a31e150ed0cba62b14",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "50a30cf4_080b6188",
+        "filename": "rw_core/core/device/manager_sbi.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-12-06T04:57:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aed54833_120b10c6",
       "range": {
         "startLine": 230,
         "startChar": 0,
