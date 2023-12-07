@@ -557,7 +557,7 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 	prevAdminState = agent.device.AdminState
 
 	if !agent.proceedWithRequest(cloned) {
-		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress or reconciling is in progress/failed: %s", agent.deviceID)
+		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress/failed: %s", agent.deviceID)
 		agent.requestQueue.RequestComplete()
 		return err
 	}
@@ -1490,9 +1490,9 @@ func (agent *Agent) ReconcileDevice(ctx context.Context) {
 		return
 	}
 
-	if !agent.proceedWithRequest(device) {
+	if agent.isDeletionInProgress() {
 		agent.requestQueue.RequestComplete()
-		err := fmt.Errorf("cannot complete operation as device deletion/reconciling is in progress or reconcile failed for device : %s", device.Id)
+		err := fmt.Errorf("cannot complete operation as device deletion is in progress device : %s", device.Id)
 		logger.Errorw(ctx, "reconcile-failed", log.Fields{"error": err})
 		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
 		return
