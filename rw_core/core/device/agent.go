@@ -1490,9 +1490,9 @@ func (agent *Agent) ReconcileDevice(ctx context.Context) {
 		return
 	}
 
-	if !agent.proceedWithRequest(device) {
+	if agent.isDeletionInProgress() {
 		agent.requestQueue.RequestComplete()
-		err := fmt.Errorf("cannot complete operation as device deletion/reconciling is in progress or reconcile failed for device : %s", device.Id)
+		err := fmt.Errorf("cannot complete operation as device deletion is in progress or reconcile failed for device : %s", device.Id)
 		logger.Errorw(ctx, "reconcile-failed", log.Fields{"error": err})
 		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
 		return

@@ -19,6 +19,7 @@ package device
 import (
 	"context"
 	"fmt"
+	"github.com/opencord/voltha-protos/v5/go/common"
 	"sync"
 	"time"
 
@@ -121,10 +122,10 @@ func (dMgr *Manager) Start(ctx context.Context, serviceName string) error {
 		} else {
 			dMgr.addDeviceAgentToMap(agent)
 		}
+		if device.OperStatus != common.OperStatus_RECONCILING && (device.OperStatus == common.OperStatus_RECONCILING_FAILED || agent.matchTransientState(core.DeviceTransientState_RECONCILE_IN_PROGRESS)) {
+			go agent.ReconcileDevice(ctx)
+		}
 	}
-
-	// TODO: Need to trigger a reconcile at this point
-
 	logger.Info(ctx, "device-manager-started")
 
 	return nil
