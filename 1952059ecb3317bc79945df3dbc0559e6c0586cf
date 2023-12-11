@@ -33,6 +33,24 @@
       "message": "Minor nit -- surrounding comments are written as:\n  //\u003cspace\u003eIn case core goes down",
       "revId": "1952059ecb3317bc79945df3dbc0559e6c0586cf",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6f94cd88_ba0b3e0c",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-12-11T16:28:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2838c45b_d6e05d3a",
+      "revId": "1952059ecb3317bc79945df3dbc0559e6c0586cf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
