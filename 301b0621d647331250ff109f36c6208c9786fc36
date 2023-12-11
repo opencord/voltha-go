@@ -16,6 +16,24 @@
       "message": "Put a comment here, like, the situation can happen when the reconcile is happening and core went for a restart. After core comes back up the core has to retry the reconcile",
       "revId": "301b0621d647331250ff109f36c6208c9786fc36",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bc04cfe7_7ef952e6",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-12-11T08:38:41Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "4a8b5a04_ec8af7a2",
+      "revId": "301b0621d647331250ff109f36c6208c9786fc36",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
