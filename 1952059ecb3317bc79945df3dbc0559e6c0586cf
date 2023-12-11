@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1ab70f60_5ea58fdc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-12-11T14:42:10Z",
+      "side": 1,
+      "message": "Aside from the minor nit (comment formatting): LGTM\n\nAbhilash(s) review input cleaned up:\n  - TODO: mark review input (click) \u0027DONE\u0027 VS adding a comment string \u0027done\u0027.\n\ngo.mod: voltha-protos @ v5.4.10\n% gofmt -sw reports no formatting problems.\n% make lint LOCAL_FIX_PERMS\u003d1 ran successfully\n[etc...]",
+      "revId": "1952059ecb3317bc79945df3dbc0559e6c0586cf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2838c45b_d6e05d3a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-12-11T14:42:10Z",
+      "side": 1,
+      "message": "Minor nit -- surrounding comments are written as:\n  //\u003cspace\u003eIn case core goes down",
+      "revId": "1952059ecb3317bc79945df3dbc0559e6c0586cf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
