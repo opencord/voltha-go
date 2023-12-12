@@ -16,6 +16,24 @@
       "message": "Just add a comment on the scenarion can happen",
       "revId": "4a7e6077892657f01f4151e1630f956232f0174d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4a50b0d2_3fdbdd50",
+        "filename": "rw_core/core/device/state/transitions.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-12-12T05:32:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "06a23384_2c1f66f8",
+      "revId": "4a7e6077892657f01f4151e1630f956232f0174d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
