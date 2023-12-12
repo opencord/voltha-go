@@ -18,6 +18,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "4ba34f40_0ad68003",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-12-12T05:30:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ab70f60_5ea58fdc",
+      "revId": "1952059ecb3317bc79945df3dbc0559e6c0586cf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "2838c45b_d6e05d3a",
@@ -49,6 +67,24 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "2838c45b_d6e05d3a",
+      "revId": "1952059ecb3317bc79945df3dbc0559e6c0586cf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2a10358b_314bf92a",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-12-12T05:30:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f94cd88_ba0b3e0c",
       "revId": "1952059ecb3317bc79945df3dbc0559e6c0586cf",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
