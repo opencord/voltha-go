@@ -1572,6 +1572,18 @@ retry:
 			agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
 			break retry
 		}
+		st, ok := status.FromError(err)
+		if ok {
+			// Decode the error code and error message
+			errorCode := st.Code()
+			if errorCode == codes.AlreadyExists {
+				logger.Errorw(ctx, "device already reconciled", log.Fields{"error": err})
+				agent.reconcilingCleanup(ctx)
+				break
+
+			}
+
+		}
 		if err != nil {
 			agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
 			<-backoffTimer.C
