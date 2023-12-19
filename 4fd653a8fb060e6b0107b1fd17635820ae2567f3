@@ -34,6 +34,24 @@
       "parentUuid": "84f0fba4_e656ea7c",
       "revId": "4fd653a8fb060e6b0107b1fd17635820ae2567f3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8b20f543_4c923665",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1580,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-12-19T07:43:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a5800614_cd21fe7c",
+      "revId": "4fd653a8fb060e6b0107b1fd17635820ae2567f3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
