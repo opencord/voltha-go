@@ -138,3 +138,4 @@ func (aa *agent) IsConnectionUp() bool {
 	_, err := aa.getClient()
 	return err == nil
 }
+# [EOF] - delta:force

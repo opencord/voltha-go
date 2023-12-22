@@ -25,3 +25,4 @@ func realMain() {
 	ctx := context.Background()
 	logger.Infoln(ctx, "NOT PROFILING")
 }
+# [EOF] - delta:force

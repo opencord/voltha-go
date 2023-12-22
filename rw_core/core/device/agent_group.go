@@ -288,3 +288,4 @@ func (agent *Agent) updateGroupsToAdapter(ctx context.Context, updatedGroups []*
 	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	return response, nil
 }
+# [EOF] - delta:force

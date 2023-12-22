@@ -861,3 +861,4 @@ func (dMgr *Manager) adapterRestartedHandler(ctx context.Context, endpoint strin
 	logger.Errorw(ctx, "restarted-adapter-not-found", log.Fields{"endpoint": endpoint})
 	return fmt.Errorf("restarted adapter at endpoint %s not found", endpoint)
 }
+# [EOF] - delta:force

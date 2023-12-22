@@ -635,3 +635,4 @@ func (ldMgr *LogicalManager) SendRPCEvent(ctx context.Context, resourceID, desc 
 	ldMgr.Manager.Agent.GetAndSendRPCEvent(ctx, resourceID, desc, context, id,
 		category, subCategory, raisedTs)
 }
+# [EOF] - delta:force

@@ -98,3 +98,4 @@ func (handler *APIHandler) GetAlarmDeviceData(context.Context, *common.ID) (*omc
 func (handler *APIHandler) GetMibDeviceData(context.Context, *common.ID) (*omci.MibDeviceData, error) {
 	return nil, errUnimplemented
 }
+# [EOF] - delta:force

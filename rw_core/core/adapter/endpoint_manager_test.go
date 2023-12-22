@@ -256,3 +256,4 @@ func TestEndpointManagerSuite(t *testing.T) {
 	//2. Test APIs with single replica
 	tmt.testEndpointManagerAPIs(t, tm, "adapter_openolt", "openolt", tmt.minReplicas)
 }
+# [EOF] - delta:force

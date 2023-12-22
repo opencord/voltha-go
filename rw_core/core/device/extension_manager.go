@@ -70,3 +70,4 @@ func (e ExtensionManager) SetExtValue(ctx context.Context, request *extension.Si
 	logger.Debugw(ctx, "SetExtValue response", log.Fields{"response": response})
 	return response, nil
 }
+# [EOF] - delta:force

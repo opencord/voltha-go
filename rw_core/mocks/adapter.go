@@ -410,3 +410,4 @@ func (ta *Adapter) SetDeleteAction(deviceID string, failDeleteDevice bool) {
 	defer ta.failDeleteDeviceLock.Unlock()
 	ta.failDeleteDevice[deviceID] = failDeleteDevice
 }
+# [EOF] - delta:force

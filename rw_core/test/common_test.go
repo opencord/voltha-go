@@ -508,3 +508,4 @@ func (cel *ChangedEventListener) Subscribe(bufferSize int) chan *ofp.ChangeEvent
 func (cel *ChangedEventListener) Unsubscribe(eventCh chan *ofp.ChangeEvent) {
 	cel.eventUnSubscriber <- eventCh
 }
+# [EOF] - delta:force

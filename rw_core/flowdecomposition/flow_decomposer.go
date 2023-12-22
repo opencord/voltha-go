@@ -545,3 +545,4 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDevice
 	deviceRules, err = fd.updateOutputPortForControllerBoundFlowForParentDevice(ctx, deviceRules)
 	return deviceRules, err
 }
+# [EOF] - delta:force

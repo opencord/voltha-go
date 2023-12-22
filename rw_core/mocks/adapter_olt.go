@@ -489,3 +489,4 @@ func (oltA *OLTAdapter) SetDeviceRebooted(deviceID string) {
 	}
 
 }
+# [EOF] - delta:force

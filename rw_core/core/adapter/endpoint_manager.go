@@ -468,3 +468,4 @@ func (m *member) getID() string {
 func (m *member) getAdapterType() string {
 	return m.adapterType
 }
+# [EOF] - delta:force

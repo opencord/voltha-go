@@ -118,3 +118,4 @@ func (h *Handle) UnLock() {
 	defer h.loader.lock.Unlock()
 	h.data = nil
 }
+# [EOF] - delta:force

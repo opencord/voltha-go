@@ -253,3 +253,4 @@ func WaitForExit(ctx context.Context) int {
 		return 1
 	}
 }
+# [EOF] - delta:force

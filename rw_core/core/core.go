@@ -229,3 +229,4 @@ func addGRPCExtensionService(ctx context.Context, server *grpcserver.GrpcServer,
 		extension.RegisterExtensionServer(server, handler)
 	})
 }
+# [EOF] - delta:force

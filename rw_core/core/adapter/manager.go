@@ -626,3 +626,4 @@ func (aMgr *Manager) WaitUntilConnectionsToAdaptersAreUp(ctx context.Context, co
 		}
 	}
 }
+# [EOF] - delta:force

@@ -590,3 +590,4 @@ func (dat *DATest) registerAdapters(ctx context.Context) {
 		logger.Fatalw(ctx, "onu registration failed", log.Fields{"error": err})
 	}
 }
+# [EOF] - delta:force

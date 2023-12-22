@@ -356,3 +356,4 @@ func TestLogicalAgentStopWithEventsInQueue(t *testing.T) {
 	lda.updateLogicalDevice(t, a)
 	lda.stopLogicalAgentAndCheckEventQueueIsEmpty(ctx, t, a)
 }
+# [EOF] - delta:force
