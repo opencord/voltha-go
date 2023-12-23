@@ -79,3 +79,5 @@ func (agent *Agent) isInReconcileState(device *voltha.Device) bool {
 	return device.OperStatus == common.OperStatus_RECONCILING || device.OperStatus == common.OperStatus_RECONCILING_FAILED ||
 		agent.matchTransientState(core.DeviceTransientState_RECONCILE_IN_PROGRESS)
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

@@ -517,3 +517,5 @@ func isEqual(routes1 map[PathID][]Hop, routes2 map[PathID][]Hop) bool {
 	}
 	return true
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

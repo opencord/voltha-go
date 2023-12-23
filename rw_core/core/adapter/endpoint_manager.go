@@ -468,3 +468,5 @@ func (m *member) getID() string {
 func (m *member) getAdapterType() string {
 	return m.adapterType
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

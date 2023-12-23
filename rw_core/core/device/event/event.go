@@ -345,3 +345,5 @@ func (q *Agent) SendDeviceDeletedEvent(ctx context.Context, device *voltha.Devic
 	logger.Debugw(ctx, "device-deleted-event-sent", log.Fields{"event": *de})
 	return nil
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

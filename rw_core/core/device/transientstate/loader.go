@@ -118,3 +118,5 @@ func (h *Handle) UnLock() {
 	defer h.loader.lock.Unlock()
 	h.data = nil
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

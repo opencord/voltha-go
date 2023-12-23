@@ -253,3 +253,5 @@ func WaitForExit(ctx context.Context) int {
 		return 1
 	}
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

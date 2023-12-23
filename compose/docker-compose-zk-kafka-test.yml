@@ -43,3 +43,4 @@ services:
       SERVICE_9092_NAME: "kafka"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+# [EOF] - 20231222: Ignore, this triage patch will be abandoned

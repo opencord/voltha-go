@@ -356,3 +356,5 @@ func TestLogicalAgentStopWithEventsInQueue(t *testing.T) {
 	lda.updateLogicalDevice(t, a)
 	lda.stopLogicalAgentAndCheckEventQueueIsEmpty(ctx, t, a)
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

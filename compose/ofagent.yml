@@ -42,3 +42,4 @@ services:
     volumes:
     - "/var/run/docker.sock:/tmp/docker.sock"
     restart: unless-stopped
+# [EOF] - 20231222: Ignore, this triage patch will be abandoned

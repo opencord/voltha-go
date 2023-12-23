@@ -25,3 +25,5 @@ func realMain() {
 	ctx := context.Background()
 	logger.Infoln(ctx, "NOT PROFILING")
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

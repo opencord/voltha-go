@@ -229,3 +229,5 @@ func addGRPCExtensionService(ctx context.Context, server *grpcserver.GrpcServer,
 		extension.RegisterExtensionServer(server, handler)
 	})
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

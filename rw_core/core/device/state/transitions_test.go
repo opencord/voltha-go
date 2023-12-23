@@ -466,3 +466,5 @@ func TestMatch(t *testing.T) {
 	m := &match{admin: currStateOnlyMatch, oper: currWildcardMatch, conn: currWildcardMatch, transient: currWildcardMatch}
 	fmt.Println(m.isBetterMatch(best), m.toInt(), best.toInt())
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

@@ -635,3 +635,5 @@ func (ldMgr *LogicalManager) SendRPCEvent(ctx context.Context, resourceID, desc 
 	ldMgr.Manager.Agent.GetAndSendRPCEvent(ctx, resourceID, desc, context, id,
 		category, subCategory, raisedTs)
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

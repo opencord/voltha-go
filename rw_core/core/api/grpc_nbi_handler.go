@@ -98,3 +98,5 @@ func (handler *APIHandler) GetAlarmDeviceData(context.Context, *common.ID) (*omc
 func (handler *APIHandler) GetMibDeviceData(context.Context, *common.ID) (*omci.MibDeviceData, error) {
 	return nil, errUnimplemented
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

@@ -590,3 +590,5 @@ func (dat *DATest) registerAdapters(ctx context.Context) {
 		logger.Fatalw(ctx, "onu registration failed", log.Fields{"error": err})
 	}
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

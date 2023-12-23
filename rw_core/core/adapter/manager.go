@@ -626,3 +626,5 @@ func (aMgr *Manager) WaitUntilConnectionsToAdaptersAreUp(ctx context.Context, co
 		}
 	}
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

@@ -520,3 +520,5 @@ func (agent *LogicalAgent) getUNILogicalPortNo(flow *ofp.OfpFlowStats) (uint32, 
 	}
 	return 0, status.Errorf(codes.NotFound, "no-uni-port: %v", flow)
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

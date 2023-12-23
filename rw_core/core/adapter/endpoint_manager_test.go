@@ -256,3 +256,5 @@ func TestEndpointManagerSuite(t *testing.T) {
 	//2. Test APIs with single replica
 	tmt.testEndpointManagerAPIs(t, tm, "adapter_openolt", "openolt", tmt.minReplicas)
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

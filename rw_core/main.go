@@ -143,3 +143,5 @@ func main() {
 
 	logger.Infow(ctx, "rw-core-run-time", log.Fields{"core": instanceID, "time": elapsed / time.Second})
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

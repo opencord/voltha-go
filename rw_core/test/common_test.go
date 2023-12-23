@@ -508,3 +508,5 @@ func (cel *ChangedEventListener) Subscribe(bufferSize int) chan *ofp.ChangeEvent
 func (cel *ChangedEventListener) Unsubscribe(eventCh chan *ofp.ChangeEvent) {
 	cel.eventUnSubscriber <- eventCh
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

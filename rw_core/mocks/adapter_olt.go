@@ -489,3 +489,5 @@ func (oltA *OLTAdapter) SetDeviceRebooted(deviceID string) {
 	}
 
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned

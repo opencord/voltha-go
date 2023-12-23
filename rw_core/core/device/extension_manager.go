@@ -70,3 +70,5 @@ func (e ExtensionManager) SetExtValue(ctx context.Context, request *extension.Si
 	logger.Debugw(ctx, "SetExtValue response", log.Fields{"response": response})
 	return response, nil
 }
+
+// [EOF] - 20231222: Ignore, this triage patch will be abandoned
