@@ -1121,6 +1121,10 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 		}
 	}
 
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, device.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": device.Id, "error": err})
+		return err
+	}
 	//send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1169,7 +1173,10 @@ func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *omci.Omc
 			return nil, err
 		}
 	}
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		return nil, err
+	}
 	// Send request to the adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1203,7 +1210,11 @@ func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cde
 	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter synchronously
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, pdevice.AdapterEndpoint)
 	if err != nil {
@@ -1243,7 +1254,11 @@ func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, valu
 	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, device.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": device.Id, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter
 	//send request to adapter synchronously
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
@@ -1284,7 +1299,11 @@ func (agent *Agent) getSingleValue(ctx context.Context, request *extension.Singl
 	}
 
 	cloned := agent.cloneDeviceWithoutLock()
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, cloned.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": cloned.Id, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1320,7 +1339,11 @@ func (agent *Agent) setSingleValue(ctx context.Context, request *extension.Singl
 	}
 
 	cloned := agent.cloneDeviceWithoutLock()
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, cloned.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": cloned.Id, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1698,4 +1721,12 @@ func (agent *Agent) canDeviceRequestProceed(ctx context.Context) error {
 		return nil
 	}
 	return fmt.Errorf("device-cannot-process-request-%s", agent.deviceID)
+}
+
+func (agent *Agent) isDeviceInGoodState(ctx context.Context) error {
+	if agent.device.AdminState == common.AdminState_ENABLED && agent.device.OperStatus == common.OperStatus_ACTIVE && agent.device.ConnectStatus == common.ConnectStatus_REACHABLE {
+		return nil
+	}
+	logger.Errorf(ctx, "device-cannot-process-request", log.Fields{"deviceId ": agent.deviceID, "AdminState ": agent.device.AdminState, "OperStatus ": agent.device.OperStatus, "ConnectStatus ": agent.device.ConnectStatus})
+	return fmt.Errorf("device-not-in-proper-state-cannot-process-request-%s", agent.deviceID)
 }
