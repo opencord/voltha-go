@@ -491,6 +491,33 @@ func (dMgr *Manager) canAdapterRequestProceed(ctx context.Context, deviceID stri
 	return nil
 }
 
+func (dMgr *Manager) areDevicesAndAdaptersReady(ctx context.Context, deviceID string) error {
+	agent := dMgr.getDeviceAgent(ctx, deviceID)
+	if agent == nil {
+		logger.Errorw(ctx, "device-nil", log.Fields{"device-id": deviceID})
+		return status.Errorf(codes.NotFound, "device-nil-for-%s", deviceID)
+	}
+	if !agent.isAdapterConnectionUp(ctx) {
+		return status.Errorf(codes.Unavailable, "adapter-connection-down-for-%s", deviceID)
+	}
+	if err := agent.isDeviceReachableAndActive(ctx); err != nil {
+		return err
+	}
+	// Perform the same checks for parent device
+	if !agent.isRootDevice {
+		parentDeviceAgent := dMgr.getDeviceAgent(ctx, agent.parentID)
+		if parentDeviceAgent == nil {
+			logger.Errorw(ctx, "parent-device-adapter-nil", log.Fields{"parent-id": agent.parentID})
+			return status.Errorf(codes.NotFound, "parent-device-adapter-nil-for-%s", deviceID)
+		}
+		if err := parentDeviceAgent.isDeviceReachableAndActive(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (dMgr *Manager) canMultipleAdapterRequestProceed(ctx context.Context, deviceIDs []string) error {
 	if len(deviceIDs) == 0 {
 		return status.Error(codes.Unavailable, "adapter(s)-not-ready")
