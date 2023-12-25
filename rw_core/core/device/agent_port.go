@@ -241,7 +241,10 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 	var desc string
 	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 	defer func() { agent.logDeviceUpdate(ctx, nil, nil, operStatus, err, desc) }()
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		return err
+	}
 	portHandle, have := agent.portLoader.Lock(portID)
 	if !have {
 		err = status.Errorf(codes.InvalidArgument, "%v", portID)
@@ -301,7 +304,10 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 	var desc string
 	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 	defer func() { agent.logDeviceUpdate(ctx, nil, nil, operStatus, err, desc) }()
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		return err
+	}
 	portHandle, have := agent.portLoader.Lock(portID)
 	if !have {
 		err = status.Errorf(codes.InvalidArgument, "%v", portID)

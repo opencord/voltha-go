@@ -491,6 +491,33 @@ func (dMgr *Manager) canAdapterRequestProceed(ctx context.Context, deviceID stri
 	return nil
 }
 
+func (dMgr *Manager) areDevicesAndAdaptersReady(ctx context.Context, deviceID string) error {
+	agent := dMgr.getDeviceAgent(ctx, deviceID)
+	if agent == nil {
+		logger.Errorw(ctx, "device-nil", log.Fields{"device-id": deviceID})
+		return status.Errorf(codes.NotFound, "device-nil-for-%s", deviceID)
+	}
+	if !agent.isAdapterConnectionUp(ctx) {
+		return status.Errorf(codes.Unavailable, "adapter-connection-down-for-%s", deviceID)
+	}
+	if err := agent.isDeviceReachableAndActive(ctx); err != nil {
+		return err
+	}
+	// Perform the same checks for parent device
+	if !agent.isRootDevice {
+		parentDeviceAgent := dMgr.getDeviceAgent(ctx, agent.parentID)
+		if parentDeviceAgent == nil {
+			logger.Errorw(ctx, "parent-device-adapter-nil", log.Fields{"parent-id": agent.parentID})
+			return status.Errorf(codes.NotFound, "parent-device-adapter-nil-for-%s", deviceID)
+		}
+		if err := parentDeviceAgent.isDeviceReachableAndActive(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (dMgr *Manager) canMultipleAdapterRequestProceed(ctx context.Context, deviceIDs []string) error {
 	if len(deviceIDs) == 0 {
 		return status.Error(codes.Unavailable, "adapter(s)-not-ready")
@@ -508,6 +535,10 @@ func (dMgr *Manager) canMultipleAdapterRequestProceed(ctx context.Context, devic
 func (dMgr *Manager) addFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	logger.Debugw(ctx, "add-flows-and-groups", log.Fields{"device-id": deviceID, "groups:": groups, "flow-metadata": flowMetadata})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
+		if err := dMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+			logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+			return err
+		}
 		return agent.addFlowsAndGroups(ctx, flows, groups, flowMetadata)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
@@ -520,6 +551,10 @@ func (dMgr *Manager) deleteParentFlows(ctx context.Context, deviceID string, uni
 		if !agent.isRootDevice {
 			return status.Errorf(codes.FailedPrecondition, "not-a-parent-device-%s", deviceID)
 		}
+		if err := dMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+			logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+			return err
+		}
 		return agent.filterOutFlows(ctx, uniPort, metadata)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
@@ -528,6 +563,10 @@ func (dMgr *Manager) deleteParentFlows(ctx context.Context, deviceID string, uni
 func (dMgr *Manager) deleteFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	logger.Debugw(ctx, "delete-flows-and-groups", log.Fields{"device-id": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
+		if err := dMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+			logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+			return err
+		}
 		return agent.deleteFlowsAndGroups(ctx, flows, groups, flowMetadata)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
@@ -536,6 +575,10 @@ func (dMgr *Manager) deleteFlowsAndGroups(ctx context.Context, deviceID string, 
 func (dMgr *Manager) updateFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	logger.Debugw(ctx, "update-flows-and-groups", log.Fields{"device-id": deviceID})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
+		if err := dMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+			logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+			return err
+		}
 		return agent.updateFlowsAndGroups(ctx, flows, groups, flowMetadata)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
