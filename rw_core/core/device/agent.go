@@ -489,6 +489,10 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		return err
+	}
 	//if new flow list is empty then the called function returns quickly
 	if flwResponse, err = agent.addFlowsToAdapter(ctx, newFlows, flowMetadata); err != nil {
 		return err
@@ -509,6 +513,10 @@ func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFl
 func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.OfpFlowStats, groupsToDel []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		return err
+	}
 	if flwResponse, err = agent.deleteFlowsFromAdapter(ctx, flowsToDel, flowMetadata); err != nil {
 		return err
 	}
@@ -527,6 +535,10 @@ func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.
 func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*ofp.OfpFlowStats, updatedGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		return err
+	}
 	if flwResponse, err = agent.updateFlowsToAdapter(ctx, updatedFlows, flowMetadata); err != nil {
 		return err
 	}
@@ -555,7 +567,11 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 
 	cloned := agent.cloneDeviceWithoutLock()
 	prevAdminState = agent.device.AdminState
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		agent.requestQueue.RequestComplete()
+		return err
+	}
 	if !agent.proceedWithRequest(cloned) {
 		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress/failed: %s", agent.deviceID)
 		agent.requestQueue.RequestComplete()
@@ -624,7 +640,10 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	logger.Debugw(ctx, "reboot-device", log.Fields{"device-id": agent.deviceID})
 
 	device := agent.getDeviceReadOnlyWithoutLock()
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		return err
+	}
 	if !agent.proceedWithRequest(device) {
 		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress or reconciling is in progress/failed:%s", agent.deviceID)
 		return err
@@ -1121,6 +1140,10 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 		}
 	}
 
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, device.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": device.Id, "error": err})
+		return err
+	}
 	//send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1169,7 +1192,10 @@ func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *omci.Omc
 			return nil, err
 		}
 	}
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		return nil, err
+	}
 	// Send request to the adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1203,7 +1229,11 @@ func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cde
 	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter synchronously
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, pdevice.AdapterEndpoint)
 	if err != nil {
@@ -1243,7 +1273,11 @@ func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, valu
 	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, device.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": device.Id, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter
 	//send request to adapter synchronously
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
@@ -1284,7 +1318,11 @@ func (agent *Agent) getSingleValue(ctx context.Context, request *extension.Singl
 	}
 
 	cloned := agent.cloneDeviceWithoutLock()
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, cloned.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": cloned.Id, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1320,7 +1358,11 @@ func (agent *Agent) setSingleValue(ctx context.Context, request *extension.Singl
 	}
 
 	cloned := agent.cloneDeviceWithoutLock()
-
+	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, cloned.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": cloned.Id, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1698,4 +1740,12 @@ func (agent *Agent) canDeviceRequestProceed(ctx context.Context) error {
 		return nil
 	}
 	return fmt.Errorf("device-cannot-process-request-%s", agent.deviceID)
+}
+
+func (agent *Agent) isDeviceReachableAndActive(ctx context.Context) error {
+	if agent.device.AdminState == common.AdminState_ENABLED && agent.device.OperStatus == common.OperStatus_ACTIVE && agent.device.ConnectStatus == common.ConnectStatus_REACHABLE {
+		return nil
+	}
+	logger.Errorf(ctx, "device-cannot-process-request", log.Fields{"deviceId ": agent.deviceID, "AdminState ": agent.device.AdminState, "OperStatus ": agent.device.OperStatus, "ConnectStatus ": agent.device.ConnectStatus})
+	return fmt.Errorf("device-not-in-active-enabled-reachable-state-cannot-process-request-%s", agent.deviceID)
 }
