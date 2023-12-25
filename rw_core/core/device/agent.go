@@ -1121,6 +1121,14 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 		}
 	}
 
+	if err := agent.canDeviceRequestProceed(ctx); err != nil && agent.getTransientState() != core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE && agent.getTransientState() != core.DeviceTransientState_FORCE_DELETING && agent.getTransientState() != core.DeviceTransientState_NONE {
+		logger.Warnw(ctx, "device-not-ready", log.Fields{"device-id": device.Id, "error": err})
+		return err
+	}
+	if err := agent.deviceMgr.canAdapterRequestProceed(ctx, device.Id); err != nil && agent.getTransientState() != core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE && agent.getTransientState() != core.DeviceTransientState_NONE {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": device.Id, "error": err})
+		return err
+	}
 	//send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1169,7 +1177,10 @@ func (agent *Agent) startOmciTest(ctx context.Context, omcitestrequest *omci.Omc
 			return nil, err
 		}
 	}
-
+	if err := agent.deviceMgr.canAdapterRequestProceed(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		return nil, err
+	}
 	// Send request to the adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1203,7 +1214,11 @@ func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cde
 	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-
+	if err := agent.deviceMgr.canAdapterRequestProceed(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter synchronously
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, pdevice.AdapterEndpoint)
 	if err != nil {
@@ -1243,7 +1258,11 @@ func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, valu
 	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
-
+	if err := agent.deviceMgr.canAdapterRequestProceed(ctx, device.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": device.Id, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter
 	//send request to adapter synchronously
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
@@ -1284,7 +1303,11 @@ func (agent *Agent) getSingleValue(ctx context.Context, request *extension.Singl
 	}
 
 	cloned := agent.cloneDeviceWithoutLock()
-
+	if err := agent.deviceMgr.canAdapterRequestProceed(ctx, cloned.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": cloned.Id, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1320,7 +1343,11 @@ func (agent *Agent) setSingleValue(ctx context.Context, request *extension.Singl
 	}
 
 	cloned := agent.cloneDeviceWithoutLock()
-
+	if err := agent.deviceMgr.canAdapterRequestProceed(ctx, cloned.Id); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": cloned.Id, "error": err})
+		agent.requestQueue.RequestComplete()
+		return nil, err
+	}
 	//send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
@@ -1406,6 +1433,11 @@ func (agent *Agent) DeleteDevicePostAdapterRestart(ctx context.Context) error {
 		logger.Debugw(ctx, "device-in-preprovisioning-state-reconcile-not-needed", log.Fields{"device-id": device.Id})
 		agent.requestQueue.RequestComplete()
 		return nil
+	}
+	if err := agent.deviceMgr.canAdapterRequestProceed(ctx, agent.deviceID); err != nil {
+		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
+		agent.requestQueue.RequestComplete()
+		return err
 	}
 	// Change device transient state to FORCE_DELETING
 	if err := agent.updateTransientState(ctx, core.DeviceTransientState_FORCE_DELETING); err != nil {
