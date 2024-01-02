@@ -491,7 +491,7 @@ func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFl
 	var err error
 	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
 		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
-		return  err
+		return err
 	}
 	//if new flow list is empty then the called function returns quickly
 	if flwResponse, err = agent.addFlowsToAdapter(ctx, newFlows, flowMetadata); err != nil {
@@ -515,7 +515,7 @@ func (agent *Agent) deleteFlowsAndGroups(ctx context.Context, flowsToDel []*ofp.
 	var err error
 	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
 		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
-		return  err
+		return err
 	}
 	if flwResponse, err = agent.deleteFlowsFromAdapter(ctx, flowsToDel, flowMetadata); err != nil {
 		return err
@@ -537,7 +537,7 @@ func (agent *Agent) updateFlowsAndGroups(ctx context.Context, updatedFlows []*of
 	var err error
 	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
 		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
-		return  err
+		return err
 	}
 	if flwResponse, err = agent.updateFlowsToAdapter(ctx, updatedFlows, flowMetadata); err != nil {
 		return err
@@ -642,7 +642,7 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	device := agent.getDeviceReadOnlyWithoutLock()
 	if err := agent.deviceMgr.areDevicesAndAdaptersReady(ctx, agent.deviceID); err != nil {
 		logger.Warnw(ctx, "adapters-not-ready", log.Fields{"device-id": agent.deviceID, "error": err})
-		return  err
+		return err
 	}
 	if !agent.proceedWithRequest(device) {
 		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress or reconciling is in progress/failed:%s", agent.deviceID)
