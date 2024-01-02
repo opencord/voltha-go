@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "55114bf7_7fbc7216",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2024-01-02T15:57:11Z",
+      "side": 1,
+      "message": "same check required here !!",
+      "revId": "df7be5f7d6a478685b75f9c6fe5ecb2c27ef6920",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e96387d3_ce083895",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2024-01-02T15:57:11Z",
+      "side": 1,
+      "message": "we need this check here as well correct ?",
+      "revId": "df7be5f7d6a478685b75f9c6fe5ecb2c27ef6920",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
