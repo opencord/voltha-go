@@ -20,6 +20,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "83e1b79b_2a38ac71",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1726,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2024-01-02T20:58:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9477658c_f88289fc",
+      "revId": "64b6dfd0b41d0c82ad6dc768aa116be04bb08311",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "0eb398b2_d1629489",
         "filename": "rw_core/core/device/agent.go",
         "patchSetId": 4
@@ -31,6 +49,24 @@
       "writtenOn": "2024-01-02T15:57:11Z",
       "side": 1,
       "message": "we can mention device not in ACTIVE and REACHABLE state",
+      "revId": "64b6dfd0b41d0c82ad6dc768aa116be04bb08311",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d69c80b5_69152384",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1731,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2024-01-02T20:58:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0eb398b2_d1629489",
       "revId": "64b6dfd0b41d0c82ad6dc768aa116be04bb08311",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
