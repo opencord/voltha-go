@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "babbb97a_3d5144fb",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2024-01-02T22:03:16Z",
+      "side": 1,
+      "message": "1) Clicked [done] button on 4 unresolved items in the history that were updated with comment \"Done\". \n This will cleanup the unresolved review item count displayed beneath commit message.\n\n2) Jenkins job reported a linting failure last attempt \u003d\u003e -1 verify\n   https://jenkins.opencord.org/job/verify_voltha-go_unit-test-lint/2795/console\n\n3) make fmt; git status\n   modified:   rw_core/core/device/agent.go\n\nRun \"gofmt -s -e -w\" to repair items #2 \u0026 #3",
+      "revId": "135e20289d84791031898bdfa3387792e54d3092",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
