@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2022 Open Networking Foundation (ONF) and the ONF Contributors
+# Copyright 2017-2024 Open Networking Foundation (ONF) and the ONF Contributors
 # SPDX-FileCopyrightText: 2022-present Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
