@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f7f51d3a_50392cf9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2024-01-10T04:51:05Z",
+      "side": 1,
+      "message": "Why not update the dependency for voltha-protos and voltha-lib-go.",
+      "revId": "7a9af443c41a1467ed7a8cf4e8f753002170a25e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
