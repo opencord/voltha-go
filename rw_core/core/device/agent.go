@@ -1465,15 +1465,6 @@ retry:
 }
 
 func (agent *Agent) ReconcileDevice(ctx context.Context) {
-	// Do not reconcile if the device was in DELETE_FAILED transient state.  Just invoke the force delete on that device.
-	state := agent.getTransientState()
-	logger.Debugw(ctx, "starting-reconcile", log.Fields{"device-id": agent.deviceID, "state": state})
-	if agent.getTransientState() == core.DeviceTransientState_DELETE_FAILED {
-		if err := agent.DeleteDevicePostAdapterRestart(ctx); err != nil {
-			logger.Errorw(ctx, "delete-post-restart-failed", log.Fields{"error": err, "device-id": agent.deviceID})
-		}
-		return
-	}
 
 	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 	var desc string
@@ -1554,16 +1545,6 @@ retry:
 
 		// Send a reconcile request to the adapter.
 		err := agent.sendReconcileRequestToAdapter(ctx, device)
-
-		// Check the transient state after a response from the adapter.   If a device delete
-		// request was issued due to a callback during that time and failed then just delete
-		// the device and stop the reconcile loop and invoke the device deletion
-		if agent.getTransientState() == core.DeviceTransientState_DELETE_FAILED {
-			if dErr := agent.DeleteDevicePostAdapterRestart(ctx); dErr != nil {
-				logger.Errorw(ctx, "delete-post-restart-failed", log.Fields{"error": dErr, "device-id": agent.deviceID})
-			}
-			break retry
-		}
 
 		if errors.Is(err, errContextExpired) || errors.Is(err, errReconcileAborted) {
 			logger.Errorw(ctx, "reconcile-aborted", log.Fields{"error": err})
