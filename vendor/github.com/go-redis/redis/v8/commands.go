@@ -12,7 +12,7 @@ import (
 // KeepTTL is an option for Set command to keep key's existing TTL.
 // For example:
 //
-//    rdb.Set(ctx, key, value, redis.KeepTTL)
+//	rdb.Set(ctx, key, value, redis.KeepTTL)
 const KeepTTL = -1
 
 func usePrecise(dur time.Duration) bool {
@@ -2230,7 +2230,7 @@ func (c cmdable) ClientKill(ctx context.Context, ipPort string) *StatusCmd {
 
 // ClientKillByFilter is new style syntax, while the ClientKill is old
 //
-//   CLIENT KILL <option> [value] ... <option> [value]
+//	CLIENT KILL <option> [value] ... <option> [value]
 func (c cmdable) ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd {
 	args := make([]interface{}, 2+len(keys))
 	args[0] = "client"

@@ -95,7 +95,7 @@ type ServerConfig struct {
 	ClientCertAuthEnabled bool
 
 	AuthToken string
-	TokenTTL   uint
+	TokenTTL  uint
 
 	// InitialCorruptCheck is true to check data corruption on boot
 	// before serving any peer/client traffic.

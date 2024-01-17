@@ -292,8 +292,9 @@ func (p *BinaryPropagator) Extract(abstractCarrier interface{}) (SpanContext, er
 // Converts a comma separated key value pair list into a map
 // e.g. key1=value1, key2=value2, key3 = value3
 // is converted to map[string]string { "key1" : "value1",
-//                                     "key2" : "value2",
-//                                     "key3" : "value3" }
+//
+//	"key2" : "value2",
+//	"key3" : "value3" }
 func (p *TextMapPropagator) parseCommaSeparatedMap(value string) map[string]string {
 	baggage := make(map[string]string)
 	value, err := url.QueryUnescape(value)

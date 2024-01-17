@@ -251,7 +251,8 @@ func InitCap(name string) string {
 // that token and the empty string, e.g. ["foo", ""]. Otherwise, it returns
 // successively shorter prefixes of the package and then the empty string. For
 // example, for a package named "foo.bar.baz" it will return the following list:
-//   ["foo.bar.baz", "foo.bar", "foo", ""]
+//
+//	["foo.bar.baz", "foo.bar", "foo", ""]
 func CreatePrefixList(pkg string) []string {
 	if pkg == "" {
 		return []string{""}

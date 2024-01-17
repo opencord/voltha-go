@@ -7,7 +7,6 @@
 // http://fastcompression.blogspot.fr/2011/05/lz4-explained.html
 //
 // See https://github.com/Cyan4973/lz4 for the reference C implementation.
-//
 package lz4
 
 import (

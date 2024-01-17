@@ -191,9 +191,12 @@ func (opt *Options) clone() *Options {
 // Scheme is required.
 // There are two connection types: by tcp socket and by unix socket.
 // Tcp connection:
-// 		redis://<user>:<password>@<host>:<port>/<db_number>
+//
+//	redis://<user>:<password>@<host>:<port>/<db_number>
+//
 // Unix connection:
-//		unix://<user>:<password>@</path/to/redis.sock>?db=<db_number>
+//
+//	unix://<user>:<password>@</path/to/redis.sock>?db=<db_number>
 func ParseURL(redisURL string) (*Options, error) {
 	u, err := url.Parse(redisURL)
 	if err != nil {

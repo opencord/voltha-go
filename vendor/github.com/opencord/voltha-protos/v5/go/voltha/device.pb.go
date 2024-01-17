@@ -766,7 +766,7 @@ func (m *PmConfigs) GetMaxSkew() uint32 {
 	return 0
 }
 
-//Object representing an image
+// Object representing an image
 type Image struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Version, this is the sole identifier of the image. it's the vendor specified OMCI version

@@ -1318,7 +1318,7 @@ func (cs *clientStream) writeRequestBody(body io.Reader, bodyCloser io.Closer) (
 
 	var sawEOF bool
 	for !sawEOF {
-		n, err := body.Read(buf[:len(buf)])
+		n, err := body.Read(buf[:])
 		if hasContentLen {
 			remainLen -= int64(n)
 			if remainLen == 0 && err == nil {

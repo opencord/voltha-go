@@ -287,7 +287,7 @@ func NewConfig() *Config {
 		Metrics:                    "basic",
 		EnableV2:                   DefaultEnableV2,
 		AuthToken:                  "simple",
-		AuthTokenTTL: 300,
+		AuthTokenTTL:               300,
 	}
 	cfg.InitialCluster = cfg.InitialClusterFromName(cfg.Name)
 	return cfg

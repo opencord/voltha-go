@@ -23,7 +23,7 @@ type PartitionConsumer interface {
 	// InitialOffset returns the offset used for creating the PartitionConsumer instance.
 	// The returned offset can be a literal offset, or OffsetNewest, or OffsetOldest
 	InitialOffset() int64
-  
+
 	// MarkOffset marks the offset of a message as preocessed.
 	MarkOffset(offset int64, metadata string)
 

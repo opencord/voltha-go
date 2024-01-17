@@ -367,6 +367,7 @@ func (v Value) MapKey() MapKey {
 //	╚═════════╧═════════════════════════════════════╝
 //
 // A MapKey is constructed and accessed through a Value:
+//
 //	k := ValueOf("hash").MapKey() // convert string to MapKey
 //	s := k.String()               // convert MapKey to string
 //

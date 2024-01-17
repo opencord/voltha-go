@@ -26,30 +26,30 @@
 // https://research.googleblog.com/2017/04/consistent-hashing-with-bounded-loads.html
 //
 // Example Use:
-// 	cfg := consistent.Config{
-// 		PartitionCount:    71,
-// 		ReplicationFactor: 20,
-// 		Load:              1.25,
-// 		Hasher:            hasher{},
-//	}
 //
-//      // Create a new consistent object
-//      // You may call this with a list of members
-//      // instead of adding them one by one.
-//	c := consistent.New(members, cfg)
+//		cfg := consistent.Config{
+//			PartitionCount:    71,
+//			ReplicationFactor: 20,
+//			Load:              1.25,
+//			Hasher:            hasher{},
+//		}
 //
-//      // myMember struct just needs to implement a String method.
-//      // New/Add/Remove distributes partitions among members using the algorithm
-//      // defined on Google Research Blog.
-//	c.Add(myMember)
+//	     // Create a new consistent object
+//	     // You may call this with a list of members
+//	     // instead of adding them one by one.
+//		c := consistent.New(members, cfg)
 //
-//	key := []byte("my-key")
-//      // LocateKey hashes the key and calculates partition ID with
-//      // this modulo operation: MOD(hash result, partition count)
-//      // The owner of the partition is already calculated by New/Add/Remove.
-//      // LocateKey just returns the member which's responsible for the key.
-//	member := c.LocateKey(key)
+//	     // myMember struct just needs to implement a String method.
+//	     // New/Add/Remove distributes partitions among members using the algorithm
+//	     // defined on Google Research Blog.
+//		c.Add(myMember)
 //
+//		key := []byte("my-key")
+//	     // LocateKey hashes the key and calculates partition ID with
+//	     // this modulo operation: MOD(hash result, partition count)
+//	     // The owner of the partition is already calculated by New/Add/Remove.
+//	     // LocateKey just returns the member which's responsible for the key.
+//		member := c.LocateKey(key)
 package consistent
 
 import (

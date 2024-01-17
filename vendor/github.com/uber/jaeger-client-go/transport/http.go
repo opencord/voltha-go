@@ -87,7 +87,8 @@ func HTTPHeaders(headers map[string]string) HTTPOption {
 
 // NewHTTPTransport returns a new HTTP-backend transport. url should be an http
 // url of the collector to handle POST request, typically something like:
-//     http://hostname:14268/api/traces?format=jaeger.thrift
+//
+//	http://hostname:14268/api/traces?format=jaeger.thrift
 func NewHTTPTransport(url string, options ...HTTPOption) *HTTPTransport {
 	c := &HTTPTransport{
 		url:       url,

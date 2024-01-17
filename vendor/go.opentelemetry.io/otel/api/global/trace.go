@@ -31,9 +31,12 @@ func Tracer(name string) trace.Tracer {
 // If none is registered then an instance of NoopTracerProvider is returned.
 //
 // Use the trace provider to create a named tracer. E.g.
-//     tracer := global.TracerProvider().Tracer("example.com/foo")
+//
+//	tracer := global.TracerProvider().Tracer("example.com/foo")
+//
 // or
-//     tracer := global.Tracer("example.com/foo")
+//
+//	tracer := global.Tracer("example.com/foo")
 func TracerProvider() trace.TracerProvider {
 	return internal.TracerProvider()
 }

@@ -526,7 +526,6 @@ func (m *KpiEventType) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_KpiEventType proto.InternalMessageInfo
 
-//
 // Struct to convey a dictionary of metric metadata.
 type MetricMetaData struct {
 	Title           string  `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
@@ -618,7 +617,6 @@ func (m *MetricMetaData) GetUuid() string {
 	return ""
 }
 
-//
 // Struct to convey a dictionary of metric->value pairs. Typically used in
 // pure shared-timestamp or shared-timestamp + shared object prefix situations.
 type MetricValuePairs struct {
@@ -661,7 +659,6 @@ func (m *MetricValuePairs) GetMetrics() map[string]float32 {
 	return nil
 }
 
-//
 // Struct to group metadata for a metric (or group of metrics) with the key-value
 // pairs of collected metrics
 type MetricInformation struct {
@@ -711,10 +708,10 @@ func (m *MetricInformation) GetMetrics() map[string]float32 {
 	return nil
 }
 
-//
 // Legacy KPI Event structured.  In mid-August, the KPI event format was updated
-//                               to a more easily parsable format. See VOL-1140
-//                               for more information.
+//
+//	to a more easily parsable format. See VOL-1140
+//	for more information.
 type KpiEvent struct {
 	Type                 KpiEventType_Types           `protobuf:"varint,1,opt,name=type,proto3,enum=event.KpiEventType_Types" json:"type,omitempty"`
 	Ts                   float32                      `protobuf:"fixed32,2,opt,name=ts,proto3" json:"ts,omitempty"`
@@ -827,7 +824,6 @@ func (m *KpiEvent2) GetSliceData() []*MetricInformation {
 	return nil
 }
 
-//
 // Describes the events specific to device
 type DeviceEvent struct {
 	// Identifier of the originating resource of the event, for ex: device_id
@@ -896,7 +892,6 @@ func (m *DeviceEvent) GetContext() map[string]string {
 	return nil
 }
 
-//
 // Describes the events specific to an RPC request
 type RPCEvent struct {
 	// RPC name
@@ -1001,7 +996,6 @@ func (m *RPCEvent) GetStatus() *common.OperationResp {
 	return nil
 }
 
-//
 // Identify the area of the system impacted by the event.
 type EventCategory struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1034,7 +1028,6 @@ func (m *EventCategory) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventCategory proto.InternalMessageInfo
 
-//
 // Identify the functional category originating the event
 type EventSubCategory struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1067,7 +1060,6 @@ func (m *EventSubCategory) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventSubCategory proto.InternalMessageInfo
 
-//
 // Identify the type of event
 type EventType struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1100,7 +1092,6 @@ func (m *EventType) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventType proto.InternalMessageInfo
 
-//
 // Identify the functional category originating the event
 type EventHeader struct {
 	// Unique ID for this event.  e.g. voltha.some_olt.1234
@@ -1207,7 +1198,6 @@ func (m *EventHeader) GetReportedTs() *timestamp.Timestamp {
 	return nil
 }
 
-//
 // Event Structure
 type Event struct {
 	// event header

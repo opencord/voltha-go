@@ -319,9 +319,9 @@ func (s *Span) fixLogsIfDropped() {
 // before allowing to set/replace baggage keys.
 // The setter eventually stores a new SpanContext with extended baggage:
 //
-//     span.context = span.context.WithBaggageItem(key, value)
+//	   span.context = span.context.WithBaggageItem(key, value)
 //
-//  See SpanContext.WithBaggageItem() for explanation why it's done this way.
+//	See SpanContext.WithBaggageItem() for explanation why it's done this way.
 func (s *Span) SetBaggageItem(key, value string) opentracing.Span {
 	s.Lock()
 	defer s.Unlock()
@@ -465,11 +465,16 @@ func (s *Span) applySamplingDecision(decision SamplingDecision, lock bool) {
 // setSamplingPriority returns true if the flag was updated successfully, false otherwise.
 // The behavior of setSamplingPriority is surprising
 // If noDebugFlagOnForcedSampling is set
-//     setSamplingPriority(..., 1) always sets only flagSampled
+//
+//	setSamplingPriority(..., 1) always sets only flagSampled
+//
 // If noDebugFlagOnForcedSampling is unset, and isDebugAllowed passes
-//     setSamplingPriority(..., 1) sets both flagSampled and flagDebug
+//
+//	setSamplingPriority(..., 1) sets both flagSampled and flagDebug
+//
 // However,
-//     setSamplingPriority(..., 0) always only resets flagSampled
+//
+//	setSamplingPriority(..., 0) always only resets flagSampled
 //
 // This means that doing a setSamplingPriority(..., 1) followed by setSamplingPriority(..., 0) can
 // leave flagDebug set

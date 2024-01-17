@@ -53,7 +53,7 @@ func (AlarmState) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_c072e7aa0dfd74d5, []int{0}
 }
 
-//* activation fail reason.
+// * activation fail reason.
 type OnuIndication_ActivationFailReason int32
 
 const (
@@ -4785,7 +4785,6 @@ func (m *PonRxPowerData) GetRxPowerMeanDbm() float64 {
 	return 0
 }
 
-//
 // contains the onu id, state of the onu and the information about the alarms on the onu.
 // As of now only few alarms are added, any further information needed can be added to the structure.
 type OnuInfo struct {
@@ -4859,7 +4858,6 @@ func (m *OnuInfo) GetLoami() AlarmState {
 	return AlarmState_OFF
 }
 
-//
 // IntfInfo has the interface Id and if there are any alarms active on that interface.
 // Any further information needed from the interface object can be added to the structure.
 type PonIntfInfo struct {

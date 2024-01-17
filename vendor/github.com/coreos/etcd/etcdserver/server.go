@@ -375,7 +375,7 @@ func NewServer(cfg ServerConfig) (srv *EtcdServer, err error) {
 		if cfg.ShouldDiscover() {
 			plog.Warningf("discovery token ignored since a cluster has already been initialized. Valid log found at %q", cfg.WALDir())
 		}
-		
+
 		// Find a snapshot to start/restart a raft node
 		walSnaps, serr := wal.ValidSnapshotEntries(cfg.WALDir())
 		if serr != nil {
@@ -1566,7 +1566,7 @@ func (s *EtcdServer) snapshot(snapi uint64, confState raftpb.ConfState) {
 		plog.Infof("saved snapshot at index %d", snap.Metadata.Index)
 
 		if err = s.r.storage.Release(snap); err != nil {
-				plog.Panicf("failed to release wal %v", err)
+			plog.Panicf("failed to release wal %v", err)
 		}
 
 		// When sending a snapshot, etcd will pause compaction.
