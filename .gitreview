@@ -2,4 +2,4 @@
 host=gerrit.opencord.org
 port=29418
 project=voltha-go.git
-defaultremote=origin
+defaultremote=votlha-12
