@@ -151,7 +151,7 @@ lint-mod: ## Verify the Go dependencies
 	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Staged or modified files must be committed before running this test" && git status -- go.mod go.sum vendor && exit 1)
 	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files must be cleaned up before running this test" && git status -- go.mod go.sum vendor && exit 1)
 
-	$(MAKE) mod-update
+	$(HIDE)$(MAKE) --no-print-directory mod-update
 
 	@git status > /dev/null
 	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Modified files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
@@ -182,34 +182,38 @@ fmt: ## Formats the soure code to go best practice style
 	gofmt -s -e -w $(PACKAGES)
 #	@go fmt ${PACKAGES}
 
+
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
 .PHONY: mod-update
-mod-update: mod-tidy mod-vendor
+mod-update: go-version mod-tidy mod-vendor
+
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
+.PHONY: go-version
+go-version :
+	$(call banner-enter,Target $@)
+	${GO} version
+	$(call banner-leave,Target $@)
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
 .PHONY: mod-tidy
-mod-tidy:
-	$(call banner-enter,$@)
+mod-tidy :
+	$(call banner-enter,Target $@)
 	${GO} mod tidy
-	$(call banner-leave,$@)
+	$(call banner-leave,Target $@)
 
 ## -----------------------------------------------------------------------
-## Intent: Refresh vendor/ directory package source
-## -----------------------------------------------------------------------
-##   Note: This target is destructive, vendor/ directory will be removed.
-##   Todo: Update logic to checkout version on demand VS checkin a static
-##         copy of vendor/ sources then augment.  Logically removal of
-##         files under revision control is strange.
 ## -----------------------------------------------------------------------
 .PHONY: mod-vendor
-mod-vendor:
-	$(call banner-enter,$@)
-	@$(if $(LOCAL_FIX_PERMS),chmod 777 .)
+mod-vendor : mod-tidy
+mod-vendor :
+	$(call banner-enter,Target $@)
+	$(if $(LOCAL_FIX_PERMS),chmod o+w $(CURDIR))
 	${GO} mod vendor
-	@$(if $(LOCAL_FIX_PERMS),chmod 755 .)
-	$(call banner-leave,$@)
+	$(if $(LOCAL_FIX_PERMS),chmod o-w $(CURDIR))
+	$(call banner-leave,Target $@)
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
