@@ -16,6 +16,23 @@
       "message": "recheck\n\nrepo:ci-management release branch created, that will quiet complaints about no version to build.",
       "revId": "a65e4dbfc19df35c0242884686591226c1470f84",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5d0745e1_b0b666a9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2024-02-01T16:55:16Z",
+      "side": 1,
+      "message": "Unit test passing now that repo:ci-management branched.\nPublish patch so we can update branch\u003dmaster to avoid conflicts.",
+      "revId": "a65e4dbfc19df35c0242884686591226c1470f84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
