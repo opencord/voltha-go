@@ -16,6 +16,23 @@
       "message": "Release branch created, now fix VERSION to avoid conflicts with the release branch",
       "revId": "f8a00bf19fc9f576b9bb635189d74bb6e9c13c56",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "285a72d9_dbbe75eb",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2024-02-01T17:09:44Z",
+      "side": 1,
+      "message": "Re-add +2, merge button disappeared after comments were added.",
+      "revId": "f8a00bf19fc9f576b9bb635189d74bb6e9c13c56",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
