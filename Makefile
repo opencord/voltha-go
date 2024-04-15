@@ -24,7 +24,7 @@ $(if $(VERBOSE),$(eval export VERBOSE=$(VERBOSE))) # visible to include(s)
 ##--------------------##
 ##---]  INCLUDES  [---##
 ##--------------------##
-include config.mk
+include lf/config.mk
 include makefiles/include.mk
 
 # Variables
