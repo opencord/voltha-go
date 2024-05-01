@@ -1,0 +1,191 @@
+---
+
+# -----------------------------------------------------------------------
+# [NOTE] - Propogate .pre-commit-config.yaml edits to all repositories!
+# -----------------------------------------------------------------------
+# [NOTE] - Common config file source lives in repo:onf-make
+#    - https://gerrit.opencord.org/plugins/gitiles/
+#            onf-make/+/refs/heads/master/.pre-commit-config.yaml
+# -----------------------------------------------------------------------
+# [TODO]
+#    - pre-commit yaml config exists individually within repositories.
+#    - Generally lint config and benavior is consistent for all repos.
+#    - Exclusions and bulk cleanup necessitate per-repo custom configs.
+#    - Dynamically generate this config file from common and custom
+# -----------------------------------------------------------------------
+
+# -----------------------------------------------------------------------
+# Copyright 2024 Open Networking Foundation Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# -----------------------------------------------------------------------
+# SPDX-FileCopyrightText: 2024 Open Networking Foundation Contributors
+# SPDX-License-Identifier: Apache-2.0
+# -----------------------------------------------------------------------
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+# -----------------------------------------------------------------------
+# .pre-commit-config-yaml 2024-04-19 v0.4
+# -----------------------------------------------------------------------
+
+# ci:
+#  autofix_commit_msg: "Chore: pre-commit autoupdate"
+##  skip: [sync]
+#  skip:
+#    # pre-commit.ci does not have actionlint installed
+#    - actionlint
+#
+# exclude: '^docs/conf.py'
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-xml
+      - id: check-yaml
+      # - id: debug-statements
+      - id: end-of-file-fixer
+      - id: fix-encoding-pragma
+      # - id: double-quote-string-fixer
+      - id: requirements-txt-fixer
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: acc9d9de6369b76d22cb4167029d2035e8730b98  # frozen: v0.19.1
+    hooks:
+      - id: gitlint
+
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.10.0
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+
+  ## -----------------------------------------------------------------------
+  ## [SOURCE] Documentation
+  ## -----------------------------------------------------------------------
+  - repo: https://github.com/rstcheck/rstcheck
+    rev: v6.2.1
+    hooks:
+      - id: rstcheck
+
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.13.0
+    hooks:
+      - id: markdownlint
+      # - id: markdownlint_docker
+
+  ## -----------------------------------------------------------------------
+  ## [SOURCE] Docker
+  ## -----------------------------------------------------------------------
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      # - id: hadolint       # local tool install
+      - id: hadolint-docker
+
+  ## -----------------------------------------------------------------------
+  ## [SOURCE] Golang
+  ## -----------------------------------------------------------------------
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.41.1
+    hooks:
+      - id: golangci-lint
+
+  ## -----------------------------------------------------------------------
+  ## [SOURCE] REUSE License Checking
+  ## -----------------------------------------------------------------------
+#  - repo: https://github.com/fsfe/reuse-tool
+#    rev: v3.0.2
+#    hooks:
+#      - id: reuse
+      # - id: add-license-headers
+
+# - repo: https://github.com/ansys/pre-commit-hooks
+  # rev: v0.2.9
+  # hooks:
+    # - id: add-license-headers
+  # args:
+    # - --custom_copyright=custom copyright phrase
+    # - --custom_template=template_name
+    # - --custom_license=license_name
+    # - --ignore_license_check
+    # - --start_year=2023
+
+  ## -----------------------------------------------------------------------
+  ## [SOURCE] Python
+  ## -----------------------------------------------------------------------
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+      - id: black
+
+# - repo: https://github.com/PyCQA/doc8
+  # rev: v1.1.1
+  # hooks:
+  # - id: doc8
+
+  ## -----------------------------------------------------------------------
+  ## [SOURCE] Spelling
+  ## -----------------------------------------------------------------------
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+      - id: codespell
+
+  ## -----------------------------------------------------------------------
+  ## [SOURCE] Testing
+  ## -----------------------------------------------------------------------
+  - repo: https://github.com/MarketSquare/robotframework-tidy
+    rev: 4.11.0
+    hooks:
+      - id: robotidy
+
+# -------------------------------------------------------------------
+# https://docs.python.org/3/library/re.html#regular-expression-syntax
+# -------------------------------------------------------------------
+exclude: |
+    (?x)^(
+        ^jjb/.*             |
+        ^makefiles/.*       |
+        ^lf/.*              |
+        ^.venv/.*           |
+        ^jenkins-scripts/.* |
+        ^lf-ansible/.*      |
+        ^packer/.*          |
+        ^test/.*            |
+        ^jjb/pipeline/voltha/voltha-physical-soak-dt-tests.groovy
+    )$
+
+# [SEE ALSO]
+# -----------------------------------------------------------------------
+# https://github.com/memfault/interrupt/blob/master/example/pre-commit/.pre-commit-config.yaml
+# https://pre-commit.com/hooks.html
+# https://github.com/floatingpurr/sync_with_poetry/blob/main/.pre-commit-config.yaml
+# https://github.com/the-common/pre-commit-config-template/blob/master/.pre-commit-config.yaml
+# https://github.com/memfault/interrupt/blob/master/example/pre-commit/.pre-commit-config.yaml
+# -----------------------------------------------------------------------
+# https://www.hatica.io/blog/pre-commit-git-hooks/
+# -----------------------------------------------------------------------
+
+# [EOF]
