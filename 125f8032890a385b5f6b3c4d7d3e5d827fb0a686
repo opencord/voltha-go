@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9882d55d_97330ccb",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2024-05-01T21:07:48Z",
+      "side": 1,
+      "message": "This patch is a NOP, adding as yet unused config file for the pre-commit linting tool.\n\nOpened a ticket for the TT, E2E ping test failure:\n  https://jira.opencord.org/browse/VOL-5335",
+      "revId": "125f8032890a385b5f6b3c4d7d3e5d827fb0a686",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
