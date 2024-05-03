@@ -27,6 +27,7 @@ ansible/*.retry
 
 # Virtualenv
 python/venv-*
+.venv/
 
 # Protobuf output files
 python/**/*_pb2.py

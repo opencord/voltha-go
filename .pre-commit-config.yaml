@@ -35,7 +35,7 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 # -----------------------------------------------------------------------
-# .pre-commit-config-yaml 2024-04-19 v0.4
+# .pre-commit-config-yaml v0.6
 # -----------------------------------------------------------------------
 
 # ci:
@@ -115,10 +115,10 @@ repos:
   ## -----------------------------------------------------------------------
   ## [SOURCE] REUSE License Checking
   ## -----------------------------------------------------------------------
-#  - repo: https://github.com/fsfe/reuse-tool
-#    rev: v3.0.2
-#    hooks:
-#      - id: reuse
+  # - repo: https://github.com/fsfe/reuse-tool
+    # rev: v3.0.2
+    # hooks:
+      # - id: reuse
       # - id: add-license-headers
 
 # - repo: https://github.com/ansys/pre-commit-hooks
@@ -166,15 +166,11 @@ repos:
 # -------------------------------------------------------------------
 exclude: |
     (?x)^(
-        ^jjb/.*             |
         ^makefiles/.*       |
         ^lf/.*              |
         ^.venv/.*           |
-        ^jenkins-scripts/.* |
-        ^lf-ansible/.*      |
-        ^packer/.*          |
-        ^test/.*            |
-        ^jjb/pipeline/voltha/voltha-physical-soak-dt-tests.groovy
+        ^.vendor/.*         |
+        ^ignore--end-of-exclusion-marker
     )$
 
 # [SEE ALSO]
