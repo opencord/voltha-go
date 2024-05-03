@@ -39,7 +39,7 @@ include $(ONF_MAKEDIR)/help/include.mk       # render target help
 include $(ONF_MAKEDIR)/utils/include.mk      # dependency-less helper macros
 include $(ONF_MAKEDIR)/etc/include.mk        # banner macros
 
-include $(ONF_MAKEDIR)/virtualenv.mk#        # lint-{jjb,python} depends on venv
+# include $(ONF_MAKEDIR)/virtualenv.mk#        # lint-{jjb,python} depends on venv
 include $(ONF_MAKEDIR)/lint/include.mk
 # include $(ONF_MAKEDIR)/git-submodules.mk
 # include $(ONF_MAKEDIR)/gerrit/include.mk
@@ -50,7 +50,8 @@ include $(ONF_MAKEDIR)/help/variables.mk
 ##---------------------##
 ##---]  ON_DEMAND  [---##
 ##---------------------##
-$(if $(USE_DOCKER_MK),$(eval include $(ONF_MAKEDIR)/docker/include.mk))
+# $(if $(USE_DOCKER_MK),$(eval include $(ONF_MAKEDIR)/docker/include.mk))
+$(if $(USE-ONF-DOCKER-MK),$(eval include $(ONF_MAKEDIR)/docker/include.mk))
 
 ##-------------------##
 ##---]  TARGETS  [---##
