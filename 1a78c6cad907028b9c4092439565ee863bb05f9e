@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e5654663_169b2f85",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2024-05-06T19:02:58Z",
+      "side": 1,
+      "message": "https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1916/console\n\nSanity E2E Test for TT (HSIA, VoD, VoIP) :: Validates E2E Ping Con... | FAIL |\n\nE2e test failure unrelated to adding repo:onf-make with conditional include of transition.mk",
+      "revId": "1a78c6cad907028b9c4092439565ee863bb05f9e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
