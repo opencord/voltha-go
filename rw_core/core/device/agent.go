@@ -1120,7 +1120,10 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 			portHandle.Unlock()
 		}
 	}
-
+	if err = agent.deviceMgr.canAdapterRequestProceed(ctx, agent.deviceID); err != nil {
+		logger.Errorw(ctx, "adapter-request-cannot-proceed", log.Fields{"device-id": agent.deviceID, "error": err})
+		return err
+	}
 	//send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
