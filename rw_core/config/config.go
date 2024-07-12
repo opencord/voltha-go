@@ -24,7 +24,7 @@ import (
 
 // RW Core service default constants
 const (
-	EtcdStoreName = "etcd"
+	KVStoreName = "etcd"
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -101,7 +101,7 @@ func (cf *RWCoreFlags) ParseCommandArguments(args []string) {
 
 	fs.StringVar(&cf.KVStoreType,
 		"kv_store_type",
-		EtcdStoreName,
+		KVStoreName,
 		"KV store type")
 
 	fs.DurationVar(&cf.KVStoreTimeout,
