@@ -31,8 +31,13 @@ import (
 
 func newKVClient(ctx context.Context, storeType string, address string, timeout time.Duration) (kvstore.Client, error) {
 	logger.Infow(ctx, "kv-store-type", log.Fields{"store": storeType})
-	if storeType == "etcd" {
+	switch storeType {
+	case "etcd":
 		return kvstore.NewEtcdClient(ctx, address, timeout, log.FatalLevel)
+	case "redis":
+		return kvstore.NewRedisClient(address, timeout, false)
+	case "redis-sentinel":
+		return kvstore.NewRedisClient(address, timeout, true)
 	}
 	return nil, errors.New("unsupported-kv-store")
 }
