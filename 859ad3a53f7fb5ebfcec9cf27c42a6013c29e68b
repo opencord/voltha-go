@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "74bef86a_1089f1b6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000957
+      },
+      "writtenOn": "2024-08-28T09:50:39Z",
+      "side": 1,
+      "message": "\u003e Patch Set 3: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1917/ : ABORTED\n\nrecheck",
+      "revId": "859ad3a53f7fb5ebfcec9cf27c42a6013c29e68b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
