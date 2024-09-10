@@ -16,6 +16,23 @@
       "message": "recheck",
       "revId": "4dabc93fab1380d146d146b0d4baed8e322a9fc2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1b16d687_2c32097d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2024-09-10T03:46:02Z",
+      "side": 1,
+      "message": "version in VERSION file needs to be bumped up.",
+      "revId": "4dabc93fab1380d146d146b0d4baed8e322a9fc2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
