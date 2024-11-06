@@ -73,21 +73,21 @@ func GetStartingUNIPortNo() int {
 // Adapter represents adapter attributes
 type Adapter struct {
 	flows                map[string]map[uint64]*openflow_13.OfpFlowStats
-	flowLock             sync.RWMutex
 	devices              map[string]*voltha.Device
-	deviceLock           sync.RWMutex
 	failFlowAdd          map[string]bool
-	failFlowAddLock      sync.RWMutex
 	failFlowDelete       map[string]bool
-	failFlowDeleteLock   sync.RWMutex
 	failDeleteDevice     map[string]bool
-	failDeleteDeviceLock sync.RWMutex
-	coreEnpoint          string
 	coreClient           *vgrpc.Client
+	Probe                *probe.Probe
+	coreEnpoint          string
 	serviceEndpoint      string
 	DeviceType           string
 	vendor               string
-	Probe                *probe.Probe
+	flowLock             sync.RWMutex
+	deviceLock           sync.RWMutex
+	failFlowAddLock      sync.RWMutex
+	failFlowDeleteLock   sync.RWMutex
+	failDeleteDeviceLock sync.RWMutex
 }
 
 // NewAdapter creates adapter instance

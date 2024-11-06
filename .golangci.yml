@@ -12,25 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+linters-settings:
+  govet:
+    enable:
+      - shadow
+      - fieldalignment
+  gocyclo:
+    min-complexity: 40
+  misspell:
+    locale: US
+    ignore-words:
+      - cancelled
+      - artefacts
+
 run:
   modules-download-mode: vendor
-
-issues:
-  exclude-use-default: false #we should decide ourselves about false positives
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - gocritic
-        - gosec
-    - linters:
-        - gocritic
-      text: "ifElseChain:" #it should be up to a developer to decide which operator to use
-  exclude:
-    - "Package github.com/golang/protobuf/proto is deprecated"
-    - "Package github.com/golang/protobuf/jsonpb is deprecated"
-    - "SA1019: voltha.ImageDownloads is deprecated"
-    - "SA1019: voltha.ImageDownload is deprecated"
 
 linters:
   enable:
@@ -40,4 +36,31 @@ linters:
     - gofmt
     - gosec
     - errcheck
-    #- unparam
+    - gocyclo
+    - govet
+    - ineffassign
+    - misspell
+    - gosec
+    - goimports
+    - gosimple
+    - staticcheck
+    - unused
+    - unparam
+
+issues:
+  exclude-use-default: false #we should decide ourselves about false positives
+  exclude-rules:
+    - path: ".*_test.go"
+      linters:
+        - errcheck
+        - gocritic
+        - gosec
+        - govet
+        - fieldalignment
+        - unparam
+    - linters:
+        - gocritic
+      text: "ifElseChain:" #it should be up to a developer to decide which operator to use
+  exclude:
+    - SA1019
+    - 'G115: integer overflow conversion'

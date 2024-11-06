@@ -86,7 +86,7 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 		} else {
 			flowToReplace := flowHandle.GetReadOnly()
 			if !proto.Equal(flowToReplace, flow) {
-				//Flow needs to be updated.
+				// Flow needs to be updated.
 				if err := flowHandle.Update(ctx, flow); err != nil {
 					flowHandle.Unlock()
 					return coreutils.DoneResponse(), err
@@ -94,7 +94,7 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 				flowsToDelete = append(flowsToDelete, flowToReplace)
 				flowsToAdd = append(flowsToAdd, flow)
 			} else {
-				//No need to change the flow. It is already exist.
+				// No need to change the flow. It is already exist.
 				logger.Debugw(ctx, "no-need-to-change-already-existing-flow", log.Fields{"device-id": agent.deviceID, "flows": newFlows, "flow-metadata": flowMetadata})
 			}
 		}
