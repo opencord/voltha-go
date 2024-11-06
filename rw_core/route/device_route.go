@@ -53,16 +53,16 @@ type listDevicePortsFunc func(ctx context.Context, id string) (map[uint32]*volth
 
 // DeviceRoutes represent the set of routes between logical ports of a logical device
 type DeviceRoutes struct {
-	logicalDeviceID     string
-	rootDeviceID        string
 	listDevicePorts     listDevicePortsFunc
 	logicalPorts        map[uint32]*voltha.LogicalPort
 	RootPorts           map[uint32]uint32
-	rootPortsLock       sync.RWMutex
 	Routes              map[PathID][]Hop
-	routeBuildLock      sync.RWMutex
 	devicesPonPorts     map[string][]*voltha.Port
 	childConnectionPort map[string]uint32
+	logicalDeviceID     string
+	rootDeviceID        string
+	rootPortsLock       sync.RWMutex
+	routeBuildLock      sync.RWMutex
 }
 
 // NewDeviceRoutes creates device graph instance

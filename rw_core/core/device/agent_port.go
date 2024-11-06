@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/common"
 
 	"github.com/gogo/protobuf/proto"
@@ -258,18 +259,20 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 
 	newPort := *oldPort
 	newPort.AdminState = voltha.AdminState_DISABLED
-	if err := portHandle.Update(ctx, &newPort); err != nil {
+	if err = portHandle.Update(ctx, &newPort); err != nil {
 		return err
 	}
 
-	//send request to adapter
-	device, err := agent.getDeviceReadOnly(ctx)
+	// Send request to adapter
+	var device *voltha.Device
+	device, err = agent.getDeviceReadOnly(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Send the request to the adapter
-	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+	var client adapter_service.AdapterServiceClient
+	client, err = agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
 		logger.Errorw(ctx, "grpc-client-nil",
 			log.Fields{
@@ -284,7 +287,7 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		_, err := client.DisablePort(subCtx, &newPort)
+		_, err = client.DisablePort(subCtx, &newPort)
 		if err == nil {
 			agent.onSuccess(subCtx, nil, nil, true)
 		} else {
@@ -322,7 +325,7 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 		return err
 	}
 
-	//send request to adapter
+	// Send request to adapter
 	device, err := agent.getDeviceReadOnly(ctx)
 	if err != nil {
 		return err

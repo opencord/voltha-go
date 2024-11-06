@@ -103,7 +103,7 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 			agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
-			//TODO: Revert flow changes
+			// TODO: Revert flow changes
 		}
 	}()
 	return nil
@@ -131,7 +131,7 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 			}
 			groupHandle.Unlock()
 
-			//TODO: this is another case where ordering guarantees are not being made,
+			// TODO: this is another case where ordering guarantees are not being made,
 			//      group deletion does not guarantee deletion of corresponding flows.
 			//      an error while deleting flows can cause inconsistent state.
 			flows, err := agent.deleteFlowsHavingGroup(ctx, groupID)
@@ -159,12 +159,12 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 			return err
 		}
 	} else {
-		//no flow is affected, just remove the groups
+		// No flow is affected, just remove the groups
 		deviceRules = fu.NewDeviceRules()
 		deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
 	}
 
-	//add groups to deviceRules
+	// Add groups to deviceRules
 	for _, groupEntry := range affectedGroups {
 		fg := fu.NewFlowsAndGroups()
 		fg.AddGroup(groupEntry)
@@ -177,7 +177,7 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 		return err
 	}
 
-	// delete groups and related flows, if any
+	// Delete groups and related flows, if any
 	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, &ofp.OfpFlowMod{})
 
 	// Wait for completion
@@ -194,7 +194,7 @@ func (agent *LogicalAgent) groupDelete(ctx context.Context, groupMod *ofp.OfpGro
 			agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
-			//TODO: Revert flow changes
+			// TODO: Revert flow changes
 		}
 	}()
 	return nil
@@ -214,7 +214,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 	}
 	defer groupHandle.Unlock()
 
-	//replace existing group entry with new group definition
+	// Replace existing group entry with new group definition
 	groupEntry := fu.GroupEntryFromGroupMod(groupMod)
 	deviceRules := fu.NewDeviceRules()
 	deviceRules.CreateEntryIfNotExist(agent.rootDeviceID)
@@ -224,7 +224,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 
 	logger.Debugw(ctx, "rules", log.Fields{"rules-for-group-modify": deviceRules.String()})
 
-	//update KV
+	// Update KV
 	if err := groupHandle.Update(ctx, groupEntry); err != nil {
 		logger.Errorw(ctx, "cannot-update-logical-group", log.Fields{"logical-device-id": agent.logicalDeviceID})
 		return err
@@ -247,7 +247,7 @@ func (agent *LogicalAgent) groupModify(ctx context.Context, groupMod *ofp.OfpGro
 			agent.ldeviceMgr.SendRPCEvent(ctx,
 				agent.logicalDeviceID, "failed-to-update-device-flows-groups", context, "RPC_ERROR_RAISE_EVENT",
 				voltha.EventCategory_COMMUNICATION, nil, time.Now().Unix())
-			//TODO: Revert flow changes
+			// TODO: Revert flow changes
 		}
 	}()
 	return nil

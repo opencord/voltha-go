@@ -61,7 +61,7 @@ func (agent *Agent) isDeletionInProgress() bool {
 		deviceTransientState == core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE
 }
 
-func (agent *Agent) isForceDeletingAllowed(deviceTransientState core.DeviceTransientState_Types, device *voltha.Device) bool {
+func (agent *Agent) isForceDeletingAllowed(deviceTransientState core.DeviceTransientState_Types) bool {
 	return deviceTransientState != core.DeviceTransientState_FORCE_DELETING
 }
 

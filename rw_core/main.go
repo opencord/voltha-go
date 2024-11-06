@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -69,13 +70,13 @@ func main() {
 		panic(err)
 	}
 
-	//Setup default logger - applies for packages that do not have specific logger set
-	if _, err := log.SetDefaultLogger(log.JSON, logLevel, log.Fields{"instanceId": instanceID}); err != nil {
+	// Setup default logger - applies for packages that do not have specific logger set
+	if _, err = log.SetDefaultLogger(log.JSON, logLevel, log.Fields{"instanceId": instanceID}); err != nil {
 		logger.With(log.Fields{"error": err}).Fatal(ctx, "Cannot setup logging")
 	}
 
 	// Update all loggers (provisioned via init) with a common field
-	if err := log.UpdateAllLoggers(log.Fields{"instanceId": instanceID}); err != nil {
+	if err = log.UpdateAllLoggers(log.Fields{"instanceId": instanceID}); err != nil {
 		logger.With(log.Fields{"error": err}).Fatal(ctx, "Cannot setup logging")
 	}
 
@@ -83,7 +84,7 @@ func main() {
 	log.SetAllLogLevel(logLevel)
 
 	defer func() {
-		err := log.CleanUp()
+		err = log.CleanUp()
 		if err != nil {
 			logger.Errorw(ctx, "unable-to-flush-any-buffered-log-entries", log.Fields{"error": err})
 		}
@@ -117,7 +118,8 @@ func main() {
 	// Add the probe to the context to pass to all the services started
 	probeCtx := context.WithValue(ctx, probe.ProbeContextKey, p)
 
-	closer, err := log.GetGlobalLFM().InitTracingAndLogCorrelation(cf.TraceEnabled, cf.TraceAgentAddress, cf.LogCorrelationEnabled)
+	var closer io.Closer
+	closer, err = log.GetGlobalLFM().InitTracingAndLogCorrelation(cf.TraceEnabled, cf.TraceAgentAddress, cf.LogCorrelationEnabled)
 	if err != nil {
 		logger.Warnw(ctx, "unable-to-initialize-tracing-and-log-correlation-module", log.Fields{"error": err})
 	} else {

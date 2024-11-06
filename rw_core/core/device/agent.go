@@ -58,31 +58,31 @@ var errNoConnection = errors.New("no connection")
 
 // Agent represents device agent attributes
 type Agent struct {
-	deviceID             string
-	parentID             string
-	deviceType           string
-	adapterEndpoint      string
-	isRootDevice         bool
-	adapterMgr           *adapter.Manager
-	deviceMgr            *Manager
-	dbProxy              *model.Proxy
-	exitChannel          chan int
-	device               *voltha.Device
-	requestQueue         *coreutils.RequestQueue
-	internalTimeout      time.Duration
-	rpcTimeout           time.Duration
-	flowTimeout          time.Duration
-	startOnce            sync.Once
-	stopOnce             sync.Once
-	stopped              bool
-	stopReconciling      chan int
-	stopReconcilingMutex sync.RWMutex
-	config               *config.RWCoreFlags
+	adapterMgr      *adapter.Manager
+	deviceMgr       *Manager
+	dbProxy         *model.Proxy
+	exitChannel     chan int
+	device          *voltha.Device
+	requestQueue    *coreutils.RequestQueue
+	stopReconciling chan int
+	config          *config.RWCoreFlags
 
 	flowCache            *flow.Cache
 	groupCache           *group.Cache
 	portLoader           *port.Loader
 	transientStateLoader *transientstate.Loader
+	deviceID             string
+	parentID             string
+	deviceType           string
+	adapterEndpoint      string
+	internalTimeout      time.Duration
+	rpcTimeout           time.Duration
+	flowTimeout          time.Duration
+	stopReconcilingMutex sync.RWMutex
+	startOnce            sync.Once
+	stopOnce             sync.Once
+	isRootDevice         bool
+	stopped              bool
 }
 
 // newAgent creates a new device agent. The device will be initialized when start() is called.
@@ -205,11 +205,11 @@ func (agent *Agent) stop(ctx context.Context) error {
 	if err := agent.deleteTransientState(ctx); err != nil {
 		return err
 	}
-	//	Remove the device from the KV store
+	// Remove the device from the KV store
 	if err := agent.dbProxy.Remove(ctx, agent.deviceID); err != nil {
 		return err
 	}
-	//send the device event to the message bus
+	// Send the device event to the message bus
 	_ = agent.deviceMgr.Agent.SendDeviceDeletedEvent(ctx, agent.device, time.Now().Unix())
 
 	close(agent.exitChannel)
@@ -248,6 +248,7 @@ func (agent *Agent) reconcileWithKVStore(ctx context.Context) {
 }
 
 // onSuccess is a common callback for scenarios where we receive a nil response following a request to an adapter
+// nolint: unparam
 func (agent *Agent) onSuccess(ctx context.Context, prevState, currState *common.AdminState_Types, deviceUpdateLog bool) {
 	if deviceUpdateLog {
 		requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
@@ -260,6 +261,7 @@ func (agent *Agent) onSuccess(ctx context.Context, prevState, currState *common.
 
 // onFailure is a common callback for scenarios where we receive an error response following a request to an adapter
 // and the only action required is to publish the failed result on kafka
+// nolint: unparam
 func (agent *Agent) onFailure(ctx context.Context, err error, prevState, currState *common.AdminState_Types, deviceUpdateLog bool) {
 	// Send an event on kafka
 	rpce := agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, err.Error(), nil)
@@ -277,6 +279,7 @@ func (agent *Agent) onFailure(ctx context.Context, err error, prevState, currSta
 }
 
 // onForceDeleteResponse is invoked following a force delete request to an adapter.
+// nolint: unparam
 func (agent *Agent) onForceDeleteResponse(ctx context.Context, prevState, currState *common.AdminState_Types, dErr error) {
 	// Log the status
 	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
@@ -324,7 +327,7 @@ func (agent *Agent) onDeleteSuccess(ctx context.Context, prevState, currState *c
 func (agent *Agent) onDeleteFailure(ctx context.Context, err error, prevState, currState *common.AdminState_Types) {
 	logger.Errorw(ctx, "rpc-failed", log.Fields{"rpc": coreutils.GetRPCMetadataFromContext(ctx), "device-id": agent.deviceID, "error": err})
 
-	//Only updating of transient state is required, no transition.
+	// Only updating of transient state is required, no transition.
 	if er := agent.updateTransientState(ctx, core.DeviceTransientState_DELETE_FAILED); er != nil {
 		logger.Errorw(ctx, "failed-to-update-transient-state-as-delete-failed", log.Fields{"device-id": agent.deviceID, "error": er})
 	}
@@ -394,7 +397,7 @@ func (agent *Agent) updateDeviceTypeAndEndpoint(ctx context.Context) error {
 
 // enableDevice activates a preprovisioned or a disable device
 func (agent *Agent) enableDevice(ctx context.Context) error {
-	//To preserve and use oldDevice state as prev state in new device
+	// To preserve and use oldDevice state as prev state in new device
 	var err error
 	var desc string
 	var prevAdminState, currAdminState common.AdminState_Types
@@ -415,12 +418,12 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress or reconciling is in progress/failed: %s", agent.deviceID)
 		return err
 	}
-	//vol-4275 TST meeting 08/04/2021: Let EnableDevice to be called again if device is in FAILED operational state,
-	//even the admin state is ENABLED.
+	// vol-4275 TST meeting 08/04/2021: Let EnableDevice to be called again if device is in FAILED operational state,
+	// even the admin state is ENABLED.
 	if oldDevice.AdminState == voltha.AdminState_ENABLED && oldDevice.OperStatus != voltha.OperStatus_FAILED {
 		logger.Warnw(ctx, "device-already-enabled", log.Fields{"device-id": agent.deviceID})
 		agent.requestQueue.RequestComplete()
-		err = status.Errorf(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-an-already-enabled-device: %s", oldDevice.Id))
+		err = status.Errorf(codes.FailedPrecondition, "cannot-enable-an-already-enabled-device: %s", oldDevice.Id)
 		return err
 	}
 
@@ -463,7 +466,6 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		var err error
 		if oldDevice.AdminState == voltha.AdminState_PREPROVISIONED {
 			_, err = client.AdoptDevice(subCtx, newDevice)
 		} else {
@@ -489,11 +491,11 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
-	//if new flow list is empty then the called function returns quickly
+	// if new flow list is empty then the called function returns quickly
 	if flwResponse, err = agent.addFlowsToAdapter(ctx, newFlows, flowMetadata); err != nil {
 		return err
 	}
-	//if new group list is empty then the called function returns quickly
+	// if new group list is empty then the called function returns quickly
 	if grpResponse, err = agent.addGroupsToAdapter(ctx, newGroups, flowMetadata); err != nil {
 		return err
 	}
@@ -577,7 +579,8 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 	cloned.AdminState = voltha.AdminState_DISABLED
 	cloned.OperStatus = voltha.OperStatus_UNKNOWN
 
-	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+	var client adapter_service.AdapterServiceClient
+	client, err = agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
 		logger.Errorw(ctx, "grpc-client-nil",
 			log.Fields{
@@ -593,7 +596,7 @@ func (agent *Agent) disableDevice(ctx context.Context) error {
 	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		_, err := client.DisableDevice(subCtx, cloned)
+		_, err = client.DisableDevice(subCtx, cloned)
 		if err == nil {
 			agent.onSuccess(subCtx, nil, nil, true)
 		} else {
@@ -669,7 +672,7 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 	// Get the device Transient state, return err if it is DELETING
 	previousDeviceTransientState := agent.getTransientState()
 	device := agent.cloneDeviceWithoutLock()
-	if !agent.isForceDeletingAllowed(previousDeviceTransientState, device) {
+	if !agent.isForceDeletingAllowed(previousDeviceTransientState) {
 		agent.requestQueue.RequestComplete()
 		err = status.Error(codes.FailedPrecondition, fmt.Sprintf("deviceId:%s, force deletion is in progress", agent.deviceID))
 		return err
@@ -694,7 +697,7 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 		requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 		go func() {
 			defer cancel()
-			_, err := client.DeleteDevice(subCtx, device)
+			_, err = client.DeleteDevice(subCtx, device)
 			if err == nil {
 				agent.onSuccess(subCtx, nil, nil, true)
 			} else {
@@ -821,7 +824,7 @@ func (agent *Agent) packetOut(ctx context.Context, outPort uint32, packet *ofp.O
 	if agent.deviceType == "" {
 		agent.reconcileWithKVStore(ctx)
 	}
-	//	Send packet to adapter
+	// Send packet to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
 		logger.Errorw(ctx, "grpc-client-nil",
@@ -1002,7 +1005,7 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 	prevDevice := agent.device
 	// update the device
 	agent.device = device
-	//If any of the states has chenged, send the change event.
+	// If any of the states has chenged, send the change event.
 	if prevDevice.OperStatus != device.OperStatus || prevDevice.ConnectStatus != device.ConnectStatus || prevDevice.AdminState != device.AdminState {
 		_ = agent.deviceMgr.Agent.SendDeviceStateChangeEvent(ctx, prevDevice.OperStatus, prevDevice.ConnectStatus, prevDevice.AdminState, device, time.Now().Unix())
 	}
@@ -1033,14 +1036,14 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 		agent.requestQueue.RequestComplete()
 		return errors.New("device-agent-stopped")
 	}
-	//update device TransientState
+	// update device TransientState
 	if err := agent.updateTransientState(ctx, transientState); err != nil {
 		agent.requestQueue.RequestComplete()
 		return err
 	}
 	// update in db
 	if err := agent.dbProxy.Set(ctx, agent.deviceID, device); err != nil {
-		//Reverting TransientState update
+		// Reverting TransientState update
 		if errTransient := agent.updateTransientState(ctx, prevTransientState); errTransient != nil {
 			logger.Errorw(ctx, "failed-to-revert-transient-state-update-on-error", log.Fields{"device-id": device.Id,
 				"previous-transient-state": prevTransientState, "current-transient-state": transientState, "error": errTransient})
@@ -1054,7 +1057,7 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 	prevDevice := agent.device
 	// update the device
 	agent.device = device
-	//If any of the states has chenged, send the change event.
+	// If any of the states has chenged, send the change event.
 	if prevDevice.OperStatus != device.OperStatus || prevDevice.ConnectStatus != device.ConnectStatus || prevDevice.AdminState != device.AdminState {
 		_ = agent.deviceMgr.Agent.SendDeviceStateChangeEvent(ctx, prevDevice.OperStatus, prevDevice.ConnectStatus, prevDevice.AdminState, device, time.Now().Unix())
 	}
@@ -1113,7 +1116,7 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 			}
 			newPort := *oldPort
 			newPort.Peers = updatedPeers
-			if err := portHandle.Update(ctx, &newPort); err != nil {
+			if err = portHandle.Update(ctx, &newPort); err != nil {
 				portHandle.Unlock()
 				return nil
 			}
@@ -1207,7 +1210,7 @@ func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cde
 		return nil, err
 	}
 
-	//send request to adapter synchronously
+	// send request to adapter synchronously
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, pdevice.AdapterEndpoint)
 	if err != nil {
 		logger.Errorw(ctx, "grpc-client-nil",
@@ -1247,8 +1250,8 @@ func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, valu
 		return nil, err
 	}
 
-	//send request to adapter
-	//send request to adapter synchronously
+	// send request to adapter
+	// send request to adapter synchronously
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
 		logger.Errorw(ctx, "grpc-client-nil",
@@ -1288,7 +1291,7 @@ func (agent *Agent) getSingleValue(ctx context.Context, request *extension.Singl
 
 	cloned := agent.cloneDeviceWithoutLock()
 
-	//send request to adapter
+	// send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
 		logger.Errorw(ctx, "grpc-client-nil",
@@ -1318,13 +1321,13 @@ func (agent *Agent) setSingleValue(ctx context.Context, request *extension.Singl
 	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 	defer func() { agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc) }()
 
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return nil, err
 	}
 
 	cloned := agent.cloneDeviceWithoutLock()
 
-	//send request to adapter
+	// send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
 	if err != nil {
 		logger.Errorw(ctx, "grpc-client-nil",
@@ -1514,7 +1517,7 @@ func (agent *Agent) StartReconcileWithRetry(ctx context.Context) {
 	reconcilingBackoff.MaxElapsedTime = agent.config.BackoffRetryMaxElapsedTime
 	reconcilingBackoff.MaxInterval = agent.config.BackoffRetryMaxInterval
 
-	//making here to keep lifecycle of this channel within the scope of retryReconcile
+	// making here to keep lifecycle of this channel within the scope of retryReconcile
 	agent.stopReconcilingMutex.Lock()
 	if agent.stopReconciling != nil {
 		logger.Warnw(ctx, "Reconciling with retries is already in progress, don't proceed further", log.Fields{"device-id": device.Id})
@@ -1536,7 +1539,7 @@ retry:
 
 		// Use an exponential back off to prevent getting into a tight loop
 		duration := reconcilingBackoff.NextBackOff()
-		//This case should never occur in default case as max elapsed time for backoff is 0(by default) , so it will never return stop
+		// This case should never occur in default case as max elapsed time for backoff is 0(by default) , so it will never return stop
 		if duration == backoff.Stop {
 			// If we have received device reconciled error and the retry intervals have elapsed
 			// clean up the reconcile and break the retry loop
@@ -1674,28 +1677,28 @@ func (agent *Agent) sendReconcileRequestToAdapter(ctx context.Context, device *v
 	}
 	adapterResponse := make(chan error)
 	go func() {
-		_, err := client.ReconcileDevice(ctx, device)
+		_, err = client.ReconcileDevice(ctx, device)
 		adapterResponse <- err
 	}()
 	select {
 	// wait for response
-	case err := <-adapterResponse:
+	case err = <-adapterResponse:
 		if err != nil {
 			return err
 		}
-		//In case of success quit retrying and wait for adapter to reset operation state of device
+		// In case of success quit retrying and wait for adapter to reset operation state of device
 		agent.stopReconcilingMutex.Lock()
 		agent.stopReconciling = nil
 		agent.stopReconcilingMutex.Unlock()
 		return nil
 
-	//if reconciling need to be stopped
+	// if reconciling need to be stopped
 	case _, ok := <-agent.stopReconciling:
 		agent.stopReconcilingMutex.Lock()
 		agent.stopReconciling = nil
 		agent.stopReconcilingMutex.Unlock()
 		if !ok {
-			//channel-closed
+			// channel-closed
 			return fmt.Errorf("reconcile channel closed:%w", errReconcileAborted)
 		}
 		return fmt.Errorf("reconciling aborted:%w", errReconcileAborted)

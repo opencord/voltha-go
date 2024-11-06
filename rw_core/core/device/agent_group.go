@@ -84,7 +84,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 		} else {
 			groupToChange := groupHandle.GetReadOnly()
 			if !proto.Equal(groupToChange, group) {
-				//Group needs to be updated.
+				// Group needs to be updated.
 				if err = groupHandle.Update(ctx, group); err != nil {
 					groupHandle.Unlock()
 					return coreutils.DoneResponse(), err
@@ -92,7 +92,7 @@ func (agent *Agent) addGroupsToAdapter(ctx context.Context, newGroups []*ofp.Ofp
 				groupsToDelete = append(groupsToDelete, groupToChange)
 				groupsToAdd = append(groupsToAdd, group)
 			} else {
-				//No need to change the group. It is already exist.
+				// No need to change the group. It is already exist.
 				logger.Debugw(ctx, "no-need-to-change-already-existing-group", log.Fields{"device-id": agent.deviceID, "group": newGroups, "flow-metadata": flowMetadata})
 			}
 		}

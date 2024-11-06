@@ -80,7 +80,7 @@ func (dMgr *Manager) SetupUNILogicalPorts(ctx context.Context, cDevice *voltha.D
 // RunPostDeviceDelete removes any reference of this device
 func (dMgr *Manager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.Device) error {
 	logger.Infow(ctx, "run-post-device-delete", log.Fields{"device-id": cDevice.Id})
-	//deleting the logical device
+	// Deleting the logical device
 	logger.Debugw(ctx, "delete-logical-device", log.Fields{"device-id": cDevice.Id})
 	if dMgr.logicalDeviceMgr != nil && cDevice.Root {
 		if err := dMgr.logicalDeviceMgr.deleteLogicalDevice(ctx, cDevice); err != nil {
@@ -92,7 +92,7 @@ func (dMgr *Manager) RunPostDeviceDelete(ctx context.Context, cDevice *voltha.De
 	}
 	if agent := dMgr.getDeviceAgent(ctx, cDevice.Id); agent != nil {
 		logger.Debugw(ctx, "invoking-delete-device-and-ports", log.Fields{"device-id": cDevice.Id})
-		//delete ports
+		// Delete ports
 		if err := agent.deleteAllPorts(ctx); err != nil {
 			logger.Warnw(ctx, "failure-delete-device-ports", log.Fields{"device-id": cDevice.Id, "error": err.Error()})
 		}

@@ -42,30 +42,31 @@ import (
 
 // LogicalAgent represent attributes of logical device agent
 type LogicalAgent struct {
+	orderedEvents  orderedEvents
+	deviceMgr      *Manager
+	ldeviceMgr     *LogicalManager
+	ldProxy        *model.Proxy
+	deviceRoutes   *route.DeviceRoutes
+	flowDecomposer *fd.FlowDecomposer
+	logicalDevice  *voltha.LogicalDevice
+	requestQueue   *coreutils.RequestQueue
+
+	flowCache       *flow.Cache
+	meterLoader     *meter.Loader
+	groupCache      *group.Cache
+	portLoader      *lp.Loader
 	logicalDeviceID string
 	serialNumber    string
 	rootDeviceID    string
-	deviceMgr       *Manager
-	ldeviceMgr      *LogicalManager
-	ldProxy         *model.Proxy
-	stopped         bool
-	deviceRoutes    *route.DeviceRoutes
-	flowDecomposer  *fd.FlowDecomposer
 	internalTimeout time.Duration
-	logicalDevice   *voltha.LogicalDevice
-	requestQueue    *coreutils.RequestQueue
-	orderedEvents   orderedEvents
 	startOnce       sync.Once
 	stopOnce        sync.Once
 	exitChannel     chan int
 
-	flowCache   *flow.Cache
-	meterLoader *meter.Loader
-	groupCache  *group.Cache
-	portLoader  *lp.Loader
+	stopped bool
 }
 
-func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
+func newLogicalAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalManager,
 	deviceMgr *Manager, dbProxy *model.Path, ldProxy *model.Proxy, internalTimeout time.Duration) *LogicalAgent {
 	return &LogicalAgent{
 		logicalDeviceID: id,
@@ -108,7 +109,7 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 
 	var ld *voltha.LogicalDevice
 	if !logicalDeviceExist {
-		//Build the logical device based on information retrieved from the device adapter
+		// Build the logical device based on information retrieved from the device adapter
 		var switchCap *ca.SwitchCapability
 		var err error
 
@@ -152,7 +153,7 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 		ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
 
 		// Save the logical device
-		if err := agent.ldProxy.Set(ctx, ld.Id, ld); err != nil {
+		if err = agent.ldProxy.Set(ctx, ld.Id, ld); err != nil {
 			logger.Errorw(ctx, "failed-to-add-logical-device", log.Fields{"logical-device-id": agent.logicalDeviceID})
 			return
 		}
@@ -227,7 +228,7 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 		subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.internalTimeout)
 		// Before deletion of the logical agent, make sure all events for ldagent are sent to avoid race conditions
 		if err := agent.orderedEvents.waitForAllEventsToBeSent(subCtx, cancel); err != nil {
-			//Log the error here
+			// Log the error here
 			logger.Errorw(ctx, "failed-to-send-all-events-on-the-logical-device-before-deletion",
 				log.Fields{"error": err, "logical-device-id": agent.logicalDeviceID})
 		}
@@ -237,7 +238,7 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 			logger.Warnw(ctx, "delete-logical-meters-error", log.Fields{"device-id": agent.logicalDeviceID, "error": err})
 		}
 
-		//Remove the logical device from the model
+		// Remove the logical device from the model
 		if err := agent.ldProxy.Remove(ctx, agent.logicalDeviceID); err != nil {
 			returnErr = err
 		} else {
@@ -404,8 +405,8 @@ func (agent *LogicalAgent) packetOut(ctx context.Context, packet *ofp.OfpPacketO
 		})
 	}
 	outPort := fu.GetPacketOutPort(packet)
-	//frame := packet.GetData()
-	//TODO: Use a channel between the logical agent and the device agent
+	// frame := packet.GetData()
+	// TODO: Use a channel between the logical agent and the device agent
 	if err := agent.deviceMgr.packetOut(ctx, agent.rootDeviceID, outPort, packet); err != nil {
 		logger.Error(ctx, "packet-out-failed", log.Fields{"logical-device-id": agent.rootDeviceID})
 	}
