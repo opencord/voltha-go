@@ -134,7 +134,7 @@ func newLDATest(ctx context.Context) *LDATest {
 	return test
 }
 
-func (lda *LDATest) startCore(ctx context.Context, inCompeteMode bool) {
+func (lda *LDATest) startCore(ctx context.Context) {
 	cfg := &config.RWCoreFlags{}
 	cfg.ParseCommandArguments([]string{})
 	cfg.EventTopic = "voltha.events"
@@ -178,7 +178,7 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalAgent {
 	clonedLD := proto.Clone(lda.logicalDevice).(*voltha.LogicalDevice)
 	clonedLD.Id = com.GetRandomString(10)
 	clonedLD.DatapathId = rand.Uint64()
-	lDeviceAgent := newLogicalAgent(context.Background(), clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.dbPath, lDeviceMgr.ldProxy, lDeviceMgr.internalTimeout)
+	lDeviceAgent := newLogicalAgent(clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.dbPath, lDeviceMgr.ldProxy, lDeviceMgr.internalTimeout)
 	lDeviceAgent.logicalDevice = clonedLD
 	for _, port := range lda.logicalPorts {
 		clonedPort := proto.Clone(port).(*voltha.LogicalPort)
@@ -330,7 +330,7 @@ func TestConcurrentLogicalDeviceUpdate(t *testing.T) {
 	defer lda.stopAll(ctx)
 
 	// Start the Core
-	lda.startCore(ctx, false)
+	lda.startCore(ctx)
 
 	var wg sync.WaitGroup
 	numConCurrentLogicalDeviceAgents := 3
@@ -350,7 +350,7 @@ func TestLogicalAgentStopWithEventsInQueue(t *testing.T) {
 	defer lda.stopAll(ctx)
 
 	// Start the Core
-	lda.startCore(ctx, false)
+	lda.startCore(ctx)
 
 	a := lda.createLogicalDeviceAgent(t)
 	lda.updateLogicalDevice(t, a)

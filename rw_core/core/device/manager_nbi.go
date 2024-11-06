@@ -282,7 +282,7 @@ func (dMgr *Manager) DownloadImageToDevice(ctx context.Context, request *voltha.
 			CommitOnSuccess:   request.CommitOnSuccess,
 		}
 
-		//slice-out only single deviceID from the request
+		// slice-out only single deviceID from the request
 		downloadReq.DeviceId = request.DeviceId[index : index+1]
 
 		go func(deviceID string, req *voltha.DeviceImageDownloadRequest, ch chan []*voltha.DeviceImageState) {
@@ -348,7 +348,7 @@ func (dMgr *Manager) GetImageStatus(ctx context.Context, request *voltha.DeviceI
 	respCh := make(chan []*voltha.DeviceImageState, len(request.GetDeviceId()))
 
 	if request.DeviceId == nil {
-		//Reply for every ONU
+		// Reply for every ONU
 		dMgr.deviceAgents.Range(func(key, value interface{}) bool {
 			device := value.(*Agent).device
 			if !device.Root {
@@ -365,7 +365,7 @@ func (dMgr *Manager) GetImageStatus(ctx context.Context, request *voltha.DeviceI
 			CommitOnSuccess: request.CommitOnSuccess,
 		}
 
-		//slice-out only single deviceID from the request
+		// slice-out only single deviceID from the request
 		imageStatusReq.DeviceId = request.DeviceId[index : index+1]
 
 		go func(deviceID string, req *voltha.DeviceImageRequest, ch chan []*voltha.DeviceImageState) {
@@ -436,7 +436,7 @@ func (dMgr *Manager) AbortImageUpgradeToDevice(ctx context.Context, request *vol
 			CommitOnSuccess: request.CommitOnSuccess,
 		}
 
-		//slice-out only single deviceID from the request
+		// slice-out only single deviceID from the request
 		abortImageReq.DeviceId = request.DeviceId[index : index+1]
 
 		go func(deviceID string, req *voltha.DeviceImageRequest, ch chan []*voltha.DeviceImageState) {
@@ -529,7 +529,7 @@ func (dMgr *Manager) ActivateImage(ctx context.Context, request *voltha.DeviceIm
 			CommitOnSuccess: request.CommitOnSuccess,
 		}
 
-		//slice-out only single deviceID from the request
+		// slice-out only single deviceID from the request
 		activateImageReq.DeviceId = request.DeviceId[index : index+1]
 
 		go func(deviceID string, req *voltha.DeviceImageRequest, ch chan []*voltha.DeviceImageState) {
@@ -600,7 +600,7 @@ func (dMgr *Manager) CommitImage(ctx context.Context, request *voltha.DeviceImag
 			Version:         request.Version,
 			CommitOnSuccess: request.CommitOnSuccess,
 		}
-		//slice-out only single deviceID from the request
+		// slice-out only single deviceID from the request
 		commitImageReq.DeviceId = request.DeviceId[index : index+1]
 
 		go func(deviceID string, req *voltha.DeviceImageRequest, ch chan []*voltha.DeviceImageState) {

@@ -41,23 +41,23 @@ import (
 
 // Manager represents adapter manager attributes
 type Manager struct {
+	endpointMgr             EndpointManager
 	adapterAgents           map[string]*agent
 	adapterEndpoints        map[Endpoint]*agent
 	deviceTypes             map[string]*voltha.DeviceType
 	adapterDbProxy          *model.Proxy
 	deviceTypeDbProxy       *model.Proxy
 	onAdapterRestart        vgrpc.RestartedHandler
-	endpointMgr             EndpointManager
-	lockAdapterAgentsMap    sync.RWMutex
-	lockDeviceTypesMap      sync.RWMutex
-	lockAdapterEndPointsMap sync.RWMutex
+	rollingUpdateMap        map[string]bool
+	rxStreamCloseChMap      map[string]chan bool
+	coreEndpoint            string
 	liveProbeInterval       time.Duration
 	PerRPCRetryTimeout      time.Duration
 	MaxRetries              uint
-	coreEndpoint            string
-	rollingUpdateMap        map[string]bool
+	lockAdapterAgentsMap    sync.RWMutex
+	lockDeviceTypesMap      sync.RWMutex
+	lockAdapterEndPointsMap sync.RWMutex
 	rollingUpdateLock       sync.RWMutex
-	rxStreamCloseChMap      map[string]chan bool
 	rxStreamCloseChLock     sync.RWMutex
 }
 
@@ -138,10 +138,10 @@ func (aMgr *Manager) GetAdapterWithEndpoint(ctx context.Context, endPoint string
 	aMgr.lockAdapterEndPointsMap.RUnlock()
 
 	if have {
-		return agent.getAdapter(ctx), nil
+		return agent.getAdapter(), nil
 	}
 
-	return nil, errors.New("Not found")
+	return nil, fmt.Errorf("%v: Not found", ctx)
 }
 
 func (aMgr *Manager) GetAdapterNameWithEndpoint(ctx context.Context, endPoint string) (string, error) {
@@ -153,7 +153,7 @@ func (aMgr *Manager) GetAdapterNameWithEndpoint(ctx context.Context, endPoint st
 		return agent.adapter.Id, nil
 	}
 
-	return "", errors.New("Not found")
+	return "", fmt.Errorf("%v: Not found", ctx)
 }
 
 func (aMgr *Manager) GetAdapterClient(_ context.Context, endpoint string) (adapter_service.AdapterServiceClient, error) {
@@ -398,7 +398,7 @@ func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *core_ada
 	// Start adapter instance - this will trigger the connection to the adapter
 	if agent, err := aMgr.getAgent(ctx, adapter.Id); agent != nil {
 		subCtx := log.WithSpanFromContext(context.Background(), ctx)
-		if err := agent.start(subCtx); err != nil {
+		if err = agent.start(subCtx); err != nil {
 			logger.Errorw(ctx, "failed-to-start-adapter", log.Fields{"error": err})
 			return nil, err
 		}
@@ -484,7 +484,7 @@ func (aMgr *Manager) ListAdapters(ctx context.Context, _ *empty.Empty) (*voltha.
 	aMgr.lockAdapterAgentsMap.RLock()
 	defer aMgr.lockAdapterAgentsMap.RUnlock()
 	for _, adapterAgent := range aMgr.adapterAgents {
-		if a := adapterAgent.getAdapter(ctx); a != nil {
+		if a := adapterAgent.getAdapter(); a != nil {
 			result.Items = append(result.Items, (proto.Clone(a)).(*voltha.Adapter))
 		}
 	}
@@ -569,16 +569,16 @@ func (aMgr *Manager) getAgent(ctx context.Context, adapterID string) (*agent, er
 	if adapterAgent, ok := aMgr.adapterAgents[adapterID]; ok {
 		return adapterAgent, nil
 	}
-	return nil, errors.New("Not found")
+	return nil, fmt.Errorf("%v: Not found", ctx)
 }
 
 func (aMgr *Manager) getAdapter(ctx context.Context, adapterID string) (*voltha.Adapter, error) {
 	aMgr.lockAdapterAgentsMap.RLock()
 	defer aMgr.lockAdapterAgentsMap.RUnlock()
 	if adapterAgent, ok := aMgr.adapterAgents[adapterID]; ok {
-		return adapterAgent.getAdapter(ctx), nil
+		return adapterAgent.getAdapter(), nil
 	}
-	return nil, errors.New("Not found")
+	return nil, fmt.Errorf("%v: Not found", ctx)
 }
 
 // mutedAdapterRestartedHandler will be invoked by the grpc client on an adapter restart.

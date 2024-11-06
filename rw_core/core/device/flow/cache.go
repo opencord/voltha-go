@@ -25,18 +25,17 @@ import (
 
 // Cache hides all low-level locking & synchronization related to flow state updates
 type Cache struct {
-	// this lock protects the flows map, it does not protect individual flows
-	lock  sync.RWMutex
 	flows map[uint64]*chunk
+	// this lock protects the flows map, it does not protect individual flows
+	lock sync.RWMutex
 }
 
 // chunk keeps a flow and the lock for this flow
 type chunk struct {
+	flow *ofp.OfpFlowStats
 	// this lock is used to synchronize all access to the flow, and also to the "deleted" variable
 	lock    sync.Mutex
 	deleted bool
-
-	flow *ofp.OfpFlowStats
 }
 
 func NewCache() *Cache {
@@ -56,7 +55,7 @@ func (cache *Cache) LockOrCreate(ctx context.Context, flow *ofp.OfpFlowStats) (*
 	cache.lock.Lock()
 	entry, have := cache.flows[flow.Id]
 	if !have {
-		entry := &chunk{flow: flow}
+		entry = &chunk{flow: flow}
 		cache.flows[flow.Id] = entry
 		entry.lock.Lock()
 		cache.lock.Unlock()
