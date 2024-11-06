@@ -42,7 +42,7 @@ func (dMgr *Manager) PortCreated(ctx context.Context, port *voltha.Port) (*empty
 		if err := agent.addPort(ctx, port); err != nil {
 			return nil, err
 		}
-		//	Setup peer ports in its own routine
+		// Setup peer ports in its own routine
 
 		if err := dMgr.addPeerPort(ctx, port.DeviceId, port); err != nil {
 			logger.Errorw(ctx, "unable-to-add-peer-port", log.Fields{"error": err, "device-id": port.DeviceId})
@@ -80,6 +80,9 @@ func (dMgr *Manager) DeviceStateUpdate(ctx context.Context, ds *ca.DeviceStateFi
 }
 
 func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ca.DeviceDiscovery) (*voltha.Device, error) {
+	var err error
+	var pDevice *voltha.Device
+
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildDeviceDetected")
 	logger.Debugw(ctx, "child-device-detected",
 		log.Fields{
@@ -91,15 +94,13 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ca.DeviceDisco
 			"serialNumber":     dd.SerialNumber,
 			"onuId":            dd.OnuId,
 		})
-
-	var err error
 	if dd.ChildDeviceType == "" && dd.VendorId != "" {
 		logger.Debug(ctx, "device-type-is-nil-fetching-device-type")
 		if dd.ChildDeviceType, err = dMgr.adapterMgr.GetAdapterTypeByVendorID(dd.VendorId); err != nil {
 			return nil, err
 		}
 	}
-	//if no match found for the vendorid,report adapter with the custom error message
+	// If no match found for the vendorid,report adapter with the custom error message
 	if dd.ChildDeviceType == "" {
 		logger.Errorw(ctx, "failed-to-fetch-adapter-name ", log.Fields{"vendorId": dd.VendorId})
 		return nil, status.Errorf(codes.NotFound, "%s", dd.VendorId)
@@ -120,21 +121,21 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ca.DeviceDisco
 		return nil, status.Errorf(codes.NotFound, "%s", dd.ParentId)
 	}
 	if pAgent.deviceType == "" {
-		pDevice, err := pAgent.getDeviceReadOnly(ctx)
+		pDevice, err = pAgent.getDeviceReadOnly(ctx)
 		logger.Errorw(ctx, "device-type-not-set", log.Fields{"parent-device": pDevice, "error": err})
 		return nil, status.Errorf(codes.FailedPrecondition, "device Type not set %s", dd.ParentId)
 	}
 
-	if device, err := dMgr.GetChildDevice(ctx, &ca.ChildDeviceFilter{
+	if pDevice, err = dMgr.GetChildDevice(ctx, &ca.ChildDeviceFilter{
 		ParentId:     dd.ParentId,
 		SerialNumber: dd.SerialNumber,
 		OnuId:        dd.OnuId,
 		ParentPortNo: dd.ParentPortNo}); err == nil {
 		logger.Warnw(ctx, "child-device-exists", log.Fields{"parent-device-id": dd.ParentId, "serialNumber": dd.SerialNumber})
-		return device, status.Errorf(codes.AlreadyExists, "%s", dd.SerialNumber)
+		return pDevice, status.Errorf(codes.AlreadyExists, "%s", dd.SerialNumber)
 	}
 
-	//Get parent endpoint
+	// Get parent endpoint
 	pEndPoint, err := dMgr.adapterMgr.GetAdapterEndpoint(ctx, pAgent.deviceID, pAgent.deviceType)
 	if err != nil {
 		logger.Errorw(ctx, "endpoint-error", log.Fields{"error": err, "parent-id": pAgent.deviceID, "parent-device-type": pAgent.deviceType})
@@ -404,7 +405,7 @@ func (dMgr *Manager) DeleteAllPorts(ctx context.Context, deviceID *common.ID) (*
 		if device, err := dMgr.getDeviceReadOnly(ctx, deviceID.Id); err == nil {
 			go func() {
 				subCtx := utils.WithSpanAndRPCMetadataFromContext(ctx)
-				if err := dMgr.logicalDeviceMgr.deleteAllLogicalPorts(subCtx, device); err != nil {
+				if err = dMgr.logicalDeviceMgr.deleteAllLogicalPorts(subCtx, device); err != nil {
 					logger.Errorw(ctx, "unable-to-delete-logical-ports", log.Fields{"error": err})
 				}
 			}()

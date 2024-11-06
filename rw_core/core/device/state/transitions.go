@@ -78,16 +78,16 @@ type transitionHandler func(context.Context, *voltha.Device) error
 
 // transition represent transition related attributes
 type transition struct {
-	deviceType    deviceType
+	handlers      []transitionHandler
 	previousState deviceState
 	currentState  deviceState
-	handlers      []transitionHandler
+	deviceType    deviceType
 }
 
 // TransitionMap represent map of transitions and device manager
 type TransitionMap struct {
-	transitions []transition
 	dMgr        DeviceManager
+	transitions []transition
 }
 
 // DeviceManager represents a generic device manager
@@ -143,7 +143,7 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_ACTIVE, Transient: core.DeviceTransientState_NONE},
 			handlers:      []transitionHandler{dMgr.SetupUNILogicalPorts}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		transition{ //DELETE PRE PROVISIONED State device forcefully
+		transition{ // DELETE PRE PROVISIONED State device forcefully
 			deviceType:    any,
 			previousState: deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_FORCE_DELETING},
@@ -155,19 +155,19 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			currentState:  deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE},
 			handlers:      []transitionHandler{dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		transition{ //DELETE device forcefully
+		transition{ // DELETE device forcefully
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_FORCE_DELETING},
 			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		transition{ //DELETE device after adapter response
+		transition{ // DELETE device after adapter response
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE},
 			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		transition{ //DELETE no operation transition
+		transition{ // DELETE no operation transition
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_DELETING_FROM_ADAPTER},
@@ -209,19 +209,19 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			currentState:  deviceState{Admin: voltha.AdminState_DISABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_NONE},
 			handlers:      []transitionHandler{dMgr.CreateLogicalDevice}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		transition{ //DELETE force case
+		transition{ // DELETE force case
 			deviceType:    child,
 			previousState: deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_FORCE_DELETING},
 			handlers:      []transitionHandler{dMgr.DeleteAllDeviceFlows, dMgr.ChildDeviceLost, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		transition{ //DELETE after adapter response case
+		transition{ // DELETE after adapter response case
 			deviceType:    child,
 			previousState: deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE},
 			handlers:      []transitionHandler{dMgr.DeleteAllDeviceFlows, dMgr.ChildDeviceLost, dMgr.DeleteLogicalPorts, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
-		transition{ //DELETE wait for adapter response(no operation)
+		transition{ // DELETE wait for adapter response(no operation)
 			deviceType:    child,
 			previousState: deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_UNKNOWN, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_DELETING_FROM_ADAPTER},
@@ -398,7 +398,7 @@ func getDeviceStates(device *voltha.Device, transientState core.DeviceTransientS
 		Transient: transientState}
 }
 
-// isMatched matches a state transition.  It returns whether there is a match and if there is whether it is an exact match
+// isMatched matches a state transition. It returns whether there is a match and if there is whether it is an exact match
 func getHandler(previous deviceState, current deviceState, transition *transition) ([]transitionHandler, *match) {
 	m := &match{}
 	var waitForOtherStatesMatch bool
@@ -473,7 +473,7 @@ func getHandler(previous deviceState, current deviceState, transition *transitio
 // getTransitionHandler returns transition handler & a flag that's set if the transition is invalid
 func (tMap *TransitionMap) getTransitionHandler(ctx context.Context, cDevice, pDevice *voltha.Device,
 	cTransientState, pTransientState core.DeviceTransientState_Types) []transitionHandler {
-	//1. Get the previous and current set of states
+	// Get the previous and current set of states
 	cState := getDeviceStates(cDevice, cTransientState)
 	pState := getDeviceStates(pDevice, pTransientState)
 
@@ -482,7 +482,6 @@ func (tMap *TransitionMap) getTransitionHandler(ctx context.Context, cDevice, pD
 		return nil
 	}
 
-	//logger.Infow(ctx, "deviceType", log.Fields{"device": pDevice})
 	deviceType := parent
 	if !cDevice.Root {
 		logger.Info(ctx, "device is child")
@@ -490,13 +489,13 @@ func (tMap *TransitionMap) getTransitionHandler(ctx context.Context, cDevice, pD
 	}
 	logger.Infof(ctx, "deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, cDevice.Id, pState, cState)
 
-	//2. Go over transition array to get the right transition
+	// Go over transition array to get the right transition
 	var currentMatch []transitionHandler
 	var tempHandler []transitionHandler
 	var m *match
 	bestMatch := &match{}
 	for i := range tMap.transitions {
-		// consider transition only if it matches deviceType or is a wild card - any
+		// Consider transition only if it matches deviceType or is a wild card - any
 		if tMap.transitions[i].deviceType != deviceType && tMap.transitions[i].deviceType != any {
 			continue
 		}

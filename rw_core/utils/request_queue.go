@@ -29,10 +29,9 @@ type request struct {
 // RequestQueue represents a request processing queue where each request is processed to completion before another
 // request is given the green light to proceed.
 type RequestQueue struct {
-	mutex sync.Mutex
-
 	last, current  *request
 	lastCompleteCh <-chan struct{}
+	mutex          sync.Mutex
 }
 
 // NewRequestQueue creates a new request queue

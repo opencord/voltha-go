@@ -130,7 +130,7 @@ func (onuA *ONUAdapter) AdoptDevice(ctx context.Context, device *voltha.Device) 
 		if err != nil {
 			return
 		}
-		if _, err := c.DeviceUpdate(context.TODO(), d); err != nil {
+		if _, err = c.DeviceUpdate(context.TODO(), d); err != nil {
 			logger.Fatalf(ctx, "deviceUpdate-failed-%s", err)
 		}
 
@@ -197,7 +197,7 @@ func (onuA *ONUAdapter) AdoptDevice(ctx context.Context, device *voltha.Device) 
 			logger.Fatalf(ctx, "PortCreated-failed-%s", err)
 		}
 
-		//Get the latest device data from the Core
+		// Get the latest device data from the Core
 		if d, err = c.GetDevice(context.TODO(), &common.ID{Id: d.Id}); err != nil {
 			logger.Fatalf(ctx, "getting-device-failed-%s", err)
 		}
@@ -237,7 +237,7 @@ func (onuA *ONUAdapter) DisableDevice(ctx context.Context, device *voltha.Device
 			logger.Warnw(ctx, "updating-ports-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 
-		//Update the device operational state
+		// Update the device operational state
 		cloned.ConnectStatus = common.ConnectStatus_UNREACHABLE
 		cloned.OperStatus = common.OperStatus_UNKNOWN
 
@@ -280,7 +280,7 @@ func (onuA *ONUAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 			logger.Warnw(ctx, "updating-ports-failed", log.Fields{"device-id": device.Id, "error": err})
 		}
 
-		//Update the device state
+		// Update the device state
 		cloned.ConnectStatus = common.ConnectStatus_REACHABLE
 		cloned.OperStatus = common.OperStatus_ACTIVE
 

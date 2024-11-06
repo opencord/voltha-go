@@ -70,6 +70,7 @@ func (fd *FlowDecomposer) DecomposeRules(ctx context.Context, agent LogicalDevic
 }
 
 // Handles special case of any controller-bound flow for a parent device
+// nolint: unparam
 func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevice(ctx context.Context, dr *fu.DeviceRules) (*fu.DeviceRules, error) {
 	EAPOL := fu.EthType(0x888e)
 	PPPoED := fu.EthType(0x8863)
@@ -77,7 +78,7 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevice(
 	UDP := fu.IpProto(17)
 
 	newDeviceRules := dr.Copy()
-	//	Check whether we are dealing with a parent device
+	// Check whether we are dealing with a parent device
 	for deviceID, fg := range dr.GetRules() {
 		if device, err := fd.getDevice(ctx, deviceID); err == nil && device.Root {
 			newDeviceRules.ClearFlows(deviceID)
@@ -97,11 +98,6 @@ func (fd *FlowDecomposer) updateOutputPortForControllerBoundFlowForParentDevice(
 					f = fu.UpdateOutputPortByActionType(f, uint32(ofp.OfpInstructionType_OFPIT_APPLY_ACTIONS),
 						uint32(ofp.OfpPortNo_OFPP_CONTROLLER))
 				}
-				// Update flow Id as a change in the instruction field will result in a new flow ID
-				//var err error
-				//if f.Id, err = fu.HashFlowStats(f); err != nil {
-				//return nil, err
-				//}
 				newDeviceRules.AddFlow(deviceID, (proto.Clone(f)).(*ofp.OfpFlowStats))
 			}
 		}
@@ -122,7 +118,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 	ingressHop := path[0]
 	egressHop := path[1]
 
-	//case of packet_in from NNI port rule
+	// case of packet_in from NNI port rule
 	if agent.GetDeviceRoutes().IsRootPort(inPortNo) {
 		// Trap flow for NNI port
 		logger.Debug(ctx, "trap-nni")
@@ -148,7 +144,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 		logger.Debug(ctx, "trap-uni")
 		var setVid, setPcp uint32
 		var setVidOk, setPcpOk bool
-		//inPortNo is 0 for wildcard input case, do not include upstream port for controller bound flow in input
+		// inPortNo is 0 for wildcard input case, do not include upstream port for controller bound flow in input
 		var inPorts = map[uint32]struct{}{inPortNo: {}}
 		if inPortNo == 0 {
 			inPorts = agent.GetWildcardInputPorts(ctx, egressHop.Egress) // exclude egress_hop.egress_port.port_no
@@ -291,7 +287,7 @@ func (fd *FlowDecomposer) processUpstreamNonControllerBoundFlow(ctx context.Cont
 		// Augment the matchfields with the ofpfields from the flow
 		fa.MatchFields = append(fa.MatchFields, fu.GetOfbFields(flow, fu.IN_PORT)...)
 
-		//Augment the actions
+		// Augment the actions
 		filteredAction := fu.GetActions(flow, fu.OUTPUT)
 		filteredAction = append(filteredAction, fu.Output(egressHop.Egress))
 		fa.Actions = filteredAction
@@ -443,7 +439,7 @@ func (fd *FlowDecomposer) processMulticastFlow(ctx context.Context, path []route
 	logger.Debugw(ctx, "multicast-flow", log.Fields{"inPortNo": inPortNo, "outPortNo": outPortNo})
 	deviceRules := fu.NewDeviceRules()
 
-	//having no Group yet is the same as having a Group with no buckets
+	// having no Group yet is the same as having a Group with no buckets
 	var grp *ofp.OfpGroupEntry
 	var ok bool
 	if grp, ok = groupMap[grpID]; !ok {
@@ -458,7 +454,7 @@ func (fd *FlowDecomposer) processMulticastFlow(ctx context.Context, path []route
 	deviceRules.CreateEntryIfNotExist(path[0].DeviceID)
 	fg := fu.NewFlowsAndGroups()
 	fg.AddFlow(flow)
-	//return the multicast flow without decomposing it
+	// return the multicast flow without decomposing it
 	deviceRules.AddFlowsAndGroup(path[0].DeviceID, fg)
 	return deviceRules
 }
@@ -469,8 +465,8 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDevice
 
 	inPortNo := fu.GetInPort(flow)
 	if fu.HasGroup(flow) && inPortNo == 0 {
-		//if no in-port specified for a multicast flow, put NNI port as in-port
-		//so that a valid path can be found for the flow
+		// if no in-port specified for a multicast flow, put NNI port as in-port
+		// so that a valid path can be found for the flow
 		nniPorts := agent.GetNNIPorts()
 		if len(nniPorts) > 0 {
 			for port := range nniPorts {
@@ -504,7 +500,6 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDevice
 		}
 	} else {
 		var ingressDevice *voltha.Device
-		var err error
 		if ingressDevice, err = fd.getDevice(ctx, path[0].DeviceID); err != nil {
 			// This can happen in a race condition where a device is deleted right after we obtain a
 			// route involving the device (GetRoute() above).  Handle it as a no route event as well.
@@ -535,7 +530,7 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDevice
 			if err != nil {
 				return nil, err
 			}
-		} else if grpID := fu.GetGroup(flow); grpID != 0 && flow.TableId == 0 { //Multicast
+		} else if grpID := fu.GetGroup(flow); grpID != 0 && flow.TableId == 0 { // Multicast
 			logger.Debugw(ctx, "process-multicast-flow", log.Fields{"flows": flow})
 			deviceRules = fd.processMulticastFlow(ctx, path, inPortNo, outPortNo, flow, grpID, groupMap)
 		} else {
