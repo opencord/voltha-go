@@ -63,7 +63,7 @@ func (agent *LogicalAgent) updateLogicalPort(ctx context.Context, device *voltha
 			logger.Infow(ctx, "failed-to-update-routes-after-adding-parent-pon-port", log.Fields{"device-id": device.Id, "port": port, "ports-count": len(devicePorts), "error": err})
 		}
 
-		//fallthrough
+		// Fallthrough
 	case voltha.Port_PON_ONU:
 		// Add the routes corresponding to that child device
 
@@ -134,7 +134,7 @@ func (agent *LogicalAgent) setupNNILogicalPorts(ctx context.Context, deviceID st
 		return err
 	}
 
-	//Get UNI port number
+	// Get UNI port number
 	for _, port := range devicePorts {
 		if port.Type == voltha.Port_ETHERNET_NNI {
 			if err = agent.addNNILogicalPort(ctx, deviceID, devicePorts, port); err != nil {
@@ -183,7 +183,7 @@ func (agent *LogicalAgent) setupUNILogicalPorts(ctx context.Context, childDevice
 	logger.Infow(ctx, "setup-uni-logical-ports", log.Fields{"logical-device-id": agent.logicalDeviceID})
 	// Build the logical device based on information retrieved from the device adapter
 	var err error
-	//Get UNI port number
+	// Get UNI port number
 	for _, port := range childDevicePorts {
 		if port.Type == voltha.Port_ETHERNET_UNI {
 			if err = agent.addUNILogicalPort(ctx, childDevice.Id, childDevice.AdminState, childDevice.OperStatus, childDevicePorts, port); err != nil {
@@ -444,8 +444,8 @@ func (e *orderedEvents) assignQueuePosition() queuePosition {
 
 // orderedEvents guarantees the order that events are sent, while allowing events to back up.
 type orderedEvents struct {
-	mutex sync.Mutex
 	last  <-chan struct{}
+	mutex sync.Mutex
 }
 
 type queuePosition struct {
