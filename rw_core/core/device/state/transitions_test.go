@@ -66,6 +66,7 @@ func assertNoOpTransition(t *testing.T, device, prevDevice *voltha.Device, trans
 	assert.Equal(t, 0, len(handlers))
 }
 
+// nolint: staticcheck,ineffassign
 func TestValidTransitions(t *testing.T) {
 	ctx := context.Background()
 

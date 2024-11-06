@@ -63,7 +63,7 @@ func waitUntilKVStoreReachableOrMaxTries(ctx context.Context, kvClient kvstore.C
 			//	Take a nap before retrying
 			select {
 			case <-ctx.Done():
-				//ctx canceled
+				// ctx canceled
 				return ctx.Err()
 			case <-time.After(retryInterval):
 			}

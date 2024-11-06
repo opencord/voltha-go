@@ -19,9 +19,10 @@ package device
 import (
 	"context"
 	"fmt"
-	"github.com/opencord/voltha-protos/v5/go/common"
 	"sync"
 	"time"
+
+	"github.com/opencord/voltha-protos/v5/go/common"
 
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
@@ -43,23 +44,23 @@ import (
 
 // Manager represent device manager attributes
 type Manager struct {
-	deviceAgents      sync.Map
-	rootDevices       map[string]bool
-	lockRootDeviceMap sync.RWMutex
+	rootDevices map[string]bool
 	*event.Agent
 	adapterMgr              *adapter.Manager
 	logicalDeviceMgr        *LogicalManager
 	stateTransitions        *state.TransitionMap
 	dbPath                  *model.Path
 	dProxy                  *model.Proxy
+	deviceLoadingInProgress map[string][]chan int
+	config                  *config.RWCoreFlags
+	doneCh                  chan struct{}
+	deviceAgents            sync.Map
 	coreInstanceID          string
 	internalTimeout         time.Duration
 	rpcTimeout              time.Duration
 	flowTimeout             time.Duration
+	lockRootDeviceMap       sync.RWMutex
 	devicesLoadingLock      sync.RWMutex
-	deviceLoadingInProgress map[string][]chan int
-	config                  *config.RWCoreFlags
-	doneCh                  chan struct{}
 }
 
 // NewManagers creates the Manager and the Logical Manager.
@@ -170,7 +171,7 @@ func (dMgr *Manager) getDeviceAgent(ctx context.Context, deviceID string) *Agent
 		}
 		return agent.(*Agent)
 	}
-	//TODO: Change the return params to return an error as well
+	// TODO: Change the return params to return an error as well
 	logger.Errorw(ctx, "loading-device-failed", log.Fields{"device-id": deviceID, "error": err})
 	return nil
 }
@@ -306,7 +307,7 @@ func (dMgr *Manager) loadDevice(ctx context.Context, deviceID string) (*Agent, e
 		ch := make(chan int, 1)
 		dMgr.deviceLoadingInProgress[deviceID] = append(dMgr.deviceLoadingInProgress[deviceID], ch)
 		dMgr.devicesLoadingLock.Unlock()
-		//	Wait for the channel to be closed, implying the process loading this device is done.
+		// Wait for the channel to be closed, implying the process loading this device is done.
 		<-ch
 	}
 	if agent, ok := dMgr.deviceAgents.Load(deviceID); ok {
@@ -374,7 +375,7 @@ func (dMgr *Manager) load(ctx context.Context, deviceID string) error {
 		}
 		logger.Debugw(ctx, "successfully-loaded-parent-and-children", log.Fields{"device-id": deviceID})
 	} else if device.ParentId != "" {
-		//	Scenario B - use the parentId of that device (root device) to trigger the loading
+		// Scenario B - use the parentId of that device (root device) to trigger the loading
 		return dMgr.load(ctx, device.ParentId)
 	}
 
@@ -455,7 +456,7 @@ func (dMgr *Manager) AddPort(ctx context.Context, deviceID string, port *voltha.
 		if err := agent.addPort(ctx, port); err != nil {
 			return err
 		}
-		//	Setup peer ports in its own routine
+		// Setup peer ports in its own routine
 		if err := dMgr.addPeerPort(ctx, deviceID, port); err != nil {
 			logger.Errorw(ctx, "unable-to-add-peer-port", log.Fields{"error": err, "device-id": deviceID})
 		}
@@ -722,7 +723,7 @@ func (dMgr *Manager) NotifyInvalidTransition(ctx context.Context, device *voltha
 		"curr-oper-state":  device.OperStatus,
 		"curr-conn-state":  device.ConnectStatus,
 	})
-	//TODO: notify over kafka?
+	// TODO: notify over kafka?
 	return nil
 }
 
@@ -752,7 +753,7 @@ func (dMgr *Manager) UpdateDeviceReason(ctx context.Context, deviceID string, re
 
 func (dMgr *Manager) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RPCEvent,
 	category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
-	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
+	// TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
 	dMgr.Agent.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs)
 }
 
@@ -817,7 +818,7 @@ func (dMgr *Manager) waitForAllResponses(ctx context.Context, opName string, res
 
 			respCount++
 
-			//check whether all responses received, if so, sent back the collated response
+			// Check whether all responses received, if so, sent back the collated response
 			if respCount == expectedResps {
 				return response, nil
 			}
@@ -837,7 +838,7 @@ func (dMgr *Manager) ReconcilingCleanup(ctx context.Context, device *voltha.Devi
 	err := agent.reconcilingCleanup(ctx)
 	if err != nil {
 		logger.Errorf(ctx, err.Error())
-		return status.Errorf(codes.Internal, err.Error())
+		return status.Errorf(codes.Internal, "%s", err.Error())
 	}
 	return nil
 }

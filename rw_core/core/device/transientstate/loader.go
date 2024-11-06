@@ -31,15 +31,15 @@ import (
 
 // Loader hides all low-level locking & synchronization related to device transient state updates
 type Loader struct {
-	dbProxy *model.Proxy
-	// this lock protects the device transient state
-	lock                 sync.RWMutex
+	dbProxy              *model.Proxy
 	deviceTransientState *data
+	// this lock protects the device transient state
+	lock sync.RWMutex
 }
 
 type data struct {
-	transientState core.DeviceTransientState_Types
 	deviceID       string
+	transientState core.DeviceTransientState_Types
 }
 
 func NewLoader(dbProxy *model.Proxy, deviceID string) *Loader {

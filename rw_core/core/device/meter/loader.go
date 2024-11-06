@@ -9,8 +9,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package meter
+ */package meter
 
 import (
 	"context"
@@ -27,17 +26,17 @@ import (
 // Loader hides all low-level locking & synchronization related to meter state updates
 type Loader struct {
 	dbProxy *model.Proxy
+	meters  map[uint32]*chunk
 	// this lock protects the meters map, it does not protect individual meters
-	lock   sync.RWMutex
-	meters map[uint32]*chunk
+	lock sync.RWMutex
 }
 
 // chunk keeps a meter and the lock for this meter
 type chunk struct {
+	meter *ofp.OfpMeterEntry
 	// this lock is used to synchronize all access to the meter, and also to the "deleted" variable
 	lock    sync.Mutex
 	deleted bool
-	meter   *ofp.OfpMeterEntry
 }
 
 func NewLoader(dbProxy *model.Proxy) *Loader {
@@ -72,7 +71,7 @@ func (loader *Loader) LockOrCreate(ctx context.Context, meter *ofp.OfpMeterEntry
 	loader.lock.Lock()
 	entry, have := loader.meters[meter.Config.MeterId]
 	if !have {
-		entry := &chunk{meter: meter}
+		entry = &chunk{meter: meter}
 		loader.meters[meter.Config.MeterId] = entry
 		entry.lock.Lock()
 		loader.lock.Unlock()
