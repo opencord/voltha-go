@@ -1675,6 +1675,7 @@ func (agent *Agent) reconcilingCleanup(ctx context.Context) error {
 		return err
 	}
 	defer agent.requestQueue.RequestComplete()
+	agent.stopReconcile()
 	err = agent.updateTransientState(ctx, core.DeviceTransientState_NONE)
 	if err != nil {
 		logger.Errorf(ctx, "transient-state-update-failed", log.Fields{"error": err})
