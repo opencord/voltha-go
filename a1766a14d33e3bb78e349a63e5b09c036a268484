@@ -16,6 +16,24 @@
       "message": "There is this error in lint verification job: \n\"Running dependency check...\n21:19:00 Unable to find image \u0027voltha/voltha-ci-tools:3.1.0-golang\u0027 locally\n21:19:03 docker: Error response from daemon: manifest for voltha/voltha-ci-tools:3.1.0-golang not found: manifest unknown: manifest unknown.\"\n\nWhat is this voltha-ci-tools?",
       "revId": "a1766a14d33e3bb78e349a63e5b09c036a268484",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ce2bdc55_a1d9eca8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000971
+      },
+      "writtenOn": "2024-11-12T09:30:02Z",
+      "side": 1,
+      "message": "votlha-ci-tools is voltha-docker-tools: https://gerrit.opencord.org/c/voltha-docker-tools/+/35400.\nThis is providing few images(golang, golangci-lint, protoc, python, junit, gocover) on top of which we do lint-check, build \u0026 generated report for our voltha components(voltha-go, votlha-go-controller, openonu-adapter-go, openolt-adapter).",
+      "parentUuid": "62e4b34c_655ba660",
+      "revId": "a1766a14d33e3bb78e349a63e5b09c036a268484",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
