@@ -299,7 +299,7 @@ func TestValidTransitions(t *testing.T) {
 	assert.Equal(t, 1, len(handlers))
 	assert.True(t, reflect.ValueOf(tdm.ReconcilingCleanup).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 
-	previousDevice = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_REBOOTED)
+	previousDevice = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_RECONCILING)
 	device = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_RECONCILING)
 	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, core.DeviceTransientState_RECONCILE_IN_PROGRESS,
 		core.DeviceTransientState_RECONCILE_IN_PROGRESS)
