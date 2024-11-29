@@ -67,6 +67,23 @@
       "message": "\u003e Patch Set 1: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1918/ : ABORTED\n\nrecheck",
       "revId": "f66f03df2596620cc93405afb7df112fdbd79c2f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "857e5dac_7aec0b0b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2024-11-29T11:33:00Z",
+      "side": 1,
+      "message": "update versions file and check the pipeline",
+      "revId": "f66f03df2596620cc93405afb7df112fdbd79c2f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
