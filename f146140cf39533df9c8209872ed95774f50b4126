@@ -16,6 +16,23 @@
       "message": "\u003e Patch Set 1: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-tests/2829/ : FAILURE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_licensed/3079/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1932/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-lint/2826/ : SUCCESS\n\nrecheck",
       "revId": "f146140cf39533df9c8209872ed95774f50b4126",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "52c4e22b_69e6b670",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000957
+      },
+      "writtenOn": "2024-12-03T04:05:30Z",
+      "side": 1,
+      "message": "\u003e Patch Set 1:\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-tests/2830/ : FAILURE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_licensed/3080/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1933/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-lint/2827/ : SUCCESS\n\nrecheck",
+      "revId": "f146140cf39533df9c8209872ed95774f50b4126",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
