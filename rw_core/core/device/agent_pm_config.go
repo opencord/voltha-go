@@ -96,6 +96,7 @@ func (agent *Agent) initPmConfigs(ctx context.Context, pmConfigs *voltha.PmConfi
 	cloned := agent.cloneDeviceWithoutLock()
 
 	if !agent.proceedWithRequest(cloned) {
+		agent.requestQueue.RequestComplete()
 		return status.Errorf(codes.FailedPrecondition, "deviceId:%s, Cannot complete operation as device deletion is in progress or reconciling is in progress/failed", cloned.Id)
 	}
 	cloned.PmConfigs = proto.Clone(pmConfigs).(*voltha.PmConfigs)
