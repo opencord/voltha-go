@@ -61,11 +61,7 @@ func (ldMgr *LogicalManager) Start(ctx context.Context, serviceName string) {
 	for _, lDevice := range logicalDevices {
 		// Create an agent for each device
 		agent := newLogicalAgent(ctx, lDevice.Id, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.internalTimeout)
-		if err := agent.start(ctx, true, lDevice); err != nil {
-			logger.Warnw(ctx, "failure-starting-logical-agent", log.Fields{"logical-device-id": lDevice.Id})
-		} else {
-			ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceID, agent)
-		}
+		go agent.start(ctx, true, lDevice)
 	}
 
 	probe.UpdateStatusFromContext(ctx, serviceName, probe.ServiceStatusRunning)
@@ -161,7 +157,6 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 	logger.Debugw(ctx, "logical-device-id", log.Fields{"logical-device-id": id})
 
 	agent := newLogicalAgent(ctx, id, sn, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.internalTimeout)
-	ldMgr.addLogicalDeviceAgentToMap(agent)
 
 	// Update the root device with the logical device Id reference
 	if err := ldMgr.deviceMgr.setParentID(ctx, device, id); err != nil {
@@ -169,11 +164,7 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 		return nil, err
 	}
 
-	err := agent.start(ctx, false, nil)
-	if err != nil {
-		logger.Errorw(ctx, "unable-to-create-the-logical-device", log.Fields{"error": err})
-		ldMgr.deleteLogicalDeviceAgent(id)
-	}
+	go agent.start(ctx, false, nil)
 
 	logger.Debug(ctx, "creating-logical-device-ends")
 	return &id, nil
@@ -229,10 +220,7 @@ func (ldMgr *LogicalManager) load(ctx context.Context, lDeviceID string) error {
 			if _, err := ldMgr.getLogicalDeviceFromModel(ctx, lDeviceID); err == nil {
 				logger.Debugw(ctx, "loading-logical-device", log.Fields{"lDeviceId": lDeviceID})
 				agent := newLogicalAgent(ctx, lDeviceID, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.internalTimeout)
-				if err := agent.start(ctx, true, nil); err != nil {
-					return err
-				}
-				ldMgr.logicalDeviceAgents.Store(agent.logicalDeviceID, agent)
+				go agent.start(ctx, true, nil)
 			} else {
 				logger.Debugw(ctx, "logical-device-not-in-model", log.Fields{"logical-device-id": lDeviceID})
 			}
