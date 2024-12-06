@@ -57,6 +57,7 @@ type LogicalAgent struct {
 	orderedEvents   orderedEvents
 	startOnce       sync.Once
 	stopOnce        sync.Once
+	exitChannel     chan int
 
 	flowCache   *flow.Cache
 	meterLoader *meter.Loader
@@ -77,6 +78,7 @@ func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string,
 		flowDecomposer:  fd.NewFlowDecomposer(deviceMgr.getDeviceReadOnly),
 		internalTimeout: internalTimeout,
 		requestQueue:    coreutils.NewRequestQueue(),
+		exitChannel:     make(chan int, 1),
 
 		flowCache:   flow.NewCache(),
 		groupCache:  group.NewCache(),
@@ -86,10 +88,11 @@ func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string,
 }
 
 // start creates the logical device and add it to the data model
-func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, logicalDevice *voltha.LogicalDevice) error {
+func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, logicalDevice *voltha.LogicalDevice) {
 	needToStart := false
 	if agent.startOnce.Do(func() { needToStart = true }); !needToStart {
-		return nil
+		logger.Debug(ctx, "starting-logical-device-agent already running")
+		return
 	}
 
 	logger.Infow(ctx, "starting-logical-device-agent", log.Fields{"logical-device-id": agent.logicalDeviceID, "load-from-db": logicalDeviceExist})
@@ -97,8 +100,8 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 	var startSucceeded bool
 	defer func() {
 		if !startSucceeded {
-			if err := agent.stop(ctx); err != nil {
-				logger.Errorw(ctx, "failed-to-cleanup-after-unsuccessful-start", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
+			if stopErr := agent.stop(ctx); stopErr != nil {
+				logger.Errorw(ctx, "failed-to-cleanup-after-unsuccessful-start", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": stopErr})
 			}
 		}
 	}()
@@ -108,15 +111,40 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 		//Build the logical device based on information retrieved from the device adapter
 		var switchCap *ca.SwitchCapability
 		var err error
+
 		if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceID); err != nil {
-			return err
+			logger.Warnw(ctx, "failed-to-get-switch-capability", log.Fields{"root-device-id": agent.rootDeviceID, "error": err})
+			switchCapTicker := time.NewTicker(time.Second * 2)
+			defer switchCapTicker.Stop()
+
+			// Start a retry loop to get switch capability of the OLT device from adapter
+			for {
+				select {
+				case <-switchCapTicker.C:
+					if switchCap, err = agent.deviceMgr.getSwitchCapability(ctx, agent.rootDeviceID); err == nil {
+						logger.Infow(ctx, "received switch capability, proceeding to start logical device agent", log.Fields{"root-device-id": agent.rootDeviceID})
+					}
+					// Before retrying, check if the agent has stopped
+				case _, ok := (<-agent.exitChannel):
+					if !ok {
+						logger.Warnw(ctx, "agent stopped, exit retrying get-switch-capability", log.Fields{"root-device-id": agent.rootDeviceID})
+						return
+					}
+				}
+				// Break the for loop as we have received the switch capability from adapter
+				if err == nil {
+					break
+				}
+				logger.Warnw(ctx, "retrying get-switch-capability", log.Fields{"root-device-id": agent.rootDeviceID, "error": err})
+			}
 		}
 		ld = &voltha.LogicalDevice{Id: agent.logicalDeviceID, RootDeviceId: agent.rootDeviceID}
 
 		// Create the datapath ID (uint64) using the logical device ID (based on the MAC Address)
 		var datapathID uint64
 		if datapathID, err = coreutils.CreateDataPathID(agent.serialNumber); err != nil {
-			return err
+			logger.Errorw(ctx, "failed-to-create-datapath-id", log.Fields{"serial-number": agent.serialNumber, "error": err})
+			return
 		}
 		ld.DatapathId = datapathID
 		ld.Desc = (proto.Clone(switchCap.Desc)).(*ofp.OfpDesc)
@@ -126,7 +154,7 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 		// Save the logical device
 		if err := agent.ldProxy.Set(ctx, ld.Id, ld); err != nil {
 			logger.Errorw(ctx, "failed-to-add-logical-device", log.Fields{"logical-device-id": agent.logicalDeviceID})
-			return err
+			return
 		}
 		logger.Debugw(ctx, "logical-device-created", log.Fields{"logical-device-id": agent.logicalDeviceID, "root-id": ld.RootDeviceId})
 
@@ -147,9 +175,12 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 			ld = &voltha.LogicalDevice{}
 			have, err := agent.ldProxy.Get(ctx, agent.logicalDeviceID, ld)
 			if err != nil {
-				return err
+				logger.Errorw(ctx, "failed-to-load-logical-device-from-db", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
+				return
 			} else if !have {
-				return status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
+				err := status.Errorf(codes.NotFound, "logical_device-%s", agent.logicalDeviceID)
+				logger.Errorw(ctx, "logical-device-not-found-in-db", log.Fields{"logical-device-id": agent.logicalDeviceID, "error": err})
+				return
 			}
 		}
 
@@ -178,8 +209,7 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 
 	}
 	startSucceeded = true
-
-	return nil
+	agent.ldeviceMgr.addLogicalDeviceAgentToMap(agent)
 }
 
 // stop stops the logical device agent.  This removes the logical device from the data model.
@@ -217,6 +247,7 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 		// TODO: remove all entries from all loaders
 		// TODO: don't allow any more modifications to flows/groups/meters/ports or to any logical device field
 
+		close(agent.exitChannel)
 		agent.stopped = true
 
 		logger.Info(ctx, "logical-device-agent-stopped")
