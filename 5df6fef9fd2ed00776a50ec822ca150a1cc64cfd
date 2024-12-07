@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d6a954a7_c72118ae",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2024-12-07T06:43:43Z",
+      "side": 1,
+      "message": "Should this be an infinite loop?",
+      "range": {
+        "startLine": 121,
+        "startChar": 1,
+        "endLine": 139,
+        "endChar": 4
+      },
+      "revId": "5df6fef9fd2ed00776a50ec822ca150a1cc64cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
