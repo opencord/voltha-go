@@ -51,6 +51,29 @@
       "message": "\u003e Patch Set 2: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/1944/ : ABORTED\n\nre",
       "revId": "bd97908455c2fcbf1daa1c25cc6003b2bbca9c0a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "de4a79da_bd310c11",
+        "filename": "VERSION",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2024-12-07T06:29:24Z",
+      "side": 1,
+      "message": "why increasing by two?",
+      "range": {
+        "startLine": 1,
+        "startChar": 4,
+        "endLine": 1,
+        "endChar": 5
+      },
+      "revId": "bd97908455c2fcbf1daa1c25cc6003b2bbca9c0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
