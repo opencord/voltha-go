@@ -363,27 +363,33 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_RECONCILING, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_REBOOTED, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
-			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+			handlers:      []transitionHandler{dMgr.ReconcilingCleanup, dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_RECONCILING, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_REBOOTED, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
-			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
-	//No op transition
+			handlers:      []transitionHandler{dMgr.ReconcilingCleanup, dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+	// VOL-5322: Splitting the transitions to handle creation of logical device only after the OLT status is reported as reachable.
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_REBOOTED, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_RECONCILING, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			handlers:      []transitionHandler{}})
-	// Add new handler to create logical device during the transition when device was rebooted and is in reconciling state
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_RECONCILING, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_RECONCILING, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			handlers:      []transitionHandler{dMgr.CreateLogicalDevice}})
+	transitionMap.transitions = append(transitionMap.transitions,
+		transition{
+			deviceType:    parent,
+			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
+			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
+			handlers:      []transitionHandler{}})
+
 	return &transitionMap
 }
 
