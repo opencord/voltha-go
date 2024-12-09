@@ -363,13 +363,13 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_RECONCILING, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_REBOOTED, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
-			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+			handlers:      []transitionHandler{dMgr.ReconcilingCleanup, dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_RECONCILING, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_REBOOTED, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
-			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+			handlers:      []transitionHandler{dMgr.ReconcilingCleanup, dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
 	// Add new handler to create logical device during the transition when device was rebooted and is in reconciling state
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
@@ -377,6 +377,13 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_REBOOTED, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_RECONCILING, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
 			handlers:      []transitionHandler{dMgr.CreateLogicalDevice}})
+	transitionMap.transitions = append(transitionMap.transitions,
+		transition{
+			deviceType:    parent,
+			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_ACTIVE, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
+			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_RECONCILE_IN_PROGRESS},
+			handlers:      []transitionHandler{}})
+
 	return &transitionMap
 }
 
