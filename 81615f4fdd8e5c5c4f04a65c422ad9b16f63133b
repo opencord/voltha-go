@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cafac697_520a64d0",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1123,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2024-12-11T23:47:15Z",
+      "side": 1,
+      "message": "I can\u0027t see how removing this helps.",
+      "range": {
+        "startLine": 1123,
+        "startChar": 26,
+        "endLine": 1123,
+        "endChar": 50
+      },
+      "revId": "81615f4fdd8e5c5c4f04a65c422ad9b16f63133b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
