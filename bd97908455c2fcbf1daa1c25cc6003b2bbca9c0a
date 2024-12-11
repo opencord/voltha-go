@@ -53,6 +53,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "65cfa6f7_268efd8e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000957
+      },
+      "writtenOn": "2024-12-11T09:18:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "73678dcb_2b069e16",
+      "revId": "bd97908455c2fcbf1daa1c25cc6003b2bbca9c0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "de4a79da_bd310c11",
@@ -66,6 +84,30 @@
       "writtenOn": "2024-12-07T06:29:24Z",
       "side": 1,
       "message": "why increasing by two?",
+      "range": {
+        "startLine": 1,
+        "startChar": 4,
+        "endLine": 1,
+        "endChar": 5
+      },
+      "revId": "bd97908455c2fcbf1daa1c25cc6003b2bbca9c0a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "603d7f41_767d78fe",
+        "filename": "VERSION",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000957
+      },
+      "writtenOn": "2024-12-11T09:18:50Z",
+      "side": 1,
+      "message": "since there is another mr for voltha-go updated by 1 there so updated by 2 for this mr.",
+      "parentUuid": "de4a79da_bd310c11",
       "range": {
         "startLine": 1,
         "startChar": 4,
