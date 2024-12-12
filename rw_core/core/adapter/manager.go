@@ -370,12 +370,11 @@ func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *core_ada
 			agt.resetConnection(ctx)
 		}
 
-		go func() {
-			err := aMgr.onAdapterRestart(log.WithSpanFromContext(context.Background(), ctx), adpt.Endpoint)
-			if err != nil {
-				logger.Errorw(ctx, "unable-to-restart-adapter", log.Fields{"error": err})
-			}
-		}()
+		err = aMgr.onAdapterRestart(log.WithSpanFromContext(context.Background(), ctx), adpt.Endpoint)
+		if err != nil {
+			logger.Errorw(ctx, "unable-to-restart-adapter", log.Fields{"error": err})
+		}
+
 		return &empty.Empty{}, nil
 	}
 	// Save the adapter and the device types

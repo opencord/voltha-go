@@ -1464,16 +1464,24 @@ retry:
 	return err
 }
 
-func (agent *Agent) ReconcileDevice(ctx context.Context) {
-	// Do not reconcile if the device was in DELETE_FAILED transient state.  Just invoke the force delete on that device.
+func (agent *Agent) CheckAndUpdateTransientState(ctx context.Context) error {
+	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+	var desc string
+
+	//set transient state to RECONCILE IN PROGRESS
+	err := agent.updateTransientState(ctx, core.DeviceTransientState_RECONCILE_IN_PROGRESS)
+	if err != nil {
+		logger.Errorw(ctx, "setting-transient-state-failed", log.Fields{"error": err})
+		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, nil, desc)
+		return err
+	}
+	return nil
+}
+
+func (agent *Agent) StartReconcileWithRetry(ctx context.Context) {
+
 	state := agent.getTransientState()
 	logger.Debugw(ctx, "starting-reconcile", log.Fields{"device-id": agent.deviceID, "state": state})
-	if agent.getTransientState() == core.DeviceTransientState_DELETE_FAILED {
-		if err := agent.DeleteDevicePostAdapterRestart(ctx); err != nil {
-			logger.Errorw(ctx, "delete-post-restart-failed", log.Fields{"error": err, "device-id": agent.deviceID})
-		}
-		return
-	}
 
 	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 	var desc string
@@ -1498,15 +1506,6 @@ func (agent *Agent) ReconcileDevice(ctx context.Context) {
 		return
 	}
 
-	//set transient state to RECONCILE IN PROGRESS
-	err := agent.updateTransientState(ctx, core.DeviceTransientState_RECONCILE_IN_PROGRESS)
-	if err != nil {
-		agent.requestQueue.RequestComplete()
-		logger.Errorw(ctx, "setting-transient-state-failed", log.Fields{"error": err})
-		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, nil, desc)
-		return
-	}
-
 	reconcilingBackoff := backoff.NewExponentialBackOff()
 	reconcilingBackoff.InitialInterval = agent.config.BackoffRetryInitialInterval
 	reconcilingBackoff.MaxElapsedTime = agent.config.BackoffRetryMaxElapsedTime
@@ -1514,12 +1513,20 @@ func (agent *Agent) ReconcileDevice(ctx context.Context) {
 
 	//making here to keep lifecycle of this channel within the scope of retryReconcile
 	agent.stopReconcilingMutex.Lock()
-	agent.stopReconciling = make(chan int, 1)
+	if agent.stopReconciling != nil {
+		logger.Warnw(ctx, "Reconciling with retries is already in progress, don't proceed further", log.Fields{"device-id": device.Id})
+		agent.stopReconcilingMutex.Unlock()
+		agent.requestQueue.RequestComplete()
+		return
+	} else {
+		agent.stopReconciling = make(chan int, 1)
+	}
 	agent.stopReconcilingMutex.Unlock()
 
 	// defined outside the retry loop so it can be cleaned
 	// up when the loop breaks
 	var backoffTimer *time.Timer
+	isDeviceReconciledErr := false
 
 retry:
 	for {
@@ -1537,6 +1544,19 @@ retry:
 		duration := reconcilingBackoff.NextBackOff()
 		//This case should never occur in default case as max elapsed time for backoff is 0(by default) , so it will never return stop
 		if duration == backoff.Stop {
+			// If we have received device reconciled error and the retry intervals have elapsed
+			// clean up the reconcile and break the retry loop
+			if isDeviceReconciledErr {
+				logger.Warnw(ctx, "reached max retry with device reconciled error", log.Fields{"max-reconciling-backoff": reconcilingBackoff.MaxElapsedTime,
+					"device-id": device.Id})
+				// Release lock before reconcile clean up
+				agent.requestQueue.RequestComplete()
+				err := agent.reconcilingCleanup(ctx)
+				if err != nil {
+					logger.Errorf(ctx, "Error during reconcile cleanup", err.Error())
+				}
+				break retry
+			}
 			// If we reach a maximum then warn and reset the backoff
 			// timer and keep attempting.
 			logger.Warnw(ctx, "maximum-reconciling-backoff-reached--resetting-backoff-timer",
@@ -1555,16 +1575,6 @@ retry:
 		// Send a reconcile request to the adapter.
 		err := agent.sendReconcileRequestToAdapter(ctx, device)
 
-		// Check the transient state after a response from the adapter.   If a device delete
-		// request was issued due to a callback during that time and failed then just delete
-		// the device and stop the reconcile loop and invoke the device deletion
-		if agent.getTransientState() == core.DeviceTransientState_DELETE_FAILED {
-			if dErr := agent.DeleteDevicePostAdapterRestart(ctx); dErr != nil {
-				logger.Errorw(ctx, "delete-post-restart-failed", log.Fields{"error": dErr, "device-id": agent.deviceID})
-			}
-			break retry
-		}
-
 		if errors.Is(err, errContextExpired) || errors.Is(err, errReconcileAborted) {
 			logger.Errorw(ctx, "reconcile-aborted", log.Fields{"error": err})
 			requestStatus = &common.OperationResp{Code: common.OperationResp_OperationReturnCode(common.OperStatus_FAILED)}
@@ -1576,27 +1586,52 @@ retry:
 		if ok {
 			// Decode the error code and error message
 			errorCode := st.Code()
+			// When the device is deleted and the core is still retrying the reconcile, adapter will send Not Found error to core when DeviceStateUpdate fails.
+			// This will enable core to stop the reconcile for the deleted device.
+			/*
+				 As the grcp connection is now reused (on adapters restart), there could be two scenarios where we could land
+				 in a stiuation where the reconcile is in a loop for already reconciled ONUs.
+				 1	If the reconcile lands on an older instance of the adapters we get this error "device already reconciled",
+					   in which case core will retry. Once the new adapter instance comes up and old adapter instance is stopped, this will go through successful.
+				 2	If the core restarts during reconcile of device, the reconcile will be done by the adapter but before
+					   the response reaches the core could have restarted. This leaves the tansient state of the device in reconciling.
+					   Once the core comes up , the reconcile is fired again and as the device was previously reconciled adapter returns this error.
+					 Either of the cases we retry for retryinterval and assume that the device is already reconciled in the new adapter.
+			*/
 			if errorCode == codes.AlreadyExists {
 				logger.Warnw(ctx, "device already reconciled", log.Fields{"error": err})
-				err := agent.reconcilingCleanup(ctx)
-				if err != nil {
-					logger.Errorf(ctx, "error during reconcile cleanup", err.Error())
+				// Reset the backoff current interval when we receive the device reconciled error for the first time
+				// so that we can retry for one full backoff cycle and then break
+				if !isDeviceReconciledErr {
+					isDeviceReconciledErr = true
+					reconcilingBackoff.Reset()
 				}
-				break retry
-
+			} else {
+				isDeviceReconciledErr = false
 			}
-
 		}
 		if err != nil {
 			agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
-			<-backoffTimer.C
-			// backoffTimer expired continue
-			// Take lock back before retrying
-			if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-				agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
-				break retry
+			select {
+			case <-backoffTimer.C:
+				// backoffTimer expired continue
+				// Take lock back before retrying
+				if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+					desc = "failed-to-acquire-lock"
+					agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
+					break retry
+				}
+				continue
+
+			case _, ok := (<-agent.exitChannel):
+				// If the device is deleted, the agent would be stopped. Check for agent status before retrying the reconcile
+				if !ok {
+					logger.Warnw(ctx, "device agent stopped, aborting reconcile", log.Fields{"device-id": agent.deviceID})
+					desc = "device-agent-stopped"
+					agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
+					break retry
+				}
 			}
-			continue
 		}
 		// Success
 		requestStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
@@ -1623,6 +1658,18 @@ retry:
 		default:
 		}
 	}
+}
+
+func (agent *Agent) ReconcileDevice(ctx context.Context) {
+
+	//set transient state to RECONCILE IN PROGRESS
+	err := agent.CheckAndUpdateTransientState(ctx)
+	if err != nil {
+		logger.Errorw(ctx, "check-and-update-transient-state-failed", log.Fields{"error": err})
+		return
+	}
+
+	agent.StartReconcileWithRetry(ctx)
 }
 
 func (agent *Agent) sendReconcileRequestToAdapter(ctx context.Context, device *voltha.Device) error {
