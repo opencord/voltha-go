@@ -19,9 +19,10 @@ package device
 import (
 	"context"
 	"fmt"
-	"github.com/opencord/voltha-protos/v5/go/common"
 	"sync"
 	"time"
+
+	"github.com/opencord/voltha-protos/v5/go/common"
 
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
@@ -387,12 +388,36 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 		"current-replica": adapter.CurrentReplica, "total-replicas": adapter.TotalReplicas,
 		"restarted-endpoint": adapter.Endpoint, "current-version": adapter.Version})
 
-	numberOfDevicesToReconcile := 0
 	dMgr.deviceAgents.Range(func(key, value interface{}) bool {
 		deviceAgent, ok := value.(*Agent)
 		if ok && deviceAgent.adapterEndpoint == adapter.Endpoint {
 			// Before reconciling, abort in-process request
 			if err := deviceAgent.abortAllProcessing(utils.WithNewSpanAndRPCMetadataContext(ctx, "AbortProcessingOnRestart")); err == nil {
+				logger.Debugw(ctx, "setting transiet state",
+					log.Fields{
+						"device-id":          deviceAgent.deviceID,
+						"root-device":        deviceAgent.isRootDevice,
+						"restarted-endpoint": adapter.Endpoint,
+						"device-type":        deviceAgent.deviceType,
+						"adapter-type":       adapter.Type,
+					})
+				//set transient state to RECONCILE IN PROGRESS
+				err := deviceAgent.CheckAndUpdateTransientState(ctx)
+				if err != nil {
+					logger.Errorw(ctx, "setting-transient-state-failed", log.Fields{"error": err})
+				}
+			} else {
+				logger.Errorw(ctx, "failed-aborting-exisiting-processing", log.Fields{"error": err})
+			}
+		}
+		return true
+	})
+
+	go func() {
+		numberOfDevicesToReconcile := 0
+		dMgr.deviceAgents.Range(func(key, value interface{}) bool {
+			deviceAgent, ok := value.(*Agent)
+			if ok && deviceAgent.adapterEndpoint == adapter.Endpoint {
 				logger.Debugw(ctx, "reconciling-device",
 					log.Fields{
 						"device-id":          deviceAgent.deviceID,
@@ -401,15 +426,14 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 						"device-type":        deviceAgent.deviceType,
 						"adapter-type":       adapter.Type,
 					})
-				deviceAgent.ReconcileDevice(utils.WithNewSpanAndRPCMetadataContext(ctx, "ReconcileDevice"))
+				go deviceAgent.StartReconcileWithRetry(utils.WithNewSpanAndRPCMetadataContext(ctx, "ReconcileDevice"))
 				numberOfDevicesToReconcile++
-			} else {
-				logger.Errorw(ctx, "failed-aborting-exisiting-processing", log.Fields{"error": err})
 			}
-		}
-		return true
-	})
-	logger.Debugw(ctx, "reconciling-on-adapter-restart-initiated", log.Fields{"adapter-endpoint": adapter.Endpoint, "number-of-devices-to-reconcile": numberOfDevicesToReconcile})
+			return true
+		})
+		logger.Debug(ctx, "reconciling-on-adapter-restart-initiated", log.Fields{"adapter-endpoint": adapter.Endpoint, "number-of-devices-to-reconcile": numberOfDevicesToReconcile})
+	}()
+
 	return nil
 }
 
@@ -671,8 +695,8 @@ func (dMgr *Manager) getParentDevice(ctx context.Context, childDevice *voltha.De
 }
 
 /*
-All the functions below are callback functions where they are invoked with the latest and previous data.  We can
-therefore use the data as is without trying to get the latest from the model.
+ All the functions below are callback functions where they are invoked with the latest and previous data.  We can
+ therefore use the data as is without trying to get the latest from the model.
 */
 
 // DisableAllChildDevices is invoked as a callback when the parent device is disabled
