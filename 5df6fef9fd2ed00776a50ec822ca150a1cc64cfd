@@ -22,6 +22,30 @@
       },
       "revId": "5df6fef9fd2ed00776a50ec822ca150a1cc64cfd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "682f22e4_de3f10d7",
+        "filename": "rw_core/core/device/logical_agent.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000960
+      },
+      "writtenOn": "2024-12-12T05:42:49Z",
+      "side": 1,
+      "message": "If the logical device creation fails, none of the devices of the OLT will get configured from the controller as rw-core will not send port state changes to controller. Hence we spawn a go routine which will keep retrying for the logical agent creation until it succeeds or until the device itself is deleted.",
+      "parentUuid": "d6a954a7_c72118ae",
+      "range": {
+        "startLine": 121,
+        "startChar": 1,
+        "endLine": 139,
+        "endChar": 4
+      },
+      "revId": "5df6fef9fd2ed00776a50ec822ca150a1cc64cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
