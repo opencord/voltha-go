@@ -22,6 +22,30 @@
       },
       "revId": "81615f4fdd8e5c5c4f04a65c422ad9b16f63133b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "03407643_7a40fb4c",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1123,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2024-12-12T06:28:38Z",
+      "side": 1,
+      "message": "When the Device is rebooting or reconciling the calls towards the adapter will anyway fail. and also sometimes the adapters have not handled cases properley. The adapters have to take care of it ideally but it is good to have in core as well to reduce the number of grpcs calls happen to adapter in case of OLT reboots",
+      "parentUuid": "cafac697_520a64d0",
+      "range": {
+        "startLine": 1123,
+        "startChar": 26,
+        "endLine": 1123,
+        "endChar": 50
+      },
+      "revId": "81615f4fdd8e5c5c4f04a65c422ad9b16f63133b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
