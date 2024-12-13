@@ -1,6 +1,23 @@
 {
   "comments": [
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d55e2241_f3a419c4",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2024-12-13T20:47:11Z",
+      "side": 1,
+      "message": "It looks fine to me in general! If you have a chance to test this patch under large number of ONUs are connected before merging, it would be fine. I\u0027m not sure if automated bbsim scale tests covers adapter reconcile cases.",
+      "revId": "35b1904ea2212a6b0cce032474bbdd508b29001b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "6a42ef91_8e9ada32",
