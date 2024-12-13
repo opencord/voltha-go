@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6a42ef91_8e9ada32",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1467,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2024-12-13T18:37:57Z",
+      "side": 1,
+      "message": "The function name is indicating a generic update to state but in the function it is updated to a single state(reconciling in progress). Could you please change the function name to reflect the body?",
+      "range": {
+        "startLine": 1467,
+        "startChar": 20,
+        "endLine": 1467,
+        "endChar": 48
+      },
+      "revId": "35b1904ea2212a6b0cce032474bbdd508b29001b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
