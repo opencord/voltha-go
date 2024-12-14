@@ -81,6 +81,30 @@
       },
       "revId": "35b1904ea2212a6b0cce032474bbdd508b29001b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "dce3d266_237e5e30",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1467,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2024-12-14T05:59:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dec0cefa_d2d51025",
+      "range": {
+        "startLine": 1467,
+        "startChar": 20,
+        "endLine": 1467,
+        "endChar": 48
+      },
+      "revId": "35b1904ea2212a6b0cce032474bbdd508b29001b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
