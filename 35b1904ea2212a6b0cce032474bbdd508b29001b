@@ -18,6 +18,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "1a3d7203_631206b6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000960
+      },
+      "writtenOn": "2024-12-14T05:10:40Z",
+      "side": 1,
+      "message": "Yes, it has been tested with scale in our lab with BBSIM. We haven\u0027t seen any issues during reconciling while testing with scale.",
+      "parentUuid": "d55e2241_f3a419c4",
+      "revId": "35b1904ea2212a6b0cce032474bbdd508b29001b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "6a42ef91_8e9ada32",
