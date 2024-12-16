@@ -17,7 +17,6 @@ package device
 
 import (
 	"context"
-	"errors"
 
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/core"
@@ -123,28 +122,52 @@ func (dMgr *Manager) DeleteAllChildDevices(ctx context.Context, parentCurrDevice
 	if agent == nil {
 		return status.Errorf(codes.NotFound, "%s", parentCurrDevice.Id)
 	}
+	// The retry mechanism ensures that failed child device deletions are re-attempted.
+	// We continue retrying the deletion process until all child devices are successfully deleted.
+	childDeviceIDs := dMgr.getAllChildDeviceIds(ctx, parentCurrDevice.Id)
+	if len(childDeviceIDs) == 0 {
+		logger.Debugw(ctx, "no-child-devices-to-delete", log.Fields{"parent-device-id": parentCurrDevice.Id})
+		return nil
+	}
 
-	for childDeviceID := range dMgr.getAllChildDeviceIds(ctx, parentCurrDevice.Id) {
-		if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
-			logger.Debugw(ctx, "invoking-delete-device", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id})
-			if err := agent.deleteDeviceForce(ctx); err != nil {
-				logger.Warnw(ctx, "delete-device-force-failed", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id,
-					"error": err})
-				// We got an error - if its a connection error we should just mark the device as delete failed and
-				// when connection is established then proceed with the deletion instead of reconciling the device.
-				// A DeviceTransientState_DELETE_FAILED does not perform any state transition
-				if errors.Is(err, errNoConnection) {
+	retryNeeded := true
+
+	// Keep retrying until all devices are deleted
+	for retryNeeded {
+		retryNeeded = false
+
+		for childDeviceID := range childDeviceIDs {
+			if agent := dMgr.getDeviceAgent(ctx, childDeviceID); agent != nil {
+				logger.Debugw(ctx, "invoking-delete-device", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id})
+
+				// Attempt to delete the device forcefully. If it fails, we mark it for retry.
+				if err := agent.deleteDeviceForce(ctx); err != nil {
+					logger.Warnw(ctx, "delete-device-force-failed", log.Fields{
+						"device-id":        childDeviceID,
+						"parent-device-id": parentCurrDevice.Id,
+						"error":            err,
+					})
+
+					// On failure, mark the device as DELETE_FAILED to trigger a retry.
 					if err = agent.updateTransientState(ctx, core.DeviceTransientState_DELETE_FAILED); err != nil {
-						logger.Warnw(ctx, "failed-updating-transient-state", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id,
-							"error": err})
+						logger.Warnw(ctx, "failed-updating-transient-state", log.Fields{
+							"device-id":        childDeviceID,
+							"parent-device-id": parentCurrDevice.Id,
+							"error":            err,
+						})
 					}
-					logger.Debugw(ctx, "device-set-to-delete-failed", log.Fields{"device-id": childDeviceID, "parent-device-id": parentCurrDevice.Id})
+
+					retryNeeded = true
+				} else {
+					// On successful deletion, remove the child device ID from the map.
+					delete(childDeviceIDs, childDeviceID)
+					logger.Debugw(ctx, "child-device-deleted", log.Fields{"device-id": childDeviceID})
 				}
 			}
-			// No further action is required here.  The deleteDevice will change the device state where the resulting
-			// callback will take care of cleaning the child device agent.
 		}
 	}
+
+	logger.Debugw(ctx, "all-child-devices-deleted", log.Fields{"parent-device-id": parentCurrDevice.Id})
 	return nil
 }
 
