@@ -170,7 +170,7 @@ func MonitorKafkaReadiness(ctx context.Context,
 				<-timeoutTimer.C
 			}
 		case <-timeoutTimer.C:
-			logger.Infow(ctx, "kafka-proxy-liveness-recheck", log.Fields{"service": serviceName})
+			logger.Debugf(ctx, "kafka-proxy-liveness-recheck", log.Fields{"service": serviceName})
 			// send the liveness probe in a goroutine; we don't want to deadlock ourselves as
 			// the liveness probe may wait (and block) writing to our channel.
 			go func() {

@@ -474,7 +474,7 @@ func (sc *SaramaClient) updateLiveness(ctx context.Context, alive bool) {
 			sc.liveness <- alive
 			sc.lastLivenessTime = time.Now()
 		} else if time.Since(sc.lastLivenessTime) > sc.livenessChannelInterval {
-			logger.Info(ctx, "update-liveness-channel-because-interval")
+			logger.Debugf(ctx, "update-liveness-channel-because-interval")
 			sc.liveness <- alive
 			sc.lastLivenessTime = time.Now()
 		}
