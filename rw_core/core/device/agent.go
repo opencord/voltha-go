@@ -1527,6 +1527,12 @@ func (agent *Agent) StartReconcileWithRetry(ctx context.Context) {
 	// up when the loop breaks
 	var backoffTimer *time.Timer
 	isDeviceReconciledErr := false
+	defer func() {
+		err := agent.reconcilingCleanup(ctx)
+		if err != nil {
+			logger.Errorf(ctx, "Error during reconcile cleanup", err.Error())
+		}
+	}()
 
 retry:
 	for {
@@ -1551,10 +1557,6 @@ retry:
 					"device-id": device.Id})
 				// Release lock before reconcile clean up
 				agent.requestQueue.RequestComplete()
-				err := agent.reconcilingCleanup(ctx)
-				if err != nil {
-					logger.Errorf(ctx, "Error during reconcile cleanup", err.Error())
-				}
 				break retry
 			}
 			// If we reach a maximum then warn and reset the backoff
