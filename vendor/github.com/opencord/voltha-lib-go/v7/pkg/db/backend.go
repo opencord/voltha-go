@@ -87,6 +87,7 @@ func (b *Backend) newClient(ctx context.Context, address string, timeout time.Du
 
 func (b *Backend) makePath(ctx context.Context, key string) string {
 	path := fmt.Sprintf("%s/%s", b.PathPrefix, key)
+	logger.Debugw(ctx, "make-path", log.Fields{"key": key, "path": path})
 	return path
 }
 
@@ -145,7 +146,7 @@ func (b *Backend) EnableLivenessChannel(ctx context.Context) chan bool {
 }
 
 // Extract Alive status of Kvstore based on type of error
-func (b *Backend) isErrorIndicatingAliveKvstore(ctx context.Context, err error) bool {
+func (b *Backend) isErrorIndicatingAliveKvstore(err error) bool {
 	// Alive unless observed an error indicating so
 	alive := true
 
@@ -188,7 +189,7 @@ func (b *Backend) List(ctx context.Context, key string) (map[string]*kvstore.KVP
 
 	pair, err := b.Client.List(ctx, formattedPath)
 
-	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(err))
 
 	return pair, err
 }
@@ -203,7 +204,37 @@ func (b *Backend) Get(ctx context.Context, key string) (*kvstore.KVPair, error) 
 
 	pair, err := b.Client.Get(ctx, formattedPath)
 
-	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(err))
+
+	return pair, err
+}
+
+// GetWithPrefix retrieves one or more items that match the specified key prefix
+func (b *Backend) GetWithPrefix(ctx context.Context, prefixKey string) (map[string]*kvstore.KVPair, error) {
+	span, ctx := log.CreateChildSpan(ctx, "kvs-get-with-prefix")
+	defer span.Finish()
+
+	formattedPath := b.makePath(ctx, prefixKey)
+	logger.Debugw(ctx, "get-entries-matching-prefix-key", log.Fields{"key": prefixKey, "path": formattedPath})
+
+	pair, err := b.Client.GetWithPrefix(ctx, formattedPath)
+
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(err))
+
+	return pair, err
+}
+
+// GetWithPrefixKeysOnly retrieves one or more keys that match the specified key prefix
+func (b *Backend) GetWithPrefixKeysOnly(ctx context.Context, prefixKey string) ([]string, error) {
+	span, ctx := log.CreateChildSpan(ctx, "kvs-get-with-prefix")
+	defer span.Finish()
+
+	formattedPath := b.makePath(ctx, prefixKey)
+	logger.Debugw(ctx, "get-keys-entries-matching-prefix-key", log.Fields{"key": prefixKey, "path": formattedPath})
+
+	pair, err := b.Client.GetWithPrefixKeysOnly(ctx, formattedPath)
+
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(err))
 
 	return pair, err
 }
@@ -218,7 +249,7 @@ func (b *Backend) Put(ctx context.Context, key string, value interface{}) error 
 
 	err := b.Client.Put(ctx, formattedPath, value)
 
-	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(err))
 
 	return err
 }
@@ -233,7 +264,7 @@ func (b *Backend) Delete(ctx context.Context, key string) error {
 
 	err := b.Client.Delete(ctx, formattedPath)
 
-	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(err))
 
 	return err
 }
@@ -247,7 +278,7 @@ func (b *Backend) DeleteWithPrefix(ctx context.Context, prefixKey string) error 
 
 	err := b.Client.DeleteWithPrefix(ctx, formattedPath)
 
-	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(ctx, err))
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(err))
 
 	return err
 }

@@ -415,3 +415,41 @@ func (c *RedisClient) Close(ctx context.Context) {
 		logger.Errorw(ctx, "error-closing-client", log.Fields{"error": err})
 	}
 }
+
+func (c *RedisClient) GetWithPrefix(ctx context.Context, prefix string) (map[string]*KVPair, error) {
+	var err error
+	var keys []string
+	m := make(map[string]*KVPair)
+	var values []interface{}
+
+	if keys, err = c.scanAllKeysWithPrefix(ctx, prefix); err != nil {
+		return nil, err
+	}
+
+	if len(keys) != 0 {
+		values, err = c.redisAPI.MGet(ctx, keys...).Result()
+		if err != nil {
+			return nil, err
+		}
+	}
+	for i, key := range keys {
+		if valBytes, err := ToByte(values[i]); err == nil {
+			m[key] = NewKVPair(key, interface{}(valBytes), "", 0, 0)
+		}
+	}
+	return m, nil
+}
+
+func (c *RedisClient) GetWithPrefixKeysOnly(ctx context.Context, prefix string) ([]string, error) {
+	// Use the scanAllKeysWithPrefix function to fetch keys matching the prefix
+	keys, err := c.scanAllKeysWithPrefix(ctx, prefix)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan keys with prefix %s: %v", prefix, err)
+	}
+
+	if len(keys) == 0 {
+		logger.Debugw(ctx, "no-keys-found", log.Fields{"prefix": prefix})
+	}
+
+	return keys, nil
+}

@@ -171,6 +171,57 @@ startLoop:
 	}
 }
 
+// GetWithPrefix fetches all key-value pairs with the specified prefix from etcd.
+// Returns a map of key-value pairs or an error if the operation fails.
+func (c *EtcdClient) GetWithPrefix(ctx context.Context, prefixKey string) (map[string]*KVPair, error) {
+	// Acquire a client from the pool
+	client, err := c.pool.Get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get client from pool: %w", err)
+	}
+	defer c.pool.Put(client)
+
+	// Fetch keys with the prefix
+	resp, err := client.Get(ctx, prefixKey, v3Client.WithPrefix())
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch entries for prefix %s: %w", prefixKey, err)
+	}
+
+	// Initialize the result map
+	result := make(map[string]*KVPair)
+
+	// Iterate through the fetched key-value pairs and populate the map
+	for _, ev := range resp.Kvs {
+		result[string(ev.Key)] = NewKVPair(string(ev.Key), ev.Value, "", ev.Lease, ev.Version)
+	}
+
+	return result, nil
+}
+
+// GetWithPrefixKeysOnly retrieves only the keys that match a given prefix.
+func (c *EtcdClient) GetWithPrefixKeysOnly(ctx context.Context, prefixKey string) ([]string, error) {
+	// Acquire a client from the pool
+	client, err := c.pool.Get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get client from pool: %w", err)
+	}
+	defer c.pool.Put(client)
+
+	// Fetch keys with the prefix
+	resp, err := client.Get(ctx, prefixKey, v3Client.WithPrefix(), v3Client.WithKeysOnly())
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch entries for prefix %s: %w", prefixKey, err)
+	}
+
+	// Extract keys from the response
+	keys := []string{}
+	for _, kv := range resp.Kvs {
+		keys = append(keys, string(kv.Key))
+	}
+
+	return keys, nil
+}
+
 // Put writes a key-value pair to the KV store.  Value can only be a string or []byte since the etcd API
 // accepts only a string as a value for a put operation. Timeout defines how long the function will
 // wait for a response
