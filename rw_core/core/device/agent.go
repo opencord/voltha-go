@@ -1530,15 +1530,6 @@ func (agent *Agent) StartReconcileWithRetry(ctx context.Context) {
 
 retry:
 	for {
-		// If the operations state of the device is RECONCILING_FAILED then we do not
-		// want to continue to attempt reconciliation.
-		deviceRef := agent.getDeviceReadOnlyWithoutLock()
-		if deviceRef.OperStatus == common.OperStatus_RECONCILING_FAILED {
-			logger.Warnw(ctx, "reconciling-failed-halting-retries",
-				log.Fields{"device-id": device.Id})
-			agent.requestQueue.RequestComplete()
-			break retry
-		}
 
 		// Use an exponential back off to prevent getting into a tight loop
 		duration := reconcilingBackoff.NextBackOff()
