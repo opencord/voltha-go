@@ -492,6 +492,20 @@ func (agent *LogicalAgent) isNNIPort(portNo uint32) bool {
 	return portHandle.GetReadOnly().RootPort
 }
 
+// getChildDeviceFromUNIPort returns the child device ID associated with the specified UNI port
+func (agent *LogicalAgent) getChildDeviceFromUNIPort(ctx context.Context, portNo uint32) (string, error) {
+	portHandle, have := agent.portLoader.Lock(portNo)
+	if !have {
+		return "", status.Errorf(codes.NotFound, "port-%d-not-exist", portNo)
+	}
+	defer portHandle.Unlock()
+
+	if !portHandle.GetReadOnly().RootPort {
+		return portHandle.GetReadOnly().DeviceId, nil
+	}
+	return "", status.Errorf(codes.NotFound, "port-%d-not-uni", portNo)
+}
+
 // getAnyNNIPort returns an NNI port
 func (agent *LogicalAgent) getAnyNNIPort() (uint32, error) {
 	for portID := range agent.portLoader.ListIDsForDevice(agent.rootDeviceID) {

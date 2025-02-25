@@ -19,6 +19,7 @@ package device
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -424,6 +425,38 @@ func (ldMgr *LogicalManager) deleteAllLogicalMetersForLogicalDevice(ctx context.
 		}
 	}
 	return nil
+}
+
+// deleteLogicalFlow removes the logical flows associated with a child device from logical agent's flow cache
+func (ldMgr *LogicalManager) deleteLogicalFlows(ctx context.Context, ldID string, childDeviceId string) error {
+	logger.Debugw(ctx, "delete-logical-flows", log.Fields{"logical-device-id": ldID, "child-device-id": childDeviceId})
+	var errFlows string
+	var err error
+
+	if agent := ldMgr.getLogicalDeviceAgent(ctx, ldID); agent != nil {
+		agent.logicalFlowsMapMutex.Lock()
+		if _, exists := agent.logicalFlowsMap[childDeviceId]; exists {
+			for _, logicalFlowId := range agent.logicalFlowsMap[childDeviceId] {
+				if flowHandle, have := agent.flowCache.Lock(logicalFlowId); have {
+					// Update the cache
+					if err := flowHandle.Delete(ctx); err != nil {
+						flowHandle.Unlock()
+						errFlows += fmt.Sprintf("%v ", logicalFlowId)
+						logger.Errorw(ctx, "unable-to-delete-flow", log.Fields{"logical-device-id": ldID, "flowID": logicalFlowId, "error": err})
+						continue
+					}
+					flowHandle.Unlock()
+				}
+			}
+			delete(agent.logicalFlowsMap, childDeviceId)
+		}
+		agent.logicalFlowsMapMutex.Unlock()
+	}
+
+	if errFlows != "" {
+		err = fmt.Errorf("unable to delete logical flows : %s", errFlows)
+	}
+	return err
 }
 
 func (ldMgr *LogicalManager) setupUNILogicalPorts(ctx context.Context, childDevice *voltha.Device, childDevicePorts map[uint32]*voltha.Port) error {
