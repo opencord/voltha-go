@@ -203,7 +203,8 @@ func TestValidTransitions(t *testing.T) {
 	assert.True(t, reflect.ValueOf(tdm.DeleteAllDeviceFlows).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 	assert.True(t, reflect.ValueOf(tdm.ChildDeviceLost).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
 	assert.True(t, reflect.ValueOf(tdm.DeleteLogicalPorts).Pointer() == reflect.ValueOf(handlers[2]).Pointer())
-	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[3]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.DeleteAllLogicalFlows).Pointer() == reflect.ValueOf(handlers[3]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[4]).Pointer())
 
 	previousDevice = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_REACHABLE, voltha.OperStatus_ACTIVE)
 	device = getDevice(true, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNREACHABLE, voltha.OperStatus_UNKNOWN)
@@ -336,6 +337,7 @@ func TestValidTransitions(t *testing.T) {
 			tdm.DeleteAllDeviceFlows,
 			tdm.ChildDeviceLost,
 			tdm.DeleteLogicalPorts,
+			tdm.DeleteAllLogicalFlows,
 			tdm.RunPostDeviceDelete,
 		},
 	}

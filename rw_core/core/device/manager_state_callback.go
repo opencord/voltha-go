@@ -179,9 +179,47 @@ func (dMgr *Manager) DeleteAllDeviceFlows(ctx context.Context, parentDevice *vol
 			logger.Errorw(ctx, "error-deleting-all-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
 			return err
 		}
-		return nil
+	} else {
+		return status.Errorf(codes.NotFound, "%s", parentDevice.Id)
 	}
-	return status.Errorf(codes.NotFound, "%s", parentDevice.Id)
+	if !parentDevice.Root {
+		if agent := dMgr.getDeviceAgent(ctx, parentDevice.Id); agent != nil {
+			if parentDeviceAgent := dMgr.getDeviceAgent(ctx, agent.parentID); parentDeviceAgent != nil {
+				// Delete device flows from parent device for this ONU
+				if err := parentDeviceAgent.deleteDeviceFlows(ctx, parentDevice.Id); err != nil {
+					logger.Errorw(ctx, "error-deleting-device-flows-from-parent", log.Fields{"parent-device-id": parentDevice.Id})
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (dMgr *Manager) DeleteAllLogicalFlows(ctx context.Context, parentDevice *voltha.Device) error {
+	logger.Debugw(ctx, "delete-all-logical-flows", log.Fields{"parent-device-id": parentDevice.Id})
+	ldID, err := dMgr.logicalDeviceMgr.getLogicalDeviceIDFromDeviceID(ctx, parentDevice.Id)
+	if err != nil {
+		logger.Errorw(ctx, "error-getting-logical-device-id", log.Fields{"parent-device-id": parentDevice.Id})
+		return err
+	}
+	// Delete logical flows from parent device for this ONU
+	if !parentDevice.Root {
+		if err := dMgr.deleteFlowsFromLogicalFlowTable(ctx, *ldID, parentDevice.Id); err != nil {
+			logger.Errorw(ctx, "error-deleting-logical-device-flows", log.Fields{"parent-device-id": parentDevice.Id})
+			return err
+		}
+	}
+	return nil
+}
+
+// deleteFlowsFromLogicalFlowTable deletes the logical flows from the logical flow table
+func (dMgr *Manager) deleteFlowsFromLogicalFlowTable(ctx context.Context, ldID string, childDeviceId string) error {
+	var err error
+	if err = dMgr.logicalDeviceMgr.deleteLogicalFlows(ctx, ldID, childDeviceId); err != nil {
+		logger.Warnw(ctx, "delete-logical-flow-error", log.Fields{"logical-device-id": ldID, "error": err})
+	}
+	return err
 }
 
 // ChildDeviceLost  calls parent adapter to delete child device and all its references
