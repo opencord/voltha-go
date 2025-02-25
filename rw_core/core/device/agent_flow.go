@@ -406,6 +406,36 @@ func (agent *Agent) filterOutFlows(ctx context.Context, uniPort uint32, flowMeta
 	return nil
 }
 
+// deleteDeviceFlows deletes specific flows from the device table
+func (agent *Agent) deleteDeviceFlows(ctx context.Context, childDeviceId string) error {
+	logger.Debugw(ctx, "delete-device-flows-from-parent", log.Fields{"parent-device-id": agent.deviceID, "child-device-id": childDeviceId})
+	var err error
+	var errFlows string
+
+	agent.deviceFlowsMapMutex.Lock()
+	if _, exists := agent.deviceFlowsMap[childDeviceId]; exists {
+		for _, deviceFlowId := range agent.deviceFlowsMap[childDeviceId] {
+			if flowHandle, have := agent.flowCache.Lock(deviceFlowId); have {
+				// Update the cache
+				if err = flowHandle.Delete(ctx); err != nil {
+					flowHandle.Unlock()
+					errFlows += fmt.Sprintf("%v ", deviceFlowId)
+					logger.Errorw(ctx, "unable-to-delete-flow", log.Fields{"device-id": agent.deviceID, "flowID": deviceFlowId, "error": err})
+					continue
+				}
+				flowHandle.Unlock()
+			}
+		}
+		delete(agent.deviceFlowsMap, childDeviceId)
+	}
+	agent.deviceFlowsMapMutex.Unlock()
+
+	if errFlows != "" {
+		err = fmt.Errorf("unable to delete flows : %s", errFlows)
+	}
+	return err
+}
+
 // deleteAllFlows deletes all flows in the device table
 func (agent *Agent) deleteAllFlows(ctx context.Context) error {
 	logger.Debugw(ctx, "deleteAllFlows", log.Fields{"device-id": agent.deviceID})

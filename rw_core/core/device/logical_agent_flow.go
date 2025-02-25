@@ -183,7 +183,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 				return changed, updated, err
 			}
 		}
-		respChannels := agent.addFlowsAndGroupsToDevices(ctx, deviceRules)
+		respChannels := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, flow)
 
 		// Create the go routines to wait
 		go func() {

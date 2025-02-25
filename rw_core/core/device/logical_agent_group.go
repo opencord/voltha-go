@@ -87,7 +87,7 @@ func (agent *LogicalAgent) groupAdd(ctx context.Context, groupMod *ofp.OfpGroupM
 	logger.Debugw(ctx, "rules", log.Fields{"rules-for-group-add": deviceRules.String()})
 
 	// Update the devices
-	respChnls := agent.addFlowsAndGroupsToDevices(ctx, deviceRules)
+	respChnls := agent.addFlowsAndGroupsToDevices(ctx, deviceRules, nil)
 
 	// Wait for completion
 	go func() {

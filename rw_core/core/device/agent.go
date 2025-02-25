@@ -44,6 +44,7 @@ import (
 	"github.com/opencord/voltha-go/rw_core/core/device/port"
 	"github.com/opencord/voltha-go/rw_core/core/device/transientstate"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
+	"github.com/opencord/voltha-lib-go/v7/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
@@ -79,6 +80,9 @@ type Agent struct {
 	stopReconcilingMutex sync.RWMutex
 	config               *config.RWCoreFlags
 
+	deviceFlowsMap      map[string][]uint64
+	deviceFlowsMapMutex sync.RWMutex
+
 	flowCache            *flow.Cache
 	groupCache           *group.Cache
 	portLoader           *port.Loader
@@ -108,6 +112,7 @@ func newAgent(device *voltha.Device, deviceMgr *Manager, dbPath *model.Path, dev
 		device:               proto.Clone(device).(*voltha.Device),
 		requestQueue:         coreutils.NewRequestQueue(),
 		config:               deviceMgr.config,
+		deviceFlowsMap:       make(map[string][]uint64),
 		flowCache:            flow.NewCache(),
 		groupCache:           group.NewCache(),
 		portLoader:           port.NewLoader(dbPath.SubPath("ports").Proxy(deviceID)),
@@ -486,7 +491,7 @@ func (agent *Agent) enableDevice(ctx context.Context) error {
 
 // addFlowsAndGroups adds the "newFlows" and "newGroups" from the existing flows/groups and sends the update to the
 // adapters
-func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
+func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFlowStats, newGroups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata, logicalFlow *ofp.OfpFlowStats) error {
 	var flwResponse, grpResponse coreutils.Response
 	var err error
 	//if new flow list is empty then the called function returns quickly
@@ -497,6 +502,70 @@ func (agent *Agent) addFlowsAndGroups(ctx context.Context, newFlows []*ofp.OfpFl
 	if grpResponse, err = agent.addGroupsToAdapter(ctx, newGroups, flowMetadata); err != nil {
 		return err
 	}
+
+	// Add logical flows and device flows to the agent, so that we can delete them during DeleteAllDeviceFlows handler upon ONU deletion
+	if logicalFlow != nil {
+		// Add logical flow and device flows to respective maps if the device is parent
+		if agent.isRootDevice {
+			for _, deviceFlow := range newFlows {
+				if deviceFlow.Cookie == logicalFlow.Cookie {
+					tunnelId := flows.GetTunnelId(deviceFlow)
+					ldId, err1 := agent.deviceMgr.logicalDeviceMgr.getLogicalDeviceIDFromDeviceID(ctx, agent.deviceID)
+					if err1 == nil && ldId != nil {
+						var childDeviceId string
+						if logicalAgent := agent.deviceMgr.logicalDeviceMgr.getLogicalDeviceAgent(ctx, *ldId); logicalAgent != nil {
+							childDeviceId, err = logicalAgent.getChildDeviceFromUNIPort(ctx, uint32(tunnelId))
+							if err == nil {
+								logicalAgent.logicalFlowsMapMutex.Lock()
+								if _, exists := logicalAgent.logicalFlowsMap[childDeviceId]; !exists {
+									logicalAgent.logicalFlowsMap[childDeviceId] = []uint64{}
+								}
+								logicalAgent.logicalFlowsMap[childDeviceId] = append(logicalAgent.logicalFlowsMap[childDeviceId], logicalFlow.Id)
+								logicalAgent.logicalFlowsMapMutex.Unlock()
+								logger.Debugw(ctx, "logical flow added to map", log.Fields{"logicalFlowId": logicalFlow.Id,
+									"logical-flow-map": logicalAgent.logicalFlowsMap, "child-device-id": childDeviceId})
+
+								agent.deviceFlowsMapMutex.Lock()
+								if _, exists := agent.deviceFlowsMap[childDeviceId]; !exists {
+									agent.deviceFlowsMap[childDeviceId] = []uint64{}
+								}
+								agent.deviceFlowsMap[childDeviceId] = append(agent.deviceFlowsMap[childDeviceId], deviceFlow.Id)
+								logger.Debugw(ctx, "device flow added to map", log.Fields{"deviceFlowId": deviceFlow.Id,
+									"device-flow-map": agent.deviceFlowsMap, "child-device-id": childDeviceId})
+								agent.deviceFlowsMapMutex.Unlock()
+							} else {
+								logger.Warnw(ctx, "error getting child-device-id from UNI", log.Fields{"error": err})
+							}
+						} else {
+							logger.Warnw(ctx, "logical-device-agent-not-found", log.Fields{"logical-device-id": *ldId})
+						}
+					} else {
+						logger.Warnw(ctx, "error getting logical-device-id from device-id", log.Fields{"device-id": agent.deviceID, "error": err1})
+					}
+				}
+			}
+			// Add only logical flows in case of device is child, since the device flows will be deleted as part of DeleteAllDeviceFlows handler
+		} else {
+			ldId, err1 := agent.deviceMgr.logicalDeviceMgr.getLogicalDeviceIDFromDeviceID(ctx, agent.parentID)
+			if err1 == nil && ldId != nil {
+				if logicalAgent := agent.deviceMgr.logicalDeviceMgr.getLogicalDeviceAgent(ctx, *ldId); logicalAgent != nil {
+					logicalAgent.logicalFlowsMapMutex.Lock()
+					if _, exists := logicalAgent.logicalFlowsMap[agent.deviceID]; !exists {
+						logicalAgent.logicalFlowsMap[agent.deviceID] = []uint64{}
+					}
+					logicalAgent.logicalFlowsMap[agent.deviceID] = append(logicalAgent.logicalFlowsMap[agent.deviceID], logicalFlow.Id)
+					logicalAgent.logicalFlowsMapMutex.Unlock()
+					logger.Debugw(ctx, "logical flow added to map", log.Fields{"logicalFlowId": logicalFlow.Id,
+						"logical-flow-map": logicalAgent.logicalFlowsMap, "device-id": agent.deviceID})
+				} else {
+					logger.Warnw(ctx, "logical-device-agent-not-found", log.Fields{"logical-device-id": *ldId})
+				}
+			} else {
+				logger.Warnw(ctx, "error getting logical-device-id from device-id", log.Fields{"device-id": agent.deviceID, "error": err1})
+			}
+		}
+	}
+
 	if errs := coreutils.WaitForNilOrErrorResponses(agent.flowTimeout, flwResponse, grpResponse); errs != nil {
 		logger.Warnw(ctx, "adapter-response", log.Fields{"device-id": agent.deviceID, "result": errs})
 		return status.Errorf(codes.Aborted, "flow-failure-device-%s", agent.deviceID)

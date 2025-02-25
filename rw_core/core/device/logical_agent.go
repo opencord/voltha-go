@@ -42,22 +42,24 @@ import (
 
 // LogicalAgent represent attributes of logical device agent
 type LogicalAgent struct {
-	logicalDeviceID string
-	serialNumber    string
-	rootDeviceID    string
-	deviceMgr       *Manager
-	ldeviceMgr      *LogicalManager
-	ldProxy         *model.Proxy
-	stopped         bool
-	deviceRoutes    *route.DeviceRoutes
-	flowDecomposer  *fd.FlowDecomposer
-	internalTimeout time.Duration
-	logicalDevice   *voltha.LogicalDevice
-	requestQueue    *coreutils.RequestQueue
-	orderedEvents   orderedEvents
-	startOnce       sync.Once
-	stopOnce        sync.Once
-	exitChannel     chan int
+	logicalDeviceID      string
+	serialNumber         string
+	rootDeviceID         string
+	deviceMgr            *Manager
+	ldeviceMgr           *LogicalManager
+	ldProxy              *model.Proxy
+	stopped              bool
+	deviceRoutes         *route.DeviceRoutes
+	flowDecomposer       *fd.FlowDecomposer
+	internalTimeout      time.Duration
+	logicalDevice        *voltha.LogicalDevice
+	requestQueue         *coreutils.RequestQueue
+	orderedEvents        orderedEvents
+	startOnce            sync.Once
+	stopOnce             sync.Once
+	exitChannel          chan int
+	logicalFlowsMap      map[string][]uint64
+	logicalFlowsMapMutex sync.RWMutex
 
 	flowCache   *flow.Cache
 	meterLoader *meter.Loader
@@ -79,6 +81,7 @@ func newLogicalAgent(ctx context.Context, id string, sn string, deviceID string,
 		internalTimeout: internalTimeout,
 		requestQueue:    coreutils.NewRequestQueue(),
 		exitChannel:     make(chan int, 1),
+		logicalFlowsMap: make(map[string][]uint64),
 
 		flowCache:   flow.NewCache(),
 		groupCache:  group.NewCache(),
@@ -264,7 +267,7 @@ func (agent *LogicalAgent) GetLogicalDeviceReadOnly(ctx context.Context) (*volth
 	return agent.logicalDevice, nil
 }
 
-func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, deviceRules *fu.DeviceRules) []coreutils.Response {
+func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, deviceRules *fu.DeviceRules, logicalFlow *ofp.OfpFlowStats) []coreutils.Response {
 	logger.Debugw(ctx, "send-add-flows-to-device-manager", log.Fields{"logical-device-id": agent.logicalDeviceID, "device-rules": deviceRules})
 
 	responses := make([]coreutils.Response, 0)
@@ -283,7 +286,7 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 				return
 			}
 			start := time.Now()
-			if err := agent.deviceMgr.addFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), toMetadata(flowMeterConfig)); err != nil {
+			if err := agent.deviceMgr.addFlowsAndGroups(subCtx, deviceId, value.ListFlows(), value.ListGroups(), toMetadata(flowMeterConfig), logicalFlow); err != nil {
 				logger.Errorw(ctx, "flow-add-failed", log.Fields{
 					"device-id": deviceId,
 					"error":     err,

@@ -529,10 +529,10 @@ func (dMgr *Manager) canMultipleAdapterRequestProceed(ctx context.Context, devic
 	return nil
 }
 
-func (dMgr *Manager) addFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata) error {
+func (dMgr *Manager) addFlowsAndGroups(ctx context.Context, deviceID string, flows []*ofp.OfpFlowStats, groups []*ofp.OfpGroupEntry, flowMetadata *ofp.FlowMetadata, logicalFlow *ofp.OfpFlowStats) error {
 	logger.Debugw(ctx, "add-flows-and-groups", log.Fields{"device-id": deviceID, "groups:": groups, "flow-metadata": flowMetadata})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
-		return agent.addFlowsAndGroups(ctx, flows, groups, flowMetadata)
+		return agent.addFlowsAndGroups(ctx, flows, groups, flowMetadata, logicalFlow)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
 }
