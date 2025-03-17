@@ -104,6 +104,7 @@ type DeviceManager interface {
 	DeleteAllLogicalMeters(ctx context.Context, curr *voltha.Device) error
 	DeleteAllDeviceFlows(ctx context.Context, curr *voltha.Device) error
 	ReconcilingCleanup(ctx context.Context, curr *voltha.Device) error
+	ClearDeviceTransientState(ctx context.Context, curr *voltha.Device) error
 }
 
 // NewTransitionMap creates transition map
@@ -182,8 +183,8 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 		transition{
 			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_UNREACHABLE, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_NONE},
-			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_REBOOTED, Transient: core.DeviceTransientState_NONE},
-			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows}})
+			currentState:  deviceState{Admin: voltha.AdminState_ENABLED, Connection: voltha.ConnectStatus_REACHABLE, Operational: voltha.OperStatus_REBOOTED, Transient: core.DeviceTransientState_REBOOT_IN_PROGRESS},
+			handlers:      []transitionHandler{dMgr.DeleteAllLogicalPorts, dMgr.DeleteAllChildDevices, dMgr.DeleteAllLogicalMeters, dMgr.DeleteLogicalDevice, dMgr.DeleteAllDeviceFlows, dMgr.ClearDeviceTransientState}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{
 			deviceType:    parent,
