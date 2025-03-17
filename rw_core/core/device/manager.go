@@ -401,11 +401,6 @@ func (dMgr *Manager) adapterRestarted(ctx context.Context, adapter *voltha.Adapt
 						"device-type":        deviceAgent.deviceType,
 						"adapter-type":       adapter.Type,
 					})
-				//set transient state to RECONCILE IN PROGRESS
-				err := deviceAgent.UpdateTransientStateToReconcile(ctx)
-				if err != nil {
-					logger.Errorw(ctx, "setting-transient-state-failed", log.Fields{"error": err})
-				}
 			} else {
 				logger.Errorw(ctx, "failed-aborting-exisiting-processing", log.Fields{"error": err})
 			}
