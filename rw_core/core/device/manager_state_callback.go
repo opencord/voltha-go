@@ -211,3 +211,16 @@ func (dMgr *Manager) DeleteAllLogicalMeters(ctx context.Context, cDevice *voltha
 	return nil
 
 }
+
+// ClearTransientState updates the parent device transient state to none
+func (dMgr *Manager) ClearDeviceTransientState(ctx context.Context, parentDevice *voltha.Device) error {
+	logger.Debugw(ctx, "clear-device-transient-state", log.Fields{"parent-device-id": parentDevice.Id})
+	if agent := dMgr.getDeviceAgent(ctx, parentDevice.Id); agent != nil {
+		// Update the transient state to none if the device is root and oper status is active and transient state is olt reboot in progress
+		if err := agent.updateTransientState(ctx, core.DeviceTransientState_NONE); err != nil {
+			return err
+		}
+		return nil
+	}
+	return status.Errorf(codes.NotFound, "%s", parentDevice.Id)
+}
