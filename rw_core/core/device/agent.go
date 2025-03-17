@@ -1010,13 +1010,20 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 		_ = agent.deviceMgr.Agent.SendDeviceStateChangeEvent(ctx, prevDevice.OperStatus, prevDevice.ConnectStatus, prevDevice.AdminState, device, time.Now().Unix())
 	}
 	deviceTransientState := agent.getTransientState()
-
+	prevDeviceTransientState := deviceTransientState
+	// Update the transient state to olt reboot in progress if the device is root and oper status is rebooted
+	if device.Root && device.OperStatus == common.OperStatus_REBOOTED && prevDevice.OperStatus != common.OperStatus_REBOOTED {
+		if err := agent.updateTransientState(ctx, core.DeviceTransientState_REBOOT_IN_PROGRESS); err != nil {
+			return err
+		}
+		deviceTransientState = core.DeviceTransientState_REBOOT_IN_PROGRESS
+	}
 	// release lock before processing transition
 	agent.requestQueue.RequestComplete()
 	subCtx := coreutils.WithSpanAndRPCMetadataFromContext(ctx)
 
 	if err := agent.deviceMgr.stateTransitions.ProcessTransition(subCtx,
-		device, prevDevice, deviceTransientState, deviceTransientState); err != nil {
+		device, prevDevice, deviceTransientState, prevDeviceTransientState); err != nil {
 		logger.Errorw(ctx, "failed-process-transition", log.Fields{"device-id": device.Id, "previous-admin-state": prevDevice.AdminState, "current-admin-state": device.AdminState})
 		// Sending RPC EVENT here
 		rpce := agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, err.Error(), nil)
@@ -1387,6 +1394,7 @@ func (agent *Agent) abortAllProcessing(ctx context.Context) error {
 	case core.DeviceTransientState_DELETING_FROM_ADAPTER:
 		updatedState = core.DeviceTransientState_DELETE_FAILED
 	case core.DeviceTransientState_DELETE_FAILED:
+	case core.DeviceTransientState_REBOOT_IN_PROGRESS:
 		// do not change state
 		return nil
 	default:
@@ -1486,6 +1494,7 @@ func (agent *Agent) UpdateTransientStateToReconcile(ctx context.Context) error {
 
 func (agent *Agent) StartReconcileWithRetry(ctx context.Context) {
 
+	var reconcileErr error
 	state := agent.getTransientState()
 	logger.Debugw(ctx, "starting-reconcile", log.Fields{"device-id": agent.deviceID, "state": state})
 
@@ -1569,17 +1578,32 @@ retry:
 		// Release lock before sending request to adapter
 		agent.requestQueue.RequestComplete()
 
-		// Send a reconcile request to the adapter.
-		err := agent.sendReconcileRequestToAdapter(ctx, device)
+		if state != core.DeviceTransientState_REBOOT_IN_PROGRESS {
+			if state != core.DeviceTransientState_RECONCILE_IN_PROGRESS {
+				// set transient state to RECONCILE IN PROGRESS
+				if err := agent.UpdateTransientStateToReconcile(ctx); err != nil {
+					logger.Errorw(ctx, "setting-transient-state-failed", log.Fields{"error": err})
+					agent.stopReconcilingMutex.Lock()
+					if agent.stopReconciling != nil {
+						agent.stopReconciling = nil
+					}
+					desc = "Failed-to-update-transient-state"
+					agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
+					agent.stopReconcilingMutex.Unlock()
+					break retry
+				}
+			}
+			reconcileErr = agent.sendReconcileRequestToAdapter(ctx, device)
+		}
 
-		if errors.Is(err, errContextExpired) || errors.Is(err, errReconcileAborted) {
-			logger.Errorw(ctx, "reconcile-aborted", log.Fields{"error": err})
+		if errors.Is(reconcileErr, errContextExpired) || errors.Is(reconcileErr, errReconcileAborted) {
+			logger.Errorw(ctx, "reconcile-aborted", log.Fields{"error": reconcileErr})
 			requestStatus = &common.OperationResp{Code: common.OperationResp_OperationReturnCode(common.OperStatus_FAILED)}
 			desc = "aborted"
-			agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
+			agent.logDeviceUpdate(ctx, nil, nil, requestStatus, reconcileErr, desc)
 			break retry
 		}
-		st, ok := status.FromError(err)
+		st, ok := status.FromError(reconcileErr)
 		if ok {
 			// Decode the error code and error message
 			errorCode := st.Code()
@@ -1596,7 +1620,7 @@ retry:
 					 Either of the cases we retry for retryinterval and assume that the device is already reconciled in the new adapter.
 			*/
 			if errorCode == codes.AlreadyExists {
-				logger.Warnw(ctx, "device already reconciled", log.Fields{"error": err})
+				logger.Warnw(ctx, "device already reconciled", log.Fields{"error": reconcileErr})
 				// Reset the backoff current interval when we receive the device reconciled error for the first time
 				// so that we can retry for one full backoff cycle and then break
 				if !isDeviceReconciledErr {
@@ -1607,17 +1631,19 @@ retry:
 				isDeviceReconciledErr = false
 			}
 		}
-		if err != nil {
-			agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
+		// If the reconcile request fails or the device transient state is in OLT reboot in progress state, retry the reconcile
+		if reconcileErr != nil || state == core.DeviceTransientState_REBOOT_IN_PROGRESS {
+			agent.logDeviceUpdate(ctx, nil, nil, requestStatus, reconcileErr, desc)
 			select {
 			case <-backoffTimer.C:
 				// backoffTimer expired continue
 				// Take lock back before retrying
-				if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+				if reconcileErr = agent.requestQueue.WaitForGreenLight(ctx); reconcileErr != nil {
 					desc = "failed-to-acquire-lock"
-					agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
+					agent.logDeviceUpdate(ctx, nil, nil, requestStatus, reconcileErr, desc)
 					break retry
 				}
+				state = agent.getTransientState()
 				continue
 
 			case _, ok := (<-agent.exitChannel):
@@ -1625,7 +1651,7 @@ retry:
 				if !ok {
 					logger.Warnw(ctx, "device agent stopped, aborting reconcile", log.Fields{"device-id": agent.deviceID})
 					desc = "device-agent-stopped"
-					agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
+					agent.logDeviceUpdate(ctx, nil, nil, requestStatus, reconcileErr, desc)
 					break retry
 				}
 			}
@@ -1633,7 +1659,7 @@ retry:
 		// Success
 		requestStatus = &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
 		desc = "adapter-response"
-		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
+		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, reconcileErr, desc)
 		break retry
 	}
 
@@ -1658,13 +1684,6 @@ retry:
 }
 
 func (agent *Agent) ReconcileDevice(ctx context.Context) {
-
-	// set transient state to RECONCILE IN PROGRESS
-	err := agent.UpdateTransientStateToReconcile(ctx)
-	if err != nil {
-		logger.Errorw(ctx, "check-and-update-transient-state-failed", log.Fields{"error": err})
-		return
-	}
 
 	agent.StartReconcileWithRetry(ctx)
 }
