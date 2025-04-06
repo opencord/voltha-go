@@ -1492,7 +1492,7 @@ func (agent *Agent) StartReconcileWithRetry(ctx context.Context) {
 	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 	var desc string
 
-	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
 		return
 	}
@@ -1506,7 +1506,7 @@ func (agent *Agent) StartReconcileWithRetry(ctx context.Context) {
 
 	if agent.isDeletionInProgress() {
 		agent.requestQueue.RequestComplete()
-		err = fmt.Errorf("cannot complete operation as device deletion is in progress device : %s", device.Id)
+		err := fmt.Errorf("cannot complete operation as device deletion is in progress device : %s", device.Id)
 		logger.Errorw(ctx, "reconcile-failed", log.Fields{"error": err})
 		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
 		return
