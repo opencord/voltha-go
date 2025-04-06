@@ -30,15 +30,12 @@
 # -------------
 # Build stage
 
-FROM --platform=linux/amd64 golang:1.16.3-alpine3.13 AS dev
-
-# [TODO] update
-# FROM --platform=linux/amd64 golang:1.19.4-r0-alpine3.17 AS dev
+FROM golang:1.23.1-alpine3.20 AS dev
 
 # Install required packages
 
-RUN apk --update update # refresh the index
-RUN apk --update add --no-cache build-base=0.5-r3
+RUN apk --update update && \
+    apk --update add --no-cache build-base=0.5-r3
 
 # Use Standard go build directory structure
 WORKDIR /go/src
@@ -92,7 +89,7 @@ WORKDIR /app
 
 # -------------
 # Image creation stage
-FROM --platform=linux/amd64 gcr.io/distroless/static:nonroot as prod
+FROM gcr.io/distroless/static:nonroot as prod
 
 # Set the working directory
 WORKDIR /app

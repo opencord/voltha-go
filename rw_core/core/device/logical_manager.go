@@ -40,13 +40,13 @@ import (
 // LogicalManager represent logical device manager attributes
 type LogicalManager struct {
 	*event.Manager
-	logicalDeviceAgents            sync.Map
 	deviceMgr                      *Manager
 	dbPath                         *model.Path
 	ldProxy                        *model.Proxy
+	logicalDeviceLoadingInProgress map[string][]chan int
+	logicalDeviceAgents            sync.Map
 	internalTimeout                time.Duration
 	logicalDevicesLoadingLock      sync.RWMutex
-	logicalDeviceLoadingInProgress map[string][]chan int
 }
 
 func (ldMgr *LogicalManager) Start(ctx context.Context, serviceName string) {
@@ -60,7 +60,7 @@ func (ldMgr *LogicalManager) Start(ctx context.Context, serviceName string) {
 	}
 	for _, lDevice := range logicalDevices {
 		// Create an agent for each device
-		agent := newLogicalAgent(ctx, lDevice.Id, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.internalTimeout)
+		agent := newLogicalAgent(lDevice.Id, "", "", ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.internalTimeout)
 		go agent.start(ctx, true, lDevice)
 	}
 
@@ -90,7 +90,7 @@ func (ldMgr *LogicalManager) getLogicalDeviceAgent(ctx context.Context, logicalD
 		}
 		return lda
 	}
-	//	Try to load into memory - loading will also create the logical device agent
+	// Try to load into memory - loading will also create the logical device agent
 	if err := ldMgr.load(ctx, logicalDeviceID); err == nil {
 		if agent, ok = ldMgr.logicalDeviceAgents.Load(logicalDeviceID); ok {
 			return agent.(*LogicalAgent)
@@ -148,7 +148,7 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 	// with length varying from eight characters to a maximum of 14 characters.   Mac Address is part of oneof
 	// in the Device model.  May need to be moved out.
 	id := utils.CreateLogicalDeviceID()
-	sn := strings.Replace(device.MacAddress, ":", "", -1)
+	sn := strings.ReplaceAll(device.MacAddress, ":", "")
 	if id == "" {
 		logger.Errorw(ctx, "mac-address-not-set", log.Fields{"device-id": device.Id, "serial-number": sn})
 		return nil, errors.New("mac-address-not-set")
@@ -156,7 +156,7 @@ func (ldMgr *LogicalManager) createLogicalDevice(ctx context.Context, device *vo
 
 	logger.Debugw(ctx, "logical-device-id", log.Fields{"logical-device-id": id})
 
-	agent := newLogicalAgent(ctx, id, sn, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.internalTimeout)
+	agent := newLogicalAgent(id, sn, device.Id, ldMgr, ldMgr.deviceMgr, ldMgr.dbPath, ldMgr.ldProxy, ldMgr.internalTimeout)
 
 	// Update the root device with the logical device Id reference
 	if err := ldMgr.deviceMgr.setParentID(ctx, device, id); err != nil {
@@ -240,7 +240,7 @@ func (ldMgr *LogicalManager) load(ctx context.Context, lDeviceID string) error {
 		ch := make(chan int, 1)
 		ldMgr.logicalDeviceLoadingInProgress[lDeviceID] = append(ldMgr.logicalDeviceLoadingInProgress[lDeviceID], ch)
 		ldMgr.logicalDevicesLoadingLock.Unlock()
-		//	Wait for the channel to be closed, implying the process loading this device is done.
+		// Wait for the channel to be closed, implying the process loading this device is done.
 		<-ch
 	}
 	if _, exist := ldMgr.logicalDeviceAgents.Load(lDeviceID); exist {
@@ -262,7 +262,7 @@ func (ldMgr *LogicalManager) deleteLogicalDevice(ctx context.Context, device *vo
 			logger.Errorw(ctx, "failed-to-stop-agent", log.Fields{"error": err})
 			return err
 		}
-		//Remove the logical device agent from the Map
+		// Remove the logical device agent from the Map
 		ldMgr.deleteLogicalDeviceAgent(logDeviceID)
 		ldMgr.SendDeviceDeletionEvent(ctx, logDeviceID)
 	} else {
@@ -408,6 +408,7 @@ func (ldMgr *LogicalManager) deleteLogicalPorts(ctx context.Context, deviceID st
 }
 
 // deleteAllLogicalMetersForLogicalDevice removes the logical meters associated with a the Logical Device ID
+// nolint:unparam
 func (ldMgr *LogicalManager) deleteAllLogicalMetersForLogicalDevice(ctx context.Context, ldID string) error {
 	logger.Debugw(ctx, "delete-logical-meters", log.Fields{"logical-device-id": ldID})
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, ldID); agent != nil {
@@ -456,7 +457,7 @@ func (ldMgr *LogicalManager) deleteAllLogicalPorts(ctx context.Context, device *
 
 	var ldID *string
 	var err error
-	//Get the logical device Id for this device
+	// Get the logical device Id for this device
 	if ldID, err = ldMgr.getLogicalDeviceID(ctx, device); err != nil {
 		logger.Warnw(ctx, "no-logical-device-found", log.Fields{"device-id": device.Id, "error": err})
 		return err
@@ -474,7 +475,7 @@ func (ldMgr *LogicalManager) updatePortState(ctx context.Context, deviceID strin
 
 	var ldID *string
 	var err error
-	//Get the logical device Id for this device
+	// Get the logical device Id for this device
 	if ldID, err = ldMgr.getLogicalDeviceIDFromDeviceID(ctx, deviceID); err != nil {
 		logger.Warnw(ctx, "no-logical-device-found", log.Fields{"device-id": deviceID, "error": err})
 		return err

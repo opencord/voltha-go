@@ -109,14 +109,14 @@ docker-build: local-protos local-lib-go ## Build core docker image (set BUILD_PR
 	$(call banner-enter,$@)
 	$(MAKE) --no-print-directory test-coverage-init
 
-	docker $(docker-build-args) build $(DOCKER_BUILD_ARGS) -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} --target ${DOCKER_TARGET} -f docker/Dockerfile.rw_core .
+	docker $(docker-build-args) build $(DOCKER_BUILD_ARGS) --platform=linux/amd64 -t ${RWCORE_IMAGENAME}:${DOCKER_TAG} --target ${DOCKER_TARGET} -f docker/Dockerfile.rw_core .
 ifdef BUILD_PROFILED
 # Force target to dev as profile build must be built with dynamic linking
-	docker build $(DOCKER_BUILD_ARGS) --target dev --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" --build-arg CGO_PARAMETER="CGO_ENABLED=1" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -f docker/Dockerfile.rw_core .
+	docker build $(DOCKER_BUILD_ARGS) --platform=linux/amd64 --target dev --build-arg EXTRA_GO_BUILD_TAGS="-tags profile" --build-arg CGO_PARAMETER="CGO_ENABLED=1" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-profile -f docker/Dockerfile.rw_core .
 endif
 ifdef BUILD_RACE
 # Force target to dev as race detection build must be built with dynamic linking
-	docker build $(DOCKER_BUILD_ARGS) --target dev --build-arg GOLANG_IMAGE=golang:1.13.8-buster --build-arg CGO_PARAMETER="CGO_ENABLED=1" --build-arg DEPLOY_IMAGE=debian:buster-slim --build-arg EXTRA_GO_BUILD_TAGS="--race" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd -f docker/Dockerfile.rw_core .
+	docker build $(DOCKER_BUILD_ARGS) --platform=linux/amd64 --target dev --build-arg GOLANG_IMAGE=golang:1.13.8-buster --build-arg CGO_PARAMETER="CGO_ENABLED=1" --build-arg DEPLOY_IMAGE=debian:buster-slim --build-arg EXTRA_GO_BUILD_TAGS="--race" -t ${RWCORE_IMAGENAME}:${DOCKER_TAG}-rd -f docker/Dockerfile.rw_core .
 endif
 
 	$(call banner-leave,$@)

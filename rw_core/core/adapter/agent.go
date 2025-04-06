@@ -19,6 +19,9 @@ package adapter
 import (
 	"context"
 	"errors"
+	"sync"
+	"time"
+
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
@@ -26,22 +29,20 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
-	"sync"
-	"time"
 )
 
 // agent represents adapter agent
 type agent struct {
 	adapter            *voltha.Adapter
-	lock               sync.RWMutex
-	adapterAPIEndPoint string
 	vClient            *vgrpc.Client
-	adapterLock        sync.RWMutex
 	onAdapterRestart   vgrpc.RestartedHandler
-	liveProbeInterval  time.Duration
+	adapterAPIEndPoint string
 	coreEndpoint       string
+	liveProbeInterval  time.Duration
 	maxRetries         uint
 	perRPCRetryTimeout time.Duration
+	lock               sync.RWMutex
+	adapterLock        sync.RWMutex
 }
 
 func getAdapterServiceClientHandler(ctx context.Context, conn *grpc.ClientConn) interface{} {
@@ -96,7 +97,7 @@ func (aa *agent) stop(ctx context.Context) {
 	}
 }
 
-func (aa *agent) getAdapter(ctx context.Context) *voltha.Adapter {
+func (aa *agent) getAdapter() *voltha.Adapter {
 	aa.adapterLock.RLock()
 	defer aa.adapterLock.RUnlock()
 	return aa.adapter

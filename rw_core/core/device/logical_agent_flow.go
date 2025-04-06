@@ -104,7 +104,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 	mod := flowUpdate.FlowMod
 	var flowToReplace *ofp.OfpFlowStats
 
-	//if flow is not found in the map, create a new entry, otherwise get the existing one.
+	// if flow is not found in the map, create a new entry, otherwise get the existing one.
 	flowHandle, flowCreated, err := agent.flowCache.LockOrCreate(ctx, flow)
 	if err != nil {
 		return changed, updated, err
@@ -119,7 +119,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 			// TODO: should this error be notified other than being logged?
 			logger.Warnw(ctx, "overlapped-flows", log.Fields{"logical-device-id": agent.logicalDeviceID})
 		} else {
-			//	Add flow
+			// Add flow
 			changed = true
 		}
 	} else {
@@ -177,7 +177,7 @@ func (agent *LogicalAgent) decomposeAndAdd(ctx context.Context, flow *ofp.OfpFlo
 		}
 
 		logger.Debugw(ctx, "rules", log.Fields{"rules": deviceRules.String()})
-		//	Update store and cache
+		// Update store and cache
 		if updated {
 			if err := flowHandle.Update(ctx, flow); err != nil {
 				return changed, updated, err
@@ -279,10 +279,10 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 		return nil
 	}
 
-	//build a list of what to delete
+	// Build a list of what to delete
 	toDelete := make(map[uint64]*ofp.OfpFlowStats)
 
-	// add perfectly matching entry if exists
+	// Add perfectly matching entry if exists
 	fs, err := fu.FlowStatsEntryFromFlowModMessage(mod)
 	if err != nil {
 		return err
@@ -292,7 +292,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 		handle.Unlock()
 	}
 
-	// search through all the flows
+	// Search through all the flows
 	for flowID := range agent.flowCache.ListIDs() {
 		if flowHandle, have := agent.flowCache.Lock(flowID); have {
 			if flow := flowHandle.GetReadOnly(); fu.FlowMatchesMod(flow, mod) {
@@ -302,7 +302,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 		}
 	}
 
-	//Delete the matched flows
+	// Delete the matched flows
 	if len(toDelete) > 0 {
 		logger.Debugw(ctx, "flow-delete", log.Fields{"logical-device-id": agent.logicalDeviceID, "to-delete": len(toDelete)})
 
@@ -316,7 +316,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 					return fmt.Errorf("cannot-delete-flow-%d. Meter-update-failed", flow.Id)
 				}
 				// Update store and cache
-				if err := flowHandle.Delete(ctx); err != nil {
+				if err = flowHandle.Delete(ctx); err != nil {
 					flowHandle.Unlock()
 					return fmt.Errorf("cannot-delete-flows-%d. Delete-from-store-failed", flow.Id)
 				}
@@ -357,8 +357,8 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 		}
 
 		for _, deviceID := range devicesInFlows {
-			if err := agent.deviceMgr.canAdapterRequestProceed(ctx, deviceID); err != nil {
-				//If the error has code.NotFound the device is not there anymore, there is no need to delete flows, just ignore it
+			if err = agent.deviceMgr.canAdapterRequestProceed(ctx, deviceID); err != nil {
+				// If the error has code.NotFound the device is not there anymore, there is no need to delete flows, just ignore it
 				if status.Code(err) != codes.NotFound {
 					logger.Warnw(ctx, "adapters-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "flow": toDelete, "error": err})
 					return err
@@ -402,7 +402,7 @@ func (agent *LogicalAgent) flowDelete(ctx context.Context, flowUpdate *ofp.FlowT
 			}
 		}()
 	}
-	//TODO: send announcement on delete
+	// TODO: send announcement on delete
 	return nil
 }
 
@@ -469,7 +469,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 
 	for _, deviceID := range devicesInFlows {
 		if err := agent.deviceMgr.canAdapterRequestProceed(ctx, deviceID); err != nil {
-			//If the error has code.NotFound the device is not there anymore, there is no need to delete flows, just ignore it
+			// If the error has code.NotFound the device is not there anymore, there is no need to delete flows, just ignore it
 			if status.Code(err) != codes.NotFound {
 				logger.Warnw(ctx, "adapters-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "flow": flowsToDelete, "error": err})
 				return err
@@ -554,9 +554,9 @@ func (agent *LogicalAgent) deleteFlowsHavingMeter(ctx context.Context, meterID u
 		if flowHandle, have := agent.flowCache.Lock(flowID); have {
 			if flowMeterID := fu.GetMeterIdFromFlow(flowHandle.GetReadOnly()); flowMeterID != 0 && flowMeterID == meterID {
 				if err := flowHandle.Delete(ctx); err != nil {
-					//TODO: Think on carrying on and deleting the remaining flows, instead of returning.
-					//Anyways this returns an error to controller which possibly results with a re-deletion.
-					//Then how can we handle the new deletion request(Same for group deletion)?
+					// TODO: Think on carrying on and deleting the remaining flows, instead of returning.
+					// Anyways this returns an error to controller which possibly results with a re-deletion.
+					// Then how can we handle the new deletion request(Same for group deletion)?
 					return err
 				}
 			}

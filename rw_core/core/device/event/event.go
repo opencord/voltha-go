@@ -98,7 +98,7 @@ func (q *Manager) getStreamingTracker(ctx context.Context, method string, done c
 	return streamingTracker.calls[method]
 }
 
-func (q *Manager) flushFailedPackets(ctx context.Context, tracker *callTracker) error {
+func (q *Manager) flushFailedPackets(ctx context.Context, tracker *callTracker) {
 	if tracker.failedPacket != nil {
 		switch failedPacket := tracker.failedPacket.(type) {
 		case openflow_13.PacketIn:
@@ -109,7 +109,6 @@ func (q *Manager) flushFailedPackets(ctx context.Context, tracker *callTracker) 
 			q.changeEventQueue <- failedPacket
 		}
 	}
-	return nil
 }
 
 // ReceivePacketsIn receives packets from adapter
@@ -119,10 +118,7 @@ func (q *Manager) ReceivePacketsIn(_ *empty.Empty, packetsIn voltha.VolthaServic
 	var streamingTracker = q.getStreamingTracker(ctx, "ReceivePacketsIn", q.packetInQueueDone)
 	logger.Debugw(ctx, "receive-packets-in-request", log.Fields{"packets-in": packetsIn})
 
-	err := q.flushFailedPackets(ctx, streamingTracker)
-	if err != nil {
-		logger.Errorw(ctx, "unable-to-flush-failed-packets", log.Fields{"error": err})
-	}
+	q.flushFailedPackets(ctx, streamingTracker)
 
 loop:
 	for {
@@ -169,19 +165,19 @@ func (q *Manager) SendFlowChangeEvent(ctx context.Context, deviceID string, res 
 	logger.Debugw(ctx, "send-change-event", log.Fields{"device-id": deviceID,
 		"flow-id": xid, "flow-cookie": flowCookie, "errors": res})
 	errorType := openflow_13.OfpErrorType_OFPET_FLOW_MOD_FAILED
-	//Manually creating the data payload for the flow error message
+	// Manually creating the data payload for the flow error message
 	bs := make([]byte, 2)
-	//OF 1.3
+	// OF 1.3
 	bs[0] = byte(4)
-	//Flow Mod
+	// Flow Mod
 	bs[1] = byte(14)
-	//Length of the message
+	// Length of the message
 	length := make([]byte, 2)
 	binary.BigEndian.PutUint16(length, 56)
 	bs = append(bs, length...)
 	emptyArr := []byte{0, 0, 0, 0}
 	bs = append(bs, emptyArr...)
-	//Cookie of the Flow
+	// Cookie of the Flow
 	cookie := make([]byte, 52)
 	binary.BigEndian.PutUint64(cookie, flowCookie)
 	bs = append(bs, cookie...)
@@ -221,10 +217,7 @@ func (q *Manager) ReceiveChangeEvents(_ *empty.Empty, changeEvents voltha.Voltha
 	var streamingTracker = q.getStreamingTracker(ctx, "ReceiveChangeEvents", q.changeEventQueueDone)
 	logger.Debugw(ctx, "receive-change-events-request", log.Fields{"change-events": changeEvents})
 
-	err := q.flushFailedPackets(ctx, streamingTracker)
-	if err != nil {
-		logger.Errorw(ctx, "unable-to-flush-failed-packets", log.Fields{"error": err})
-	}
+	q.flushFailedPackets(ctx, streamingTracker)
 
 loop:
 	for {
@@ -283,7 +276,7 @@ func (q *Agent) NewRPCEvent(ctx context.Context, resourceID, desc string, contex
 }
 
 func (q *Agent) SendRPCEvent(ctx context.Context, id string, rpcEvent *voltha.RPCEvent, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
-	//TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
+	// TODO Instead of directly sending to the kafka bus, queue the message and send it asynchronously
 	if rpcEvent.Rpc != "" {
 		if err := q.eventProxy.SendRPCEvent(ctx, id, rpcEvent, category, subCategory, raisedTs); err != nil {
 			logger.Errorw(ctx, "failed-to-send-rpc-event", log.Fields{"resource-id": id, "error": err})
