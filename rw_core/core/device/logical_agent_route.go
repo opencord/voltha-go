@@ -37,7 +37,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 	if egressPortNo != 0 && ((egressPortNo & 0x7fffffff) == uint32(ofp.OfpPortNo_OFPP_CONTROLLER)) {
 		logger.Debugw(ctx, "controller-flow", log.Fields{"ingressPortNo": ingressPortNo, "egressPortNo": egressPortNo})
 		if agent.isNNIPort(ingressPortNo) {
-			//This is a trap on the NNI Port
+			// This is a trap on the NNI Port
 			if agent.deviceRoutes.IsRoutesEmpty() {
 				// If there are no routes set (usually when the logical device has only NNI port(s), then just return an
 				// route with same IngressHop and EgressHop
@@ -62,7 +62,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 		}
 	}
 
-	//If ingress port is not specified (nil), it may be a wildcarded route if egress port is OFPP_CONTROLLER or a nni
+	// If ingress port is not specified (nil), it may be a wildcarded route if egress port is OFPP_CONTROLLER or a nni
 	// logical port, in which case we need to create a half-route where only the egress hop is filled, the first hop is nil
 	if ingressPortNo == 0 && agent.isNNIPort(egressPortNo) {
 		routes, err := agent.deviceRoutes.GetHalfRoute(true, ingressPortNo, egressPortNo)
@@ -72,7 +72,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 		return routes, nil
 	}
 
-	//If egress port is not specified (nil), we can also can return a "half" route
+	// If egress port is not specified (nil), we can also can return a "half" route
 	if egressPortNo == 0 {
 		routes, err := agent.deviceRoutes.GetHalfRoute(false, ingressPortNo, egressPortNo)
 		if err != nil {
@@ -81,7 +81,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 		return routes, nil
 	}
 
-	//	Return the pre-calculated route
+	// Return the pre-calculated route
 	return agent.deviceRoutes.GetRoute(ctx, ingressPortNo, egressPortNo)
 }
 

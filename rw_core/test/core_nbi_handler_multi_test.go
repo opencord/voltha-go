@@ -141,7 +141,7 @@ func newNBTest(ctx context.Context, loadTest bool) *NBTest {
 	return test
 }
 
-func (nb *NBTest) startGRPCCore(ctx context.Context, t *testing.T) (coreEndpoint, nbiEndpoint string) {
+func (nb *NBTest) startGRPCCore(ctx context.Context) (coreEndpoint, nbiEndpoint string) {
 	// Setup the configs
 	cfg := &config.RWCoreFlags{}
 	cfg.ParseCommandArguments([]string{})
@@ -511,9 +511,7 @@ func (nb *NBTest) enableDevice(t *testing.T, nbi voltha.VolthaServiceClient, olt
 	// Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
 	var wg sync.WaitGroup
 	wg.Add(1)
-	subCtx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go nb.monitorLogicalDevices(subCtx, t, nbi, 1, nb.numONUPerOLT, &wg, false, false, oltDevice.Id, eventCh)
+	go nb.monitorLogicalDevices(t, nbi, 1, nb.numONUPerOLT, &wg, false, false, oltDevice.Id, eventCh)
 
 	// Wait for the logical device to be in the ready state
 	var vldFunction = func(ports []*voltha.LogicalPort) bool {
@@ -781,7 +779,7 @@ func (nb *NBTest) createAndEnableOLTDevice(t *testing.T, nbi voltha.VolthaServic
 	return oltDevice, err
 }
 
-func (nb *NBTest) testEnableDeviceFailed(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
+func (nb *NBTest) testEnableDeviceFailed(t *testing.T, nbi voltha.VolthaServiceClient) {
 	//Create a device that has no adapter registered
 	macAddress := getRandomMacAddress()
 	oltDeviceNoAdapter, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: "noAdapterRegistered", MacAddress: macAddress})
@@ -816,9 +814,7 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi voltha.VolthaServiceClient,
 	//Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
 	var wg sync.WaitGroup
 	wg.Add(1)
-	subCtx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go nb.monitorLogicalDevices(subCtx, t, nbi, 1, nb.numONUPerOLT, &wg, false, false, oltDevice.Id, eventCh)
+	go nb.monitorLogicalDevices(t, nbi, 1, nb.numONUPerOLT, &wg, false, false, oltDevice.Id, eventCh)
 
 	// Wait for the logical device to be in the ready state
 	var vldFunction = func(ports []*voltha.LogicalPort) bool {
@@ -1339,7 +1335,7 @@ func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi voltha.VolthaSe
 	assert.Nil(t, err)
 }
 
-func (nb *NBTest) sendTrapFlows(t *testing.T, nbi voltha.VolthaServiceClient, logicalDeviceID string, ports []*voltha.LogicalPort, meterID uint64, startingVlan int) (numNNIPorts, numUNIPorts int) {
+func (nb *NBTest) sendTrapFlows(t *testing.T, nbi voltha.VolthaServiceClient, logicalDeviceID string, ports []*voltha.LogicalPort) (numNNIPorts, numUNIPorts int) {
 	// Send flows for the parent device
 	var nniPorts []*voltha.LogicalPort
 	var uniPorts []*voltha.LogicalPort
@@ -1526,7 +1522,6 @@ func (nb *NBTest) getAdapterInstancesWithDeviceIds(t *testing.T, nbi voltha.Volt
 }
 
 func (nb *NBTest) monitorLogicalDevices(
-	ctx context.Context,
 	t *testing.T,
 	nbi voltha.VolthaServiceClient,
 	numNNIPorts int,
@@ -1615,7 +1610,7 @@ func (nb *NBTest) monitorLogicalDevices(
 
 	// Send initial set of Trap flows
 	startingVlan := 4091
-	nb.sendTrapFlows(t, nbi, logicalDeviceID, ports.Items, uint64(meterID), startingVlan)
+	nb.sendTrapFlows(t, nbi, logicalDeviceID, ports.Items)
 
 	//Listen for port events
 	processedNniLogicalPorts := 0
@@ -1689,9 +1684,7 @@ func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi voltha.VolthaServiceClien
 	// Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
 	var wg sync.WaitGroup
 	wg.Add(1)
-	subCtx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go nb.monitorLogicalDevices(subCtx, t, nbi, 1, nb.numONUPerOLT, &wg, true, false, oltDevice.Id, eventCh)
+	go nb.monitorLogicalDevices(t, nbi, 1, nb.numONUPerOLT, &wg, true, false, oltDevice.Id, eventCh)
 
 	// Wait for the logical device to be in the ready state
 	var vldFunction = func(ports []*voltha.LogicalPort) bool {
@@ -1946,7 +1939,7 @@ func (nb *NBTest) runTestSuite(t *testing.T, nbi voltha.VolthaServiceClient, olt
 	nb.testDeleteDeviceFailure(t, nbi, oltDeviceType)
 
 	////Test failed enable device
-	nb.testEnableDeviceFailed(t, nbi, oltDeviceType)
+	nb.testEnableDeviceFailed(t, nbi)
 
 	//Test Enable a device
 	nb.testEnableDevice(t, nbi, oltDeviceType)
@@ -2008,7 +2001,7 @@ func (nb *NBTest) runTestSuite(t *testing.T, nbi voltha.VolthaServiceClient, olt
 
 func setUpCore(ctx context.Context, t *testing.T, nb *NBTest) (voltha.VolthaServiceClient, string) {
 	// Start the Core
-	coreAPIEndpoint, nbiEndpoint := nb.startGRPCCore(ctx, t)
+	coreAPIEndpoint, nbiEndpoint := nb.startGRPCCore(ctx)
 
 	// Wait until the core is ready
 	start := time.Now()

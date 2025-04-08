@@ -20,17 +20,16 @@ package test
 import (
 	"bufio"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
-
-	"math/rand"
 
 	"github.com/opencord/voltha-go/rw_core/config"
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
@@ -51,11 +50,11 @@ const (
 )
 
 type AdapterInfo struct {
-	TotalReplica    int32
 	Vendor          string
 	DeviceType      string
 	ChildDeviceType string
 	ChildVendor     string
+	TotalReplica    int32
 }
 
 // prettyPrintDeviceUpdateLog is used just for debugging and exploring the Core logs
@@ -100,16 +99,14 @@ func prettyPrintDeviceUpdateLog(inputFile string, deviceID string) {
 		if err := json.Unmarshal([]byte(input), &logEntry); err != nil {
 			logger.Fatal(context.Background(), err)
 		}
-		fmt.Println(
-			fmt.Sprintf(
-				"%s\t%s\t%s\t%-30.30q\t%-16.16s\t%-25.25s\t%s",
-				logEntry.Ts,
-				logEntry.DeviceID,
-				logEntry.Status,
-				logEntry.RPC,
-				logEntry.RequestedBy,
-				logEntry.StateChange,
-				logEntry.Description))
+		fmt.Printf("%s\t%s\t%s\t%-30.30q\t%-16.16s\t%-25.25s\t%s",
+			logEntry.Ts,
+			logEntry.DeviceID,
+			logEntry.Status,
+			logEntry.RPC,
+			logEntry.RequestedBy,
+			logEntry.StateChange,
+			logEntry.Description)
 	}
 }
 
@@ -317,13 +314,14 @@ func SetupKVClient(ctx context.Context, cf *config.RWCoreFlags, coreInstanceID s
 
 // getRandomMacAddress returns a random mac address
 func getRandomMacAddress() string {
-	rand.Seed(time.Now().UnixNano() / int64(rand.Intn(255)+1))
+	mac := make([]byte, 6)
+	if _, err := io.ReadFull(rand.Reader, mac); err != nil {
+		fmt.Println("Error", err)
+	}
+
+	// Ensure the locally administered bit is set and the unicast bit is cleared
+	mac[0] = (mac[0] & 0xfe) | 0x02
+
 	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
-		rand.Intn(255),
-		rand.Intn(255),
-		rand.Intn(255),
-		rand.Intn(255),
-		rand.Intn(255),
-		rand.Intn(255),
-	)
+		mac[0], mac[1], mac[2], mac[3], mac[4], mac[5])
 }

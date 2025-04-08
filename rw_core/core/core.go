@@ -108,20 +108,20 @@ func (core *Core) Start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	backend.LivenessChannelInterval = cf.LiveProbeInterval / 2
 
 	// wait until connection to KV Store is up
-	if err := waitUntilKVStoreReachableOrMaxTries(ctx, kvClient, cf.MaxConnectionRetries, cf.ConnectionRetryInterval, kvService); err != nil {
+	if err = waitUntilKVStoreReachableOrMaxTries(ctx, kvClient, cf.MaxConnectionRetries, cf.ConnectionRetryInterval, kvService); err != nil {
 		logger.Fatal(ctx, "unable-to-connect-to-kv-store")
 	}
 	go monitorKVStoreLiveness(ctx, backend, kvService, cf.LiveProbeInterval, cf.NotLiveProbeInterval)
 
 	// Start kafka communications and artefacts
-	if err := kafka.StartAndWaitUntilKafkaConnectionIsUp(ctx, core.KafkaClient, cf.ConnectionRetryInterval, clusterMessagingService); err != nil {
+	if err = kafka.StartAndWaitUntilKafkaConnectionIsUp(ctx, core.KafkaClient, cf.ConnectionRetryInterval, clusterMessagingService); err != nil {
 		logger.Fatal(ctx, "unable-to-connect-to-kafka")
 	}
 	defer core.KafkaClient.Stop(ctx)
 
 	// create the voltha.events topic
 	topic := &kafka.Topic{Name: cf.EventTopic}
-	if err := core.KafkaClient.CreateTopic(ctx, topic, cf.EventTopicPartitions, cf.EventTopicReplicas); err != nil {
+	if err = core.KafkaClient.CreateTopic(ctx, topic, cf.EventTopicPartitions, cf.EventTopicReplicas); err != nil {
 		if err != nil {
 			logger.Fatal(ctx, "unable-to create topic", log.Fields{"topic": cf.EventTopic, "error": err})
 		}
@@ -130,7 +130,7 @@ func (core *Core) Start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	// Create the event proxy to post events to KAFKA
 	eventProxy := events.NewEventProxy(events.MsgClient(core.KafkaClient), events.MsgTopic(kafka.Topic{Name: cf.EventTopic}))
 	go func() {
-		if err := eventProxy.Start(); err != nil {
+		if err = eventProxy.Start(); err != nil {
 			logger.Fatalw(ctx, "event-proxy-cannot-start", log.Fields{"error": err})
 		}
 	}()
@@ -179,7 +179,7 @@ func (core *Core) Start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	// Create the NBI gRPC server
 	grpcNBIServer := grpcserver.NewGrpcServer(cf.GrpcNBIAddress, nil, false, probe.GetProbeFromContext(ctx))
 
-	//Register the 'Extension' service on this gRPC server
+	// Register the 'Extension' service on this gRPC server
 	addGRPCExtensionService(ctx, grpcNBIServer, device.GetNewExtensionManager(deviceMgr))
 
 	go startGrpcNbiService(ctx, grpcNBIServer, grpcNBIService, api.NewAPIHandler(deviceMgr, logicalDeviceMgr, adapterMgr))
