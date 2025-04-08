@@ -66,20 +66,20 @@ type EndpointManager interface {
 }
 
 type adapterService struct {
-	adapterType    string // Type of the adapter.  The same type applies for all replicas of that adapter
-	totalReplicas  int32
 	replicas       map[ReplicaID]Endpoint
 	consistentRing *consistent.Consistent
+	adapterType    string // Type of the adapter.  The same type applies for all replicas of that adapter
+	totalReplicas  int32
 }
 
 type endpointManager struct {
+	backend                           *db.Backend
+	adapterServices                   map[string]*adapterService
+	deviceTypeToAdapterServiceMap     map[string]string
 	partitionCount                    int
 	replicationFactor                 int
 	load                              float64
-	backend                           *db.Backend
-	adapterServices                   map[string]*adapterService
 	adapterServicesLock               sync.RWMutex
-	deviceTypeToAdapterServiceMap     map[string]string
 	deviceTypeToAdapterServiceMapLock sync.RWMutex
 }
 
@@ -307,15 +307,15 @@ func (ep *endpointManager) loadAdapterServices(ctx context.Context) error {
 		return err
 	}
 
-	// Data is marshalled as proto bytes in the data store
+	// Data is marshaled as proto bytes in the data store
 	for _, blob := range blobs {
 		data := blob.Value.([]byte)
 		adapter := &voltha.Adapter{}
-		if err := proto.Unmarshal(data, adapter); err != nil {
+		if err = proto.Unmarshal(data, adapter); err != nil {
 			return err
 		}
 		// A valid adapter should have the vendorID set
-		if err := ep.setupAdapterWithLock(ctx, adapter); err != nil {
+		if err = ep.setupAdapterWithLock(ctx, adapter); err != nil {
 			logger.Errorw(ctx, "missing vendor id", log.Fields{"adapter": adapter})
 		}
 	}
@@ -327,7 +327,7 @@ func (ep *endpointManager) loadAdapterServices(ctx context.Context) error {
 	for _, blob := range blobs {
 		data := blob.Value.([]byte)
 		deviceType := &voltha.DeviceType{}
-		if err := proto.Unmarshal(data, deviceType); err != nil {
+		if err = proto.Unmarshal(data, deviceType); err != nil {
 			return err
 		}
 		ep.addDeviceTypeWithLock(deviceType)
@@ -434,8 +434,8 @@ type member struct {
 	adapterType string
 	vendor      string
 	version     string
-	replica     ReplicaID
 	endpoint    Endpoint
+	replica     ReplicaID
 }
 
 func newMember(id string, adapterType string, vendor string, endPoint Endpoint, version string, replica ReplicaID) Member {

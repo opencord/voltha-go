@@ -25,18 +25,17 @@ import (
 
 // Cache hides all low-level locking & synchronization related to group state updates
 type Cache struct {
-	// this lock protects the groups map, it does not protect individual groups
-	lock   sync.RWMutex
 	groups map[uint32]*chunk
+	// this lock protects the groups map, it does not protect individual groups
+	lock sync.RWMutex
 }
 
 // chunk keeps a group and the lock for this group
 type chunk struct {
+	group *ofp.OfpGroupEntry
 	// this lock is used to synchronize all access to the group, and also to the "deleted" variable
 	lock    sync.Mutex
 	deleted bool
-
-	group *ofp.OfpGroupEntry
 }
 
 func NewCache() *Cache {
@@ -56,7 +55,7 @@ func (cache *Cache) LockOrCreate(ctx context.Context, group *ofp.OfpGroupEntry) 
 	cache.lock.Lock()
 	entry, have := cache.groups[group.Desc.GroupId]
 	if !have {
-		entry := &chunk{group: group}
+		entry = &chunk{group: group}
 		cache.groups[group.Desc.GroupId] = entry
 		entry.lock.Lock()
 		cache.lock.Unlock()

@@ -146,7 +146,7 @@ func (p *Proxy) Set(ctx context.Context, id string, data proto.Message) error {
 
 	blob, err := proto.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("unable to save to kvStore, error marshalling: %s", err)
+		return fmt.Errorf("unable to save to kvStore, error marshaling: %s", err)
 	}
 
 	if err := p.kvStore.Put(ctx, completePath, blob); err != nil {

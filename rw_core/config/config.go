@@ -34,17 +34,18 @@ type RWCoreFlags struct {
 	GrpcSBIAddress              string
 	KafkaClusterAddress         string
 	KVStoreType                 string
-	KVStoreTimeout              time.Duration
 	KVStoreAddress              string
 	EventTopic                  string
-	EventTopicPartitions        int
-	EventTopicReplicas          int
 	LogLevel                    string
-	Banner                      bool
-	DisplayVersionOnly          bool
 	RWCoreKey                   string
 	RWCoreCert                  string
 	RWCoreCA                    string
+	ProbeAddress                string
+	TraceAgentAddress           string
+	VolthaStackID               string
+	KVStoreTimeout              time.Duration
+	EventTopicPartitions        int
+	EventTopicReplicas          int
 	InternalTimeout             time.Duration
 	RPCTimeout                  time.Duration
 	FlowTimeout                 time.Duration
@@ -52,16 +53,15 @@ type RWCoreFlags struct {
 	ConnectionRetryInterval     time.Duration
 	LiveProbeInterval           time.Duration
 	NotLiveProbeInterval        time.Duration
-	ProbeAddress                string
-	TraceEnabled                bool
-	TraceAgentAddress           string
-	LogCorrelationEnabled       bool
-	VolthaStackID               string
 	BackoffRetryInitialInterval time.Duration
 	BackoffRetryMaxElapsedTime  time.Duration
 	BackoffRetryMaxInterval     time.Duration
 	PerRPCRetryTimeout          time.Duration
 	MaxRetries                  uint
+	Banner                      bool
+	DisplayVersionOnly          bool
+	TraceEnabled                bool
+	LogCorrelationEnabled       bool
 }
 
 // ParseCommandArguments parses the arguments when running read-write core service
@@ -129,7 +129,7 @@ func (cf *RWCoreFlags) ParseCommandArguments(args []string) {
 		5*time.Second,
 		"RPC timeout")
 
-	fs.DurationVar(&(cf.FlowTimeout), //Note flow time out will be considered for flows related rpc's not rpc timeout
+	fs.DurationVar(&(cf.FlowTimeout), // Note flow time out will be considered for flows related rpc's not rpc timeout
 		"flow_timeout",
 		30*time.Second,
 		"Flow timeout")
@@ -197,7 +197,7 @@ func (cf *RWCoreFlags) ParseCommandArguments(args []string) {
 	fs.DurationVar(&cf.BackoffRetryMaxElapsedTime,
 		"backoff_retry_max_elapsed_time",
 		0*time.Second,
-		"The maximum number of milliseconds an exponential backoff can elasped")
+		"The maximum number of milliseconds an exponential backoff can elapsed")
 
 	fs.DurationVar(&cf.BackoffRetryMaxInterval,
 		"backoff_retry_max_interval",
