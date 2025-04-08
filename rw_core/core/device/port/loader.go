@@ -31,18 +31,17 @@ import (
 // Loader hides all low-level locking & synchronization related to port state updates
 type Loader struct {
 	dbProxy *model.Proxy
+	ports   map[uint32]*chunk
 	// this lock protects the ports map, it does not protect individual ports
-	lock  sync.RWMutex
-	ports map[uint32]*chunk
+	lock sync.RWMutex
 }
 
 // chunk keeps a port and the lock for this port
 type chunk struct {
+	port *voltha.Port
 	// this lock is used to synchronize all access to the port, and also to the "deleted" variable
 	lock    sync.Mutex
 	deleted bool
-
-	port *voltha.Port
 }
 
 func NewLoader(dbProxy *model.Proxy) *Loader {
@@ -79,7 +78,7 @@ func (loader *Loader) LockOrCreate(ctx context.Context, port *voltha.Port) (*Han
 	loader.lock.Lock()
 	entry, have := loader.ports[port.PortNo]
 	if !have {
-		entry := &chunk{port: port}
+		entry = &chunk{port: port}
 		loader.ports[port.PortNo] = entry
 		entry.lock.Lock()
 		loader.lock.Unlock()
