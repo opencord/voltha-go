@@ -33,6 +33,29 @@
       "message": "\u003e Patch Set 6:\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-tests/2914/ : FAILURE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/2025/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_licensed/3164/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-lint/2911/ : SUCCESS\n\nrecheck",
       "revId": "55926a3b45e5f9ddd96b2e48927feb9f44c12216",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "58351869_8c0072ea",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2025-05-05T21:04:17Z",
+      "side": 1,
+      "message": "I guess this transient state change should be done only when the operStatus is changed to the reboot from something else. In this case we might add \"\u0026\u0026 prevDevice.OperStatus !\u003d common.OperStatus_REBOOTED\" to the if condition.",
+      "range": {
+        "startLine": 1015,
+        "startChar": 0,
+        "endLine": 1015,
+        "endChar": 2
+      },
+      "revId": "55926a3b45e5f9ddd96b2e48927feb9f44c12216",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
