@@ -765,7 +765,6 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 					"device-type":      agent.deviceType,
 					"adapter-endpoint": device.AdapterEndpoint,
 				})
-			agent.requestQueue.RequestComplete()
 			return err
 		}
 		subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
