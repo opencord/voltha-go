@@ -37,9 +37,23 @@ func (e ExtensionManager) GetExtValue(ctx context.Context, request *extension.Si
 	log.EnrichSpan(ctx, log.Fields{"device-id": request.TargetId})
 
 	logger.Debugw(ctx, "GetExtValue", log.Fields{"request": request})
-	agent := e.DeviceManager.getDeviceAgent(ctx, request.TargetId)
-	if agent == nil {
-		return nil, status.Errorf(codes.NotFound, "target-id %s", request.TargetId)
+	var agent *Agent
+
+	switch request.GetRequest().GetRequest().(type) {
+	case *extension.GetValueRequest_OnuStatsFromOlt:
+		parentId := e.DeviceManager.GetParentDeviceID(ctx, request.TargetId)
+		if parentId == "" {
+			return nil, status.Errorf(codes.NotFound, "target-id %s", request.TargetId)
+		}
+		agent = e.DeviceManager.getDeviceAgent(ctx, parentId)
+		if agent == nil {
+			return nil, status.Errorf(codes.NotFound, "target-id %s, parent-id %s", request.TargetId, parentId)
+		}
+	default:
+		agent = e.DeviceManager.getDeviceAgent(ctx, request.TargetId)
+		if agent == nil {
+			return nil, status.Errorf(codes.NotFound, "target-id %s", request.TargetId)
+		}
 	}
 
 	response, err := agent.getSingleValue(ctx, request)
