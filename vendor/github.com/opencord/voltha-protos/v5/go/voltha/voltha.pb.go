@@ -57,6 +57,9 @@ type ConnectStatus = common.ConnectStatus
 // OperationResp from public import voltha_protos/common.proto
 type OperationResp = common.OperationResp
 
+// PortStatistics from public import voltha_protos/common.proto
+type PortStatistics = common.PortStatistics
+
 // TestModeKeys from public import voltha_protos/common.proto
 type TestModeKeys = common.TestModeKeys
 
