@@ -1364,7 +1364,7 @@ func (agent *Agent) proceedWithRequest(device *voltha.Device) bool {
 func (agent *Agent) stopReconcile() {
 	agent.stopReconcilingMutex.Lock()
 	if agent.stopReconciling != nil {
-		agent.stopReconciling <- 0
+		close(agent.stopReconciling)
 	}
 	agent.stopReconcilingMutex.Unlock()
 }
@@ -1381,6 +1381,9 @@ func (agent *Agent) abortAllProcessing(ctx context.Context) error {
 
 	// If any reconciling is in progress just abort it. The adapter is gone.
 	agent.stopReconcile()
+	agent.stopReconcilingMutex.Lock()
+	agent.stopReconciling = nil
+	agent.stopReconcilingMutex.Unlock()
 
 	logger.Infow(ctx, "aborting-current-running-requests-after-sendstop", log.Fields{"device-id": agent.deviceID})
 
@@ -1654,6 +1657,16 @@ retry:
 					agent.logDeviceUpdate(ctx, nil, nil, requestStatus, reconcileErr, desc)
 					break retry
 				}
+			case _, ok := <-agent.stopReconciling:
+				// This case is executed when the reconciling request is either not sent to the adapter
+				// or fails in the adapter, and the reconciling aborted by the abortAllProcessing function.
+				if !ok {
+					logger.Warnw(ctx, "Stop Reconciling channel closed", log.Fields{"device-id": agent.deviceID})
+					err = fmt.Errorf("reconciling channel closed:%w", errReconcileAborted)
+					desc = "reconciling-channel-closed"
+					agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
+				}
+				break retry
 			}
 		}
 		// Success
@@ -1713,9 +1726,6 @@ func (agent *Agent) sendReconcileRequestToAdapter(ctx context.Context, device *v
 
 	// if reconciling need to be stopped
 	case _, ok := <-agent.stopReconciling:
-		agent.stopReconcilingMutex.Lock()
-		agent.stopReconciling = nil
-		agent.stopReconcilingMutex.Unlock()
 		if !ok {
 			// channel-closed
 			return fmt.Errorf("reconcile channel closed:%w", errReconcileAborted)
@@ -1723,6 +1733,9 @@ func (agent *Agent) sendReconcileRequestToAdapter(ctx context.Context, device *v
 		return fmt.Errorf("reconciling aborted:%w", errReconcileAborted)
 	// Context expired
 	case <-ctx.Done():
+		agent.stopReconcilingMutex.Lock()
+		agent.stopReconciling = nil
+		agent.stopReconcilingMutex.Unlock()
 		return fmt.Errorf("context expired:%s :%w", ctx.Err(), errContextExpired)
 	}
 }
@@ -1739,6 +1752,9 @@ func (agent *Agent) reconcilingCleanup(ctx context.Context) error {
 	}
 	defer agent.requestQueue.RequestComplete()
 	agent.stopReconcile()
+	agent.stopReconcilingMutex.Lock()
+	agent.stopReconciling = nil
+	agent.stopReconcilingMutex.Unlock()
 	err = agent.updateTransientState(ctx, core.DeviceTransientState_NONE)
 	if err != nil {
 		logger.Errorf(ctx, "transient-state-update-failed", log.Fields{"error": err})
