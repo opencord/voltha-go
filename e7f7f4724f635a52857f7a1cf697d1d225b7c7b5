@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7f0dcb3b_92d246da",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2025-06-12T23:16:24Z",
+      "side": 1,
+      "message": "Jenkins verification failure.\nand VERSION needs to be increased",
+      "revId": "e7f7f4724f635a52857f7a1cf697d1d225b7c7b5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
