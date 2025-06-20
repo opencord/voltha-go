@@ -205,7 +205,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the first port to FAILED
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(context.Background(), 1, voltha.OperStatus_FAILED)
+		err := ldAgent.updatePortState(context.Background(), 1, voltha.OperStatus_FAILED, "device_ID")
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -213,7 +213,7 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the second port to TESTING
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(context.Background(), 2, voltha.OperStatus_TESTING)
+		err := ldAgent.updatePortState(context.Background(), 2, voltha.OperStatus_TESTING, "device_ID")
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -221,9 +221,9 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Change the state of the third port to UNKNOWN and then back to ACTIVE
 	localWG.Add(1)
 	go func() {
-		err := ldAgent.updatePortState(context.Background(), 3, voltha.OperStatus_UNKNOWN)
+		err := ldAgent.updatePortState(context.Background(), 3, voltha.OperStatus_UNKNOWN, "device_ID")
 		assert.Nil(t, err)
-		err = ldAgent.updatePortState(context.Background(), 3, voltha.OperStatus_ACTIVE)
+		err = ldAgent.updatePortState(context.Background(), 3, voltha.OperStatus_ACTIVE, "device_ID")
 		assert.Nil(t, err)
 		localWG.Done()
 	}()
@@ -310,15 +310,15 @@ func (lda *LDATest) updateLogicalDevice(t *testing.T, ldAgent *LogicalAgent) {
 	assert.NotNil(t, originalLogicalPorts)
 
 	// Change the state of the first port to FAILED
-	err := ldAgent.updatePortState(context.Background(), 1, voltha.OperStatus_FAILED)
+	err := ldAgent.updatePortState(context.Background(), 1, voltha.OperStatus_FAILED,,"device_ID")
 	assert.Nil(t, err)
 
 	// Change the state of the second port to TESTING
-	err = ldAgent.updatePortState(context.Background(), 2, voltha.OperStatus_TESTING)
+	err = ldAgent.updatePortState(context.Background(), 2, voltha.OperStatus_TESTING,,"device_ID")
 	assert.Nil(t, err)
 
 	// Change the state of the third port to ACTIVE
-	err = ldAgent.updatePortState(context.Background(), 3, voltha.OperStatus_ACTIVE)
+	err = ldAgent.updatePortState(context.Background(), 3, voltha.OperStatus_ACTIVE,"device_ID")
 	assert.Nil(t, err)
 
 }
