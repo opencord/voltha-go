@@ -53,6 +53,8 @@ type LogicalAgent struct {
 	logicalDevice  *voltha.LogicalDevice
 	requestQueue   *coreutils.RequestQueue
 
+	uniPortsMap     map[uint32]*voltha.Port
+	uniPortsMu      sync.RWMutex
 	flowCache       *flow.Cache
 	meterLoader     *meter.Loader
 	groupCache      *group.Cache
@@ -82,6 +84,7 @@ func newLogicalAgent(id string, sn string, deviceID string, ldeviceMgr *LogicalM
 		internalTimeout: internalTimeout,
 		requestQueue:    coreutils.NewRequestQueue(),
 		exitChannel:     make(chan int, 1),
+		uniPortsMap:     make(map[uint32]*voltha.Port),
 
 		flowCache:   flow.NewCache(),
 		groupCache:  group.NewCache(),
