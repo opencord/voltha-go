@@ -483,7 +483,7 @@ func (ldMgr *LogicalManager) updatePortState(ctx context.Context, deviceID strin
 		return err
 	}
 	if agent := ldMgr.getLogicalDeviceAgent(ctx, *ldID); agent != nil {
-		if err := agent.updatePortState(ctx, portNo, state); err != nil {
+		if err := agent.updatePortState(ctx, portNo, state, deviceID); err != nil {
 			return err
 		}
 	}
