@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"sync"
 
+	port "github.com/opencord/voltha-go/rw_core/core/device/logical_port"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	fu "github.com/opencord/voltha-lib-go/v7/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
@@ -33,7 +34,7 @@ import (
 // listLogicalDevicePorts returns logical device ports
 func (agent *LogicalAgent) listLogicalDevicePorts(ctx context.Context) map[uint32]*voltha.LogicalPort {
 	portIDs := agent.portLoader.ListIDs()
-	logger.Debugw(ctx, "list-logical-device-ports", log.Fields{"num-ports": len(portIDs)})
+	logger.Debugw(ctx, "list-logical-device-ports", log.Fields{"num-ports": len(portIDs), "device-id": agent.logicalDeviceID})
 	ret := make(map[uint32]*voltha.LogicalPort, len(portIDs))
 	for portID := range portIDs {
 		if portHandle, have := agent.portLoader.Lock(portID); have {
@@ -146,12 +147,16 @@ func (agent *LogicalAgent) setupNNILogicalPorts(ctx context.Context, deviceID st
 }
 
 // updatePortState updates the port state of the device
-func (agent *LogicalAgent) updatePortState(ctx context.Context, portNo uint32, operStatus voltha.OperStatus_Types) error {
+func (agent *LogicalAgent) updatePortState(ctx context.Context, portNo uint32, operStatus voltha.OperStatus_Types, deviceID string) error {
+	var err error
 	logger.Infow(ctx, "update-port-state-start", log.Fields{"logical-device-id": agent.logicalDeviceID, "port-no": portNo, "state": operStatus})
 
 	portHandle, have := agent.portLoader.Lock(portNo)
 	if !have {
-		return status.Errorf(codes.NotFound, "port-%d-not-exist", portNo)
+		portHandle, err = agent.checkAndUpdateLogicalPort(ctx, portNo, deviceID)
+		if err != nil {
+			return err
+		}
 	}
 	defer portHandle.Unlock()
 
@@ -301,7 +306,7 @@ func (agent *LogicalAgent) disableLogicalPort(ctx context.Context, lPortNo uint3
 // (true, nil).   If the device is not in the correct state it will return (false, nil) as this is a valid
 // scenario. This also applies to the case where the port was already added.
 func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, deviceID string, devicePorts map[uint32]*voltha.Port, port *voltha.Port) error {
-	logger.Debugw(ctx, "add-nni-logical-port", log.Fields{"logical-device-id": agent.logicalDeviceID, "nni-port": port})
+	logger.Infow(ctx, "add-nni-logical-port", log.Fields{"logical-device-id": agent.logicalDeviceID, "nni-port": port})
 
 	label := fmt.Sprintf("nni-%d", port.PortNo)
 	ofpPort := *port.OfpPort
@@ -319,12 +324,13 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, deviceID strin
 
 	portHandle, created, err := agent.portLoader.LockOrCreate(ctx, nniPort)
 	if err != nil {
+		logger.Errorw(ctx, "error-creating-port", log.Fields{"port": port, "error": err})
 		return err
 	}
 	defer portHandle.Unlock()
 
 	if !created {
-		logger.Debugw(ctx, "port-already-exist", log.Fields{"port": port})
+		logger.Infow(ctx, "port-already-exist", log.Fields{"port": port})
 		return nil
 	}
 
@@ -519,4 +525,29 @@ func (agent *LogicalAgent) getUNILogicalPortNo(flow *ofp.OfpFlowStats) (uint32, 
 		return outPortNo, nil
 	}
 	return 0, status.Errorf(codes.NotFound, "no-uni-port: %v", flow)
+}
+
+func (agent *LogicalAgent) checkAndUpdateLogicalPort(ctx context.Context, portNo uint32, deviceID string) (*port.Handle, error) {
+	deviceagent := agent.deviceMgr.getDeviceAgent(ctx, deviceID)
+	port, err := deviceagent.getDevicePort(portNo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list ports for device %s: %w", agent.rootDeviceID, err)
+	}
+	switch port.Type {
+	case voltha.Port_ETHERNET_NNI:
+		if err = agent.addNNILogicalPort(ctx, port.DeviceId, deviceagent.listDevicePorts(), port); err != nil {
+			logger.Errorw(ctx, "error-adding-nni-port", log.Fields{"error": err})
+			return nil, status.Errorf(codes.Internal, "failed-to-create-logical-NNI-port: %s", err)
+		}
+	case voltha.Port_ETHERNET_UNI:
+		if err = agent.addUNILogicalPort(ctx, deviceID, deviceagent.device.AdminState, deviceagent.device.OperStatus, deviceagent.listDevicePorts(), port); err != nil {
+			logger.Errorw(ctx, "error-adding-uni-port", log.Fields{"error": err})
+			return nil, status.Errorf(codes.Internal, "failed-to-create-logical-UNI-port: %s", err)
+		}
+	}
+	portHandle, have := agent.portLoader.Lock(portNo)
+	if !have {
+		return nil, status.Errorf(codes.NotFound, "port-%d-not-exist", portNo)
+	}
+	return portHandle, nil
 }
