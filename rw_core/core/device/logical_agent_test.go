@@ -177,7 +177,7 @@ func (lda *LDATest) createLogicalDeviceAgent(t *testing.T) *LogicalAgent {
 	deviceMgr := lda.deviceMgr
 	clonedLD := proto.Clone(lda.logicalDevice).(*voltha.LogicalDevice)
 	clonedLD.Id = com.GetRandomString(10)
-	clonedLD.DatapathId = rand.Uint64()
+	clonedLD.DatapathId = rand.Uint64() //nolint:gosec
 	lDeviceAgent := newLogicalAgent(clonedLD.Id, clonedLD.Id, clonedLD.RootDeviceId, lDeviceMgr, deviceMgr, lDeviceMgr.dbPath, lDeviceMgr.ldProxy, lDeviceMgr.internalTimeout)
 	lDeviceAgent.logicalDevice = clonedLD
 	for _, port := range lda.logicalPorts {
@@ -231,12 +231,12 @@ func (lda *LDATest) updateLogicalDeviceConcurrently(t *testing.T, ldAgent *Logic
 	// Add a meter to the logical device
 	meterMod := &ofp.OfpMeterMod{
 		Command: ofp.OfpMeterModCommand_OFPMC_ADD,
-		Flags:   rand.Uint32(),
-		MeterId: rand.Uint32(),
+		Flags:   rand.Uint32(), //nolint:gosec
+		MeterId: rand.Uint32(), //nolint:gosec
 		Bands: []*ofp.OfpMeterBandHeader{
 			{Type: ofp.OfpMeterBandType_OFPMBT_EXPERIMENTER,
-				Rate:      rand.Uint32(),
-				BurstSize: rand.Uint32(),
+				Rate:      rand.Uint32(), //nolint:gosec
+				BurstSize: rand.Uint32(), //nolint:gosec
 				Data:      nil,
 			},
 		},

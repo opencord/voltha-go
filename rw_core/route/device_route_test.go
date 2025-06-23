@@ -64,6 +64,7 @@ type logicalDeviceManager struct {
 	done            chan struct{}
 }
 
+// nolint:unparam
 func newLogicalDeviceManager(ld *voltha.LogicalDevice, rootDeviceID string, ch chan portRegistration, totalLogicalPorts int, done chan struct{}) *logicalDeviceManager {
 	return &logicalDeviceManager{
 		logicalDeviceID: ld.Id,
@@ -75,6 +76,7 @@ func newLogicalDeviceManager(ld *voltha.LogicalDevice, rootDeviceID string, ch c
 	}
 }
 
+// nolint:unparam
 func (ldM *logicalDeviceManager) start(ctx context.Context, listDevicePorts listDevicePortsFunc, buildRoutes bool) {
 	ldM.deviceRoutes = NewDeviceRoutes(ldM.logicalDeviceID, ldM.rootDeviceID, listDevicePorts)
 	ofpPortNo := uint32(1)
@@ -115,6 +117,7 @@ type oltManager struct {
 	oltChnl          chan onuRegistration
 }
 
+// nolint:unparam
 func newOltManager(oltDeviceID string, ldMgr *logicalDeviceManager, numNNIPort int, numPonPortOnOlt int, ch chan onuRegistration) *oltManager {
 	return &oltManager{
 		oltID:            oltDeviceID, // ParentId: ldMgr.logicalDeviceID, Root: true},
@@ -129,14 +132,14 @@ func newOltManager(oltDeviceID string, ldMgr *logicalDeviceManager, numNNIPort i
 func (oltM *oltManager) start() {
 	// Setup the OLT nni ports and trigger the nni ports creation
 	for nniPort := 1; nniPort < oltM.numNNIPort+1; nniPort++ {
-		p := &voltha.Port{Label: fmt.Sprintf("nni-%d", nniPort), PortNo: uint32(nniPort), DeviceId: oltM.oltID, Type: voltha.Port_ETHERNET_NNI}
+		p := &voltha.Port{Label: fmt.Sprintf("nni-%d", nniPort), PortNo: uint32(nniPort), DeviceId: oltM.oltID, Type: voltha.Port_ETHERNET_NNI} // nolint:gosec
 		oltM.oltPorts[p.PortNo] = p
 		oltM.logicalDeviceMgr.ldChnl <- portRegistration{port: p, rootPort: true}
 	}
 
 	// Create OLT pon ports
 	for ponPort := oltM.numNNIPort + 1; ponPort < oltM.numPonPortOnOlt+oltM.numNNIPort+1; ponPort++ {
-		p := &voltha.Port{PortNo: uint32(ponPort), DeviceId: oltM.oltID, Type: voltha.Port_PON_OLT}
+		p := &voltha.Port{PortNo: uint32(ponPort), DeviceId: oltM.oltID, Type: voltha.Port_PON_OLT} // nolint:gosec
 		oltM.oltPorts[p.PortNo] = p
 	}
 
@@ -179,6 +182,7 @@ type onuManager struct {
 	onuPorts                map[string]map[uint32]*voltha.Port
 }
 
+// nolint:unparam
 func newOnuManager(oltMgr *oltManager, numOnus int, numUnisPerOnu int, startingUniPortNo int) *onuManager {
 	return &onuManager{
 		oltMgr:            oltMgr,
@@ -199,15 +203,15 @@ func (onuM *onuManager) start(startingOltPeerPortNo int, numPonPortOnOlt int) {
 				var onu *voltha.Device
 				defer wg.Done()
 				id := fmt.Sprintf("%d-onu-%d", oltPonNum, onuID)
-				onu = &voltha.Device{Id: id, ParentId: onuM.oltMgr.oltID, ParentPortNo: uint32(oltPonNum)}
+				onu = &voltha.Device{Id: id, ParentId: onuM.oltMgr.oltID, ParentPortNo: uint32(oltPonNum)} // nolint:gosec
 				ponPort := &voltha.Port{Label: fmt.Sprintf("%s:pon-%d", onu.Id, onuID), PortNo: 1, DeviceId: onu.Id, Type: voltha.Port_PON_ONU}
 				ponPort.Peers = make([]*voltha.Port_PeerPort, 0)
-				peerPort := voltha.Port_PeerPort{DeviceId: onuM.oltMgr.oltID, PortNo: uint32(oltPonNum)}
+				peerPort := voltha.Port_PeerPort{DeviceId: onuM.oltMgr.oltID, PortNo: uint32(oltPonNum)} // nolint:gosec
 				ponPort.Peers = append(ponPort.Peers, &peerPort)
 				onuPorts := make(map[uint32]*voltha.Port)
 				onuPorts[ponPort.PortNo] = ponPort
 				for j := onuM.startingUniPortNo; j < onuM.numUnisPerOnu+onuM.startingUniPortNo; j++ {
-					uniPort := &voltha.Port{Label: fmt.Sprintf("%s:uni-%d", onu.Id, j), PortNo: uint32(oltPonNum)<<12 + uint32(onuID+1)<<4 + uint32(j), DeviceId: onu.Id, Type: voltha.Port_ETHERNET_UNI}
+					uniPort := &voltha.Port{Label: fmt.Sprintf("%s:uni-%d", onu.Id, j), PortNo: uint32(oltPonNum)<<12 + uint32(onuID+1)<<4 + uint32(j), DeviceId: onu.Id, Type: voltha.Port_ETHERNET_UNI} //nolint:gosec
 					onuPorts[uniPort.PortNo] = uniPort
 				}
 				onuM.deviceLock.Lock()
@@ -217,14 +221,14 @@ func (onuM *onuManager) start(startingOltPeerPortNo int, numPonPortOnOlt int) {
 				onuM.oltMgr.oltChnl <- onuRegistration{
 					onuID:    onu.Id,
 					onuPorts: onuPorts,
-					oltPonNo: uint32(oltPonNum),
+					oltPonNo: uint32(oltPonNum), //nolint:gosec
 					onuPonNo: 1,
 				}
 			}(onuID, oltPonNo)
 		}
 	}
 	wg.Wait()
-	//send an empty device to indicate the end of onu registration
+	// send an empty device to indicate the end of onu registration
 	onuM.oltMgr.oltChnl <- onuRegistration{
 		onuPorts: nil,
 		oltPonNo: 0,
@@ -434,7 +438,7 @@ func TestDeviceRoutes_reverseRoute(t *testing.T) {
 
 	fmt.Println("Reverse of two hops successful.")
 
-	//Test 3 hops in a route
+	// Test 3 hops in a route
 	route = make([]Hop, 3)
 	route[0].DeviceID = "d1"
 	route[0].Ingress = 1
@@ -460,15 +464,15 @@ func TestDeviceRoutes_reverseRoute(t *testing.T) {
 	fmt.Println("Reverse of three hops successful.")
 
 	// Test any number of hops in a route
-	numRoutes := rand.Intn(100)
+	numRoutes := rand.Intn(100) // nolint:gosec
 	route = make([]Hop, numRoutes)
 	deviceIds := make([]string, numRoutes)
 	ingressNos := make([]uint32, numRoutes)
 	egressNos := make([]uint32, numRoutes)
 	for i := 0; i < numRoutes; i++ {
 		deviceIds[i] = fmt.Sprintf("d-%d", i)
-		ingressNos[i] = rand.Uint32()
-		egressNos[i] = rand.Uint32()
+		ingressNos[i] = rand.Uint32() // nolint:gosec
+		egressNos[i] = rand.Uint32()  // nolint:gosec
 	}
 	for i := 0; i < numRoutes; i++ {
 		route[i].DeviceID = deviceIds[i]

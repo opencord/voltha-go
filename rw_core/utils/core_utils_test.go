@@ -36,12 +36,12 @@ func init() {
 }
 
 func runSuccessfulTask(response Response, durationRange int) {
-	time.Sleep(time.Duration(rand.Intn(durationRange)) * time.Millisecond)
+	time.Sleep(time.Duration(rand.Intn(durationRange)) * time.Millisecond) // nolint:gosec
 	response.Done()
 }
 
 func runFailureTask(response Response, durationRange int) {
-	time.Sleep(time.Duration(rand.Intn(durationRange)) * time.Millisecond)
+	time.Sleep(time.Duration(rand.Intn(durationRange)) * time.Millisecond) // nolint:gosec
 	response.Error(taskFailureError)
 }
 
@@ -92,7 +92,7 @@ func TestNoTimeouts(t *testing.T) {
 	numIterations := 5
 	numTasks := 5
 	for i := 0; i < numIterations; i++ {
-		totalSuccess = rand.Intn(numTasks)
+		totalSuccess = rand.Intn(numTasks) // nolint:gosec
 		totalFailure = numTasks - totalSuccess
 		results = runMultipleTasks(110*time.Millisecond, numTasks, 50, totalSuccess, totalFailure)
 		nSuccess, nFailure, nTimeouts = getNumSuccessFailure(results)
@@ -114,7 +114,7 @@ func TestSomeTasksTimeouts(t *testing.T) {
 	numIterations := 5
 	numTasks := 5
 	for i := 0; i < numIterations; i++ {
-		totalSuccess = rand.Intn(numTasks)
+		totalSuccess = rand.Intn(numTasks) //nolint:gosec
 		totalFailure = numTasks - totalSuccess
 		results = runMultipleTasks(50*time.Millisecond, numTasks, 100, totalSuccess, totalFailure)
 		nSuccess, nFailure, nTimeouts = getNumSuccessFailure(results)

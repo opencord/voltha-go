@@ -42,7 +42,7 @@ import (
 
 // LogicalAgent represent attributes of logical device agent
 //
-//nolint:govet
+// nolint:govet
 type LogicalAgent struct {
 	orderedEvents  orderedEvents
 	deviceMgr      *Manager
@@ -174,7 +174,7 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 		// Check to see if we need to load from dB
 		ld = logicalDevice
 		if logicalDevice == nil {
-			//	load from dB
+			// 	load from dB
 			ld = &voltha.LogicalDevice{}
 			have, err := agent.ldProxy.Get(ctx, agent.logicalDeviceID, ld)
 			if err != nil {

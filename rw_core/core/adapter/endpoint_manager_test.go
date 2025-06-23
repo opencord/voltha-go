@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	// nolint:staticcheck
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v7/pkg/db"
@@ -101,8 +102,8 @@ func (ep *EPTest) populateBackend() error {
 			Vendor:         "VOLTHA OpenONU",
 			Version:        "2.4.0-dev0",
 			Type:           adapterPrefix,
-			CurrentReplica: int32(i),
-			TotalReplicas:  int32(numReplicas),
+			CurrentReplica: int32(i),           // nolint:gosec
+			TotalReplicas:  int32(numReplicas), // nolint:gosec
 			Endpoint:       fmt.Sprintf("%s_%d", adapterPrefix, i),
 		}
 		adapterKVKey := fmt.Sprintf("%s/%d", adapterPrefix, i)
@@ -124,8 +125,8 @@ func (ep *EPTest) populateBackend() error {
 			Vendor:         "VOLTHA OpenOLT",
 			Version:        "2.3.1-dev",
 			Type:           adapterPrefix,
-			CurrentReplica: int32(i),
-			TotalReplicas:  int32(numReplicas),
+			CurrentReplica: int32(i),           // nolint:gosec
+			TotalReplicas:  int32(numReplicas), // nolint:gosec
 			Endpoint:       fmt.Sprintf("%s_%d", adapterPrefix, i),
 		}
 		adapterKVKey := fmt.Sprintf("%s/%d", adapterPrefix, i)
@@ -229,11 +230,11 @@ func (ep *EPTest) testEndpointManagerAPIs(t *testing.T, tm EndpointManager, adap
 			logger.Fatalw(ctx, "error-getting-topic", log.Fields{"error": err})
 		}
 		for k := 0; k < replicas; k++ {
-			owned, err := tm.IsDeviceOwnedByAdapter(ctx, deviceID, adapterType, int32(k))
+			owned, err := tm.IsDeviceOwnedByAdapter(ctx, deviceID, adapterType, int32(k)) // nolint:gosec
 			if err != nil {
 				logger.Fatalw(ctx, "error-verifying-device-ownership", log.Fields{"error": err})
 			}
-			assert.Equal(t, ReplicaID(k) == replicaID, owned)
+			assert.Equal(t, ReplicaID(k) == replicaID, owned) // nolint:gosec
 		}
 	}
 }
@@ -250,9 +251,9 @@ func TestEndpointManagerSuite(t *testing.T) {
 
 	defer tmt.stopAll()
 
-	//1. Test APIs with multiple replicas
+	// 1. Test APIs with multiple replicas
 	tmt.testEndpointManagerAPIs(t, tm, "adapter_brcm_openomci_onu", "brcm_openomci_onu", tmt.maxReplicas)
 
-	//2. Test APIs with single replica
+	// 2. Test APIs with single replica
 	tmt.testEndpointManagerAPIs(t, tm, "adapter_openolt", "openolt", tmt.minReplicas)
 }

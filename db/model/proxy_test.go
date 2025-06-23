@@ -52,8 +52,8 @@ var (
 func init() {
 	BenchmarkProxyLogger, _ = log.RegisterPackage(log.JSON, log.DebugLevel, log.Fields{"instanceId": "PLT"})
 	ctx := context.Background()
-	//log.UpdateAllLoggers(log.Fields{"instanceId": "PROXY_LOAD_TEST"})
-	//Setup default logger - applies for packages that do not have specific logger set
+	// log.UpdateAllLoggers(log.Fields{"instanceId": "PROXY_LOAD_TEST"})
+	// Setup default logger - applies for packages that do not have specific logger set
 	if _, err := log.SetDefaultLogger(log.JSON, log.DebugLevel, log.Fields{"instanceId": "PLT"}); err != nil {
 		BenchmarkProxyLogger.With(log.Fields{"error": err}).Fatal(ctx, "Cannot setup logging")
 	}
@@ -173,12 +173,13 @@ func TestProxy_1_1_2_Add_ExistingDevice(t *testing.T) {
 	d := &voltha.Device{}
 
 	have, err := TestProxyRootDevice.Get(context.Background(), TestProxyDeviceID, d)
-	if err != nil {
+	switch {
+	case err != nil:
 		BenchmarkProxyLogger.Errorf(ctx, "Failed get device info from test proxy due to error: %v", err)
 		assert.NotNil(t, err)
-	} else if !have {
+	case !have:
 		t.Error("Failed to find added device")
-	} else {
+	default:
 		if d.String() != TestProxyDevice.String() {
 			t.Errorf("Devices don't match - existing: %+v returned: %+v", TestProxyLogicalDevice, d)
 		}
@@ -340,13 +341,14 @@ func TestProxy_1_4_1_Remove_Device(t *testing.T) {
 
 	d := &voltha.Device{}
 	have, err := TestProxyRootDevice.Get(context.Background(), TestProxyDeviceID, d)
-	if err != nil {
+	switch {
+	case err != nil:
 		BenchmarkProxyLogger.Errorf(ctx, "Failed to get device info from devices proxy due to error: %v", err)
 		assert.NotNil(t, err)
-	} else if have {
+	case have:
 		djson, _ := json.Marshal(d)
 		t.Errorf("Device was not removed - %s", djson)
-	} else {
+	default:
 		t.Logf("Device was removed: %s", TestProxyDeviceID)
 	}
 }

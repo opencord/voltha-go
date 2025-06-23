@@ -137,7 +137,7 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 
 	tfd.routes = make(map[route.OFPortLink][]route.Hop)
 
-	//DOWNSTREAM ROUTES
+	// DOWNSTREAM ROUTES
 
 	tfd.routes[route.OFPortLink{Ingress: 10, Egress: 1}] = []route.Hop{
 		{
@@ -201,7 +201,7 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 		},
 	}
 
-	//UPSTREAM DATA PLANE
+	// UPSTREAM DATA PLANE
 
 	tfd.routes[route.OFPortLink{Ingress: 1, Egress: 10}] = []route.Hop{
 		{
@@ -252,7 +252,7 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 		},
 	}
 
-	//UPSTREAM NEXT TABLE BASED
+	// UPSTREAM NEXT TABLE BASED
 
 	// openflow port 0 means absence of a port - go/protobuf interpretation
 	tfd.routes[route.OFPortLink{Ingress: 1, Egress: 0}] = []route.Hop{
@@ -391,7 +391,7 @@ func newTestFlowDecomposer(t *testing.T, deviceMgr *testDeviceManager) *testFlow
 	fg.AddFlow(fs)
 	tfd.defaultRules.AddFlowsAndGroup("onu4", fg)
 
-	//Set up the device graph - flow decomposer uses it only to verify whether a port is a root port.
+	// Set up the device graph - flow decomposer uses it only to verify whether a port is a root port.
 	tfd.deviceRoutes = route.NewDeviceRoutes("ldid", "olt", tfd.dMgr.listDevicePorts)
 	tfd.deviceRoutes.RootPorts = make(map[uint32]uint32)
 	tfd.deviceRoutes.RootPorts[10] = 10
@@ -431,11 +431,12 @@ func (tfd *testFlowDecomposer) GetWildcardInputPorts(ctx context.Context, exclud
 
 func (tfd *testFlowDecomposer) GetRoute(ctx context.Context, ingressPortNo uint32, egressPortNo uint32) ([]route.Hop, error) {
 	var portLink route.OFPortLink
-	if egressPortNo == 0 {
+	switch {
+	case egressPortNo == 0:
 		portLink.Egress = 0
-	} else if egressPortNo&0x7fffffff == uint32(ofp.OfpPortNo_OFPP_CONTROLLER) {
+	case egressPortNo&0x7fffffff == uint32(ofp.OfpPortNo_OFPP_CONTROLLER):
 		portLink.Egress = 10
-	} else {
+	default:
 		portLink.Egress = egressPortNo
 	}
 	if ingressPortNo == 0 {
@@ -1337,7 +1338,7 @@ func TestMplsDownstreamFlowDecomposition(t *testing.T) {
 	expectedFs.Id = derivedFlow.Id
 	assert.Equal(t, expectedFs.String(), derivedFlow.String())
 
-	//olt downstream flows (table-id=1)
+	// olt downstream flows (table-id=1)
 	faOlt := &fu.FlowArgs{
 		KV: fu.OfpFlowModArgs{"priority": 1000, "table_id": 2, "meter_id": 1},
 		MatchFields: []*ofp.OfpOxmOfbField{

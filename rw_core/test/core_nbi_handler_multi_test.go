@@ -42,6 +42,7 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc"
 
+	// nolint:staticcheck
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/opencord/voltha-go/rw_core/config"
 	c "github.com/opencord/voltha-go/rw_core/core"
@@ -176,7 +177,7 @@ func (nb *NBTest) startGRPCCore(ctx context.Context) (coreEndpoint, nbiEndpoint 
 	cfg.ProbeAddress = "127.0.0.1:" + strconv.Itoa(probePort)
 	go nb.probe.ListenAndServe(ctx, cfg.ProbeAddress)
 
-	//Add the probe to the context to pass to all the services started
+	// Add the probe to the context to pass to all the services started
 	probeCtx := context.WithValue(ctx, probe.ProbeContextKey, nb.probe)
 
 	// Set up a mock kafka broker
@@ -293,11 +294,11 @@ func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, n
 	assert.Equal(t, uint32(15), ld.SwitchFeatures.Capabilities)
 	assert.Equal(t, 1+nb.numONUPerOLT, len(ports.Items))
 	assert.Equal(t, oltDevice.ParentId, ld.Id)
-	//Expected port no
+	// Expected port no
 	expectedPortNo := make(map[uint32]bool)
 	expectedPortNo[uint32(2)] = false
 	for i := 0; i < nb.numONUPerOLT; i++ {
-		expectedPortNo[uint32(i+100)] = false
+		expectedPortNo[uint32(i+100)] = false //nolint:gosec
 	}
 	for _, p := range ports.Items {
 		assert.Equal(t, p.OfpPort.PortNo, p.DevicePortNo)
@@ -305,7 +306,7 @@ func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, n
 		expectedPortNo[p.OfpPort.PortNo] = true
 		if strings.HasPrefix(p.Id, "nni") {
 			assert.Equal(t, true, p.RootPort)
-			//assert.Equal(t, uint32(2), p.OfpPort.PortNo)
+			// assert.Equal(t, uint32(2), p.OfpPort.PortNo)
 			assert.Equal(t, p.Id, fmt.Sprintf("nni-%d", p.DevicePortNo))
 		} else {
 			assert.Equal(t, p.Id, fmt.Sprintf("uni-%d", p.DevicePortNo))
@@ -347,34 +348,36 @@ func (nb *NBTest) verifyDevices(t *testing.T, nbi voltha.VolthaServiceClient, ol
 			assert.NotEqual(t, "", d.MacAddress)
 			assert.NotEqual(t, "", d.SerialNumber)
 
-			if d.Type == "olt_adapter_mock" {
+			switch d.Type {
+			case "olt_adapter_mock":
 				assert.Equal(t, true, d.Root)
 				assert.NotEqual(t, "", d.Id)
 				assert.NotEqual(t, "", d.ParentId)
 				assert.Nil(t, d.ProxyAddress)
-			} else if d.Type == "onu_adapter_mock" {
+			case "onu_adapter_mock":
 				assert.Equal(t, false, d.Root)
 				assert.NotEqual(t, uint32(0), d.Vlan)
 				assert.NotEqual(t, "", d.Id)
 				assert.NotEqual(t, "", d.ParentId)
 				assert.NotEqual(t, "", d.ProxyAddress.DeviceId)
 				assert.Equal(t, "olt_adapter_mock", d.ProxyAddress.DeviceType)
-			} else {
+			default:
 				assert.Error(t, errors.New("invalid-device-type"))
 			}
 			assert.Equal(t, 2, len(dPorts.Items))
 			for _, p := range dPorts.Items {
 				assert.Equal(t, voltha.AdminState_ENABLED, p.AdminState)
 				assert.Equal(t, voltha.OperStatus_ACTIVE, p.OperStatus)
-				if p.Type == voltha.Port_ETHERNET_NNI || p.Type == voltha.Port_ETHERNET_UNI {
+				switch p.Type {
+				case voltha.Port_ETHERNET_NNI, voltha.Port_ETHERNET_UNI:
 					assert.Equal(t, 0, len(p.Peers))
-				} else if p.Type == voltha.Port_PON_OLT {
+				case voltha.Port_PON_OLT:
 					assert.Equal(t, nb.numONUPerOLT, len(p.Peers))
 					assert.Equal(t, uint32(1), p.PortNo)
-				} else if p.Type == voltha.Port_PON_ONU {
+				case voltha.Port_PON_ONU:
 					assert.Equal(t, 1, len(p.Peers))
 					assert.Equal(t, uint32(1), p.PortNo)
-				} else {
+				default:
 					assert.Error(t, errors.New("invalid-port"))
 				}
 			}
@@ -415,10 +418,10 @@ func (nb *NBTest) testCoreWithoutData(t *testing.T, nbi voltha.VolthaServiceClie
 func (nb *NBTest) getNumAdapters() int {
 	totalAdapters := int32(0)
 	for _, aInfo := range onuAdapters {
-		totalAdapters = totalAdapters + aInfo.TotalReplica
+		totalAdapters += aInfo.TotalReplica
 	}
 	for _, aInfo := range oltAdapters {
-		totalAdapters = totalAdapters + aInfo.TotalReplica
+		totalAdapters += aInfo.TotalReplica
 	}
 	return int(totalAdapters)
 }
@@ -434,15 +437,16 @@ func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi voltha.VolthaService
 	nb.onuAdaptersLock.RLock()
 	defer nb.onuAdaptersLock.RUnlock()
 	for _, a := range adapters.Items {
-		if strings.Contains(a.Type, "olt") {
+		switch {
+		case strings.Contains(a.Type, "olt"):
 			_, exist := nb.oltAdapters[a.Type]
 			assert.True(t, exist)
 			assert.True(t, strings.Contains(a.Vendor, "olt-mock-vendor"))
-		} else if strings.Contains(a.Type, "onu") {
+		case strings.Contains(a.Type, "onu"):
 			_, exist := nb.onuAdapters[a.Type]
 			assert.True(t, exist)
 			assert.True(t, strings.Contains(a.Vendor, "onu-mock-vendor"))
-		} else {
+		default:
 			logger.Fatal(ctx, "unregistered-adapter", a.Id)
 		}
 	}
@@ -451,24 +455,25 @@ func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi voltha.VolthaService
 	assert.NotNil(t, deviceTypes)
 	assert.Equal(t, len(nb.oltAdapters)+len(nb.onuAdapters), len(deviceTypes.Items))
 	for _, dt := range deviceTypes.Items {
-		if strings.Contains(dt.AdapterType, "olt") {
+		switch {
+		case strings.Contains(dt.AdapterType, "olt"):
 			_, exist := nb.oltAdapters[dt.AdapterType]
 			assert.True(t, exist)
 			assert.Equal(t, false, dt.AcceptsBulkFlowUpdate)
 			assert.Equal(t, true, dt.AcceptsAddRemoveFlowUpdates)
-		} else if strings.Contains(dt.AdapterType, "onu") {
+		case strings.Contains(dt.AdapterType, "onu"):
 			_, exist := nb.onuAdapters[dt.AdapterType]
 			assert.True(t, exist)
 			assert.Equal(t, false, dt.AcceptsBulkFlowUpdate)
 			assert.Equal(t, true, dt.AcceptsAddRemoveFlowUpdates)
-		} else {
+		default:
 			logger.Fatal(ctx, "invalid-device-type", dt.Id)
 		}
 	}
 }
 
 func (nb *NBTest) testCreateDevice(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//	Create a valid device
+	// 	Create a valid device
 	aRandomMacAddress := getRandomMacAddress()
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: oltDeviceType, MacAddress: aRandomMacAddress})
 	assert.Nil(t, err)
@@ -494,7 +499,7 @@ func (nb *NBTest) testCreateDevice(t *testing.T, nbi voltha.VolthaServiceClient,
 	assert.Nil(t, err)
 	assert.NotNil(t, createDevice)
 
-	//Remove the device
+	// Remove the device
 	err = cleanUpCreatedDevices(nb.maxTimeout, nbi, oltDevice.Id)
 	assert.Nil(t, err)
 }
@@ -535,7 +540,7 @@ func (nb *NBTest) enableDevice(t *testing.T, nbi voltha.VolthaServiceClient, olt
 }
 
 func (nb *NBTest) testForceDeletePreProvDevice(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//	Create a valid device
+	// 	Create a valid device
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: oltDeviceType, MacAddress: getRandomMacAddress()})
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -546,7 +551,7 @@ func (nb *NBTest) testForceDeletePreProvDevice(t *testing.T, nbi voltha.VolthaSe
 	assert.NotNil(t, device)
 	assert.Equal(t, oltDevice.String(), device.String())
 
-	//Remove the device forcefully
+	// Remove the device forcefully
 	_, err = nbi.ForceDeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
 	assert.Nil(t, err)
 
@@ -555,7 +560,7 @@ func (nb *NBTest) testForceDeletePreProvDevice(t *testing.T, nbi voltha.VolthaSe
 }
 
 func (nb *NBTest) testForceDeleteEnabledDevice(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//	Create a valid device
+	// 	Create a valid device
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: oltDeviceType, MacAddress: getRandomMacAddress()})
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -563,7 +568,7 @@ func (nb *NBTest) testForceDeleteEnabledDevice(t *testing.T, nbi voltha.VolthaSe
 	// Enable device
 	nb.enableDevice(t, nbi, oltDevice)
 
-	//Remove the device forcefully
+	// Remove the device forcefully
 	_, err = nbi.ForceDeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
 	assert.Nil(t, err)
 
@@ -572,7 +577,7 @@ func (nb *NBTest) testForceDeleteEnabledDevice(t *testing.T, nbi voltha.VolthaSe
 }
 
 func (nb *NBTest) testDeletePreProvDevice(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//	Create a valid device
+	// 	Create a valid device
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: oltDeviceType, MacAddress: getRandomMacAddress()})
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -588,7 +593,7 @@ func (nb *NBTest) testDeletePreProvDevice(t *testing.T, nbi voltha.VolthaService
 }
 
 func (nb *NBTest) testDeleteEnabledDevice(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//	Create a valid device
+	// 	Create a valid device
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: oltDeviceType, MacAddress: getRandomMacAddress()})
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -596,7 +601,7 @@ func (nb *NBTest) testDeleteEnabledDevice(t *testing.T, nbi voltha.VolthaService
 	// Enable device
 	nb.enableDevice(t, nbi, oltDevice)
 
-	//Remove the device
+	// Remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
 	assert.Nil(t, err)
 
@@ -613,7 +618,7 @@ func (nb *NBTest) testDeleteEnabledDevice(t *testing.T, nbi voltha.VolthaService
 }
 
 func (nb *NBTest) testForceDeleteDeviceFailure(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//	Create a valid device
+	// 	Create a valid device
 	oltDevice, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: oltDeviceType, MacAddress: getRandomMacAddress()})
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -626,7 +631,7 @@ func (nb *NBTest) testForceDeleteDeviceFailure(t *testing.T, nbi voltha.VolthaSe
 	assert.Nil(t, err)
 	oltAdapter.SetDeleteAction(oltDevice.Id, true)
 
-	//Remove the device
+	// Remove the device
 	_, err = nbi.ForceDeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
 	assert.Nil(t, err)
 
@@ -678,7 +683,7 @@ func (nb *NBTest) testDeleteDeviceFailure(t *testing.T, nbi voltha.VolthaService
 		}
 	}()
 
-	//Now remove the device
+	// Now remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDevice.Id})
 	assert.NotNil(t, err)
 
@@ -767,7 +772,7 @@ func (nb *NBTest) createAndEnableOLTDevice(t *testing.T, nbi voltha.VolthaServic
 				if d.AdminState == voltha.AdminState_ENABLED &&
 					d.OperStatus == voltha.OperStatus_ACTIVE &&
 					d.ConnectStatus == voltha.ConnectStatus_REACHABLE {
-					count = count + 1
+					count += 1
 				}
 			}
 		}
@@ -780,7 +785,7 @@ func (nb *NBTest) createAndEnableOLTDevice(t *testing.T, nbi voltha.VolthaServic
 }
 
 func (nb *NBTest) testEnableDeviceFailed(t *testing.T, nbi voltha.VolthaServiceClient) {
-	//Create a device that has no adapter registered
+	// Create a device that has no adapter registered
 	macAddress := getRandomMacAddress()
 	oltDeviceNoAdapter, err := nbi.CreateDevice(getContext(), &voltha.Device{Type: "noAdapterRegistered", MacAddress: macAddress})
 	assert.Nil(t, err)
@@ -791,7 +796,7 @@ func (nb *NBTest) testEnableDeviceFailed(t *testing.T, nbi voltha.VolthaServiceC
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "adapter-not-registered-for-device-type noAdapterRegistered"))
 
-	//Remove the device
+	// Remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: oltDeviceNoAdapter.Id})
 	assert.Nil(t, err)
 
@@ -811,7 +816,7 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi voltha.VolthaServiceClient,
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
 
-	//Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
+	// Create a logical device monitor will automatically send trap and eapol flows to the devices being enables
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go nb.monitorLogicalDevices(t, nbi, 1, nb.numONUPerOLT, &wg, false, false, oltDevice.Id, eventCh)
@@ -833,11 +838,11 @@ func (nb *NBTest) testEnableDevice(t *testing.T, nbi voltha.VolthaServiceClient,
 	// Verify that the logical device has been setup correctly
 	nb.verifyLogicalDevices(t, oltDevice, nbi)
 
-	//Wait until all flows has been sent to the devices successfully
+	// Wait until all flows has been sent to the devices successfully
 	wg.Wait()
 
 	// log.SetAllLogLevel(log.DebugLevel)
-	//Remove the device
+	// Remove the device
 	err = cleanUpDevices(nb.maxTimeout, nbi, oltDevice.Id, false)
 	assert.Nil(t, err)
 }
@@ -918,13 +923,13 @@ func (nb *NBTest) testDisableAndReEnableRootDevice(t *testing.T, nbi voltha.Volt
 	err = waitUntilLogicalDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 
-	//Remove the device
+	// Remove the device
 	err = cleanUpDevices(nb.maxTimeout, nbi, oltDevice.Id, true)
 	assert.Nil(t, err)
 }
 
 func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//Get an OLT device
+	// Get an OLT device
 	oltDevice, err := nb.createAndEnableOLTDevice(t, nbi, oltDeviceType)
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -984,13 +989,13 @@ func (nb *NBTest) testDisableAndDeleteAllDevice(t *testing.T, nbi voltha.VolthaS
 	err = waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 
-	//Remove the device
+	// Remove the device
 	err = cleanUpDevices(nb.maxTimeout, nbi, oltDevice.Id, true)
 	assert.Nil(t, err)
 }
 
 func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//Create/Enable an OLT device
+	// Create/Enable an OLT device
 	oltDevice, err := nb.createAndEnableOLTDevice(t, nbi, oltDeviceType)
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -1002,7 +1007,7 @@ func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi voltha.VolthaSe
 	err = waitUntilLogicalDevicePortsReadiness(oltDevice.Id, nb.maxTimeout, nbi, vldFunction)
 	assert.Nil(t, err)
 
-	//Get all child devices
+	// Get all child devices
 	onuDevices, err := nb.getChildDevices(oltDevice.Id, nbi)
 	assert.Nil(t, err)
 	assert.NotNil(t, onuDevices)
@@ -1042,7 +1047,7 @@ func (nb *NBTest) testEnableAndDeleteAllDevice(t *testing.T, nbi voltha.VolthaSe
 }
 
 func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//Create an OLT device
+	// Create an OLT device
 	var cp *voltha.Port
 	oltDevice, err := nb.createAndEnableOLTDevice(t, nbi, oltDeviceType)
 	assert.Nil(t, err)
@@ -1129,13 +1134,13 @@ func (nb *NBTest) testDisableAndEnablePort(t *testing.T, nbi voltha.VolthaServic
 	_, err = nbi.DisablePort(getContext(), cp)
 	assert.NotNil(t, err)
 
-	//Remove the device
+	// Remove the device
 	err = cleanUpDevices(nb.maxTimeout, nbi, oltDevice.Id, true)
 	assert.Nil(t, err)
 }
 
 func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//Create an OLT device
+	// Create an OLT device
 	oltDevice, err := nb.createAndEnableOLTDevice(t, nbi, oltDeviceType)
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -1224,7 +1229,7 @@ func (nb *NBTest) testDeviceRebootWhenOltIsEnabled(t *testing.T, nbi voltha.Volt
 	assert.Nil(t, err)
 	assert.NotNil(t, onuDevices)
 	assert.Equal(t, 0, len(onuDevices.Items))
-	//Remove the device
+	// Remove the device
 	err = cleanUpDevices(nb.maxTimeout, nbi, oltDevice.Id, true)
 	assert.Nil(t, err)
 }
@@ -1252,11 +1257,11 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi voltha.VolthaService
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "noAdapterRegisteredOmciTest"))
 
-	//Remove the device
+	// Remove the device
 	_, err = nbi.DeleteDevice(getContext(), &voltha.ID{Id: deviceNoAdapter.Id})
 	assert.Nil(t, err)
 
-	//Ensure there are no devices in the Core now - wait until condition satisfied or timeout
+	// Ensure there are no devices in the Core now - wait until condition satisfied or timeout
 	var vFunction isDevicesConditionSatisfied = func(devices *voltha.Devices) bool {
 		if (devices == nil) || (len(devices.Items) == 0) {
 			return true
@@ -1274,7 +1279,7 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi voltha.VolthaService
 	// -----------------------------------------------------------------------
 	// SubTest 3: Omci test action should succeed on valid ONU
 
-	//	Create and enable device with valid data
+	// 	Create and enable device with valid data
 	oltDevice, err := nb.createAndEnableOLTDevice(t, nbi, oltDeviceType)
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -1299,7 +1304,7 @@ func (nb *NBTest) testStartOmciTestAction(t *testing.T, nbi voltha.VolthaService
 	assert.Nil(t, err)
 	assert.Equal(t, resp.Result, omci.TestResponse_SUCCESS)
 
-	//Remove the device
+	// Remove the device
 	err = cleanUpDevices(nb.maxTimeout, nbi, oltDevice.Id, false)
 	assert.Nil(t, err)
 }
@@ -1316,7 +1321,7 @@ func createMetadata(cTag int, techProfile int, port int) uint64 {
 	md := 0
 	md = (md | (cTag & 0xFFFF)) << 16
 	md = (md | (techProfile & 0xFFFF)) << 32
-	return uint64(md | (port & 0xFFFFFFFF))
+	return uint64(md | (port & 0xFFFFFFFF)) // nolint:gosec
 }
 
 func (nb *NBTest) verifyLogicalDeviceFlowCount(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceID string, numNNIPorts int, numUNIPorts int, flowAddFail bool) {
@@ -1347,7 +1352,7 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi voltha.VolthaServiceClient, lo
 		}
 	}
 	assert.Equal(t, 1, len(nniPorts))
-	//assert.Greater(t, len(uniPorts), 1 )
+	// assert.Greater(t, len(uniPorts), 1 )
 	nniPort := nniPorts[0].OfpPort.PortNo
 	maxInt32 := uint64(0xFFFFFFFF)
 	controllerPortMask := uint32(4294967293) // will result in 4294967293&0x7fffffff => 2147483645 which is the actual controller port
@@ -1471,7 +1476,7 @@ func (nb *NBTest) getOLTAdapterInstance(t *testing.T, nbi voltha.VolthaServiceCl
 		if d.Id == oltDeviceID {
 			for _, oltAdapters := range nb.oltAdapters {
 				for _, oAdapter := range oltAdapters {
-					if oAdapter.Adapter.GetEndPoint() == d.AdapterEndpoint {
+					if oAdapter.GetEndPoint() == d.AdapterEndpoint {
 						return oAdapter, nil
 					}
 				}
@@ -1496,7 +1501,7 @@ func (nb *NBTest) getAdapterInstancesWithDeviceIds(t *testing.T, nbi voltha.Volt
 		if !oltAdapterFound && d.Id == oltDeviceID {
 			for _, oltAdapters := range nb.oltAdapters {
 				for _, oAdapter := range oltAdapters {
-					if oAdapter.Adapter.GetEndPoint() == d.AdapterEndpoint {
+					if oAdapter.GetEndPoint() == d.AdapterEndpoint {
 						oltAdapter = oAdapter
 						oltAdapterFound = true
 					}
@@ -1508,7 +1513,7 @@ func (nb *NBTest) getAdapterInstancesWithDeviceIds(t *testing.T, nbi voltha.Volt
 			onuDeviceIDs = append(onuDeviceIDs, d.Id)
 			for _, adapters := range nb.onuAdapters {
 				for _, oAdapter := range adapters {
-					if oAdapter.Adapter.GetEndPoint() == d.AdapterEndpoint {
+					if oAdapter.GetEndPoint() == d.AdapterEndpoint {
 						onuAdapters[d.AdapterEndpoint] = oAdapter
 					}
 				}
@@ -1587,17 +1592,17 @@ func (nb *NBTest) monitorLogicalDevices(
 		}
 	}
 
-	meterID := rand.Uint32()
+	meterID := rand.Uint32() //nolint:gosec
 
 	// Add a meter to the logical device
 	meterMod := &ofp.OfpMeterMod{
 		Command: ofp.OfpMeterModCommand_OFPMC_ADD,
-		Flags:   rand.Uint32(),
+		Flags:   rand.Uint32(), //nolint:gosec
 		MeterId: meterID,
 		Bands: []*ofp.OfpMeterBandHeader{
 			{Type: ofp.OfpMeterBandType_OFPMBT_EXPERIMENTER,
-				Rate:      rand.Uint32(),
-				BurstSize: rand.Uint32(),
+				Rate:      rand.Uint32(), //nolint:gosec
+				BurstSize: rand.Uint32(), //nolint:gosec
 				Data:      nil,
 			},
 		},
@@ -1612,7 +1617,7 @@ func (nb *NBTest) monitorLogicalDevices(
 	startingVlan := 4091
 	nb.sendTrapFlows(t, nbi, logicalDeviceID, ports.Items)
 
-	//Listen for port events
+	// Listen for port events
 	processedNniLogicalPorts := 0
 	processedUniLogicalPorts := 0
 
@@ -1624,7 +1629,7 @@ func (nb *NBTest) monitorLogicalDevices(
 		if portStatus, ok := (event.Event).(*ofp.ChangeEvent_PortStatus); ok {
 			ps := portStatus.PortStatus
 			if ps.Reason == ofp.OfpPortReason_OFPPR_ADD {
-				if ps.Desc.PortNo >= uint32(nb.startingUNIPortNo) {
+				if ps.Desc.PortNo >= uint32(nb.startingUNIPortNo) { //nolint:gosec
 					processedUniLogicalPorts++
 					nb.sendEAPFlows(t, nbi, logicalDeviceID, ps.Desc, startingVlan, uint64(meterID))
 				} else {
@@ -1638,7 +1643,7 @@ func (nb *NBTest) monitorLogicalDevices(
 		}
 	}
 
-	//Verify the flow count on the logical device
+	// Verify the flow count on the logical device
 	nb.verifyLogicalDeviceFlowCount(t, nbi, oltID, numNNIPorts, numUNIPorts, flowAddFail)
 
 	// Wait until all flows have been sent to the OLT adapters (or all failed)
@@ -1661,7 +1666,7 @@ func (nb *NBTest) monitorLogicalDevices(
 		count := 0
 		for _, a := range onuAdapters {
 			for _, id := range onuDeviceIDs {
-				count = count + a.GetFlowCount(id)
+				count += a.GetFlowCount(id)
 			}
 		}
 		return count == expectedFlowCount
@@ -1676,7 +1681,7 @@ func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi voltha.VolthaServiceClien
 
 	defer nb.changeEventLister.Unsubscribe(eventCh)
 
-	//	Create and enable device with valid data
+	// 	Create and enable device with valid data
 	oltDevice, err := nb.createAndEnableOLTDevice(t, nbi, oltDeviceType)
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -1706,13 +1711,13 @@ func (nb *NBTest) testFlowAddFailure(t *testing.T, nbi voltha.VolthaServiceClien
 	// Wait until all flows has been sent to the devices successfully
 	wg.Wait()
 
-	//Remove the device
+	// Remove the device
 	err = cleanUpDevices(nb.maxTimeout, nbi, oltDevice.Id, true)
 	assert.Nil(t, err)
 }
 
 func (nb *NBTest) testMPLSFlowsAddition(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceType string) {
-	//	Create and enable device with valid data
+	// 	Create and enable device with valid data
 	oltDevice, err := nb.createAndEnableOLTDevice(t, nbi, oltDeviceType)
 	assert.Nil(t, err)
 	assert.NotNil(t, oltDevice)
@@ -1749,12 +1754,12 @@ func (nb *NBTest) testMPLSFlowsAddition(t *testing.T, nbi voltha.VolthaServiceCl
 	// Add a meter to the logical device, which the flow can refer to
 	meterMod := &ofp.OfpMeterMod{
 		Command: ofp.OfpMeterModCommand_OFPMC_ADD,
-		Flags:   rand.Uint32(),
+		Flags:   rand.Uint32(), //nolint:gosec
 		MeterId: 1,
 		Bands: []*ofp.OfpMeterBandHeader{
 			{Type: ofp.OfpMeterBandType_OFPMBT_EXPERIMENTER,
-				Rate:      rand.Uint32(),
-				BurstSize: rand.Uint32(),
+				Rate:      rand.Uint32(), //nolint:gosec
+				BurstSize: rand.Uint32(), //nolint:gosec
 				Data:      nil,
 			},
 		},
@@ -1788,7 +1793,7 @@ func (nb *NBTest) testMPLSFlowsAddition(t *testing.T, nbi voltha.VolthaServiceCl
 		assert.NoError(t, err)
 	}
 
-	//Remove the device
+	// Remove the device
 	err = cleanUpDevices(nb.maxTimeout, nbi, oltDevice.Id, true)
 	assert.Nil(t, err)
 }
@@ -1930,7 +1935,7 @@ func (nb *NBTest) runTestSuite(t *testing.T, nbi voltha.VolthaServiceClient, olt
 	// Test create device
 	nb.testCreateDevice(t, nbi, oltDeviceType)
 
-	//Test Delete Device Scenarios
+	// Test Delete Device Scenarios
 	nb.testForceDeletePreProvDevice(t, nbi, oltDeviceType)
 	nb.testDeletePreProvDevice(t, nbi, oltDeviceType)
 	nb.testForceDeleteEnabledDevice(t, nbi, oltDeviceType)
@@ -1938,13 +1943,13 @@ func (nb *NBTest) runTestSuite(t *testing.T, nbi voltha.VolthaServiceClient, olt
 	nb.testForceDeleteDeviceFailure(t, nbi, oltDeviceType)
 	nb.testDeleteDeviceFailure(t, nbi, oltDeviceType)
 
-	////Test failed enable device
+	//// Test failed enable device
 	nb.testEnableDeviceFailed(t, nbi)
 
-	//Test Enable a device
+	// Test Enable a device
 	nb.testEnableDevice(t, nbi, oltDeviceType)
 
-	//Test disable and ReEnable a root device
+	// Test disable and ReEnable a root device
 	nb.testDisableAndReEnableRootDevice(t, nbi, oltDeviceType)
 
 	// Test disable and Enable pon port of OLT device
@@ -1979,17 +1984,17 @@ func (nb *NBTest) runTestSuite(t *testing.T, nbi voltha.VolthaServiceClient, olt
 
 		Downstream
 		OLT
-		//Below flow rule to pop L2 Ethernet headers from packets which have a single MPLS label
+		// Below flow rule to pop L2 Ethernet headers from packets which have a single MPLS label
 		ADDED, bytes=0, packets=0, table=0, priority=1000, selector=[IN_PORT:65536, ETH_TYPE:mpls_unicast, MPLS_BOS:true, ETH_SRC:LEAF_MAC],
 		treatment=[DefaultTrafficTreatment{immediate=[DEC_MPLS_TTL, TTL_IN, MPLS_POP:mpls_unicast, EXTENSION:of:0000000000000227/VolthaPopL2Header{},
 		transition=TABLE:1]
 
-		//Below flow rule to pop L2 Ethernet headers from packets which have two MPLS label
+		// Below flow rule to pop L2 Ethernet headers from packets which have two MPLS label
 		ADDED, bytes=0, packets=0, table=0, priority=1000, selector=[IN_PORT:65536, ETH_TYPE:mpls_unicast, MPLS_BOS:false, ETH_SRC:LEAF_MAC],
 		treatment=[DefaultTrafficTreatment{immediate=[DEC_MPLS_TTL, TTL_IN, MPLS_POP:mpls_unicast, MPLS_POP:mpls_unicast ,
 		EXTENSION:of:0000000000000227/VolthaPopL2Header{}, transition=TABLE:1]
 
-		//Below flow rules are unchanged from the current implementations except for the table numbers
+		// Below flow rules are unchanged from the current implementations except for the table numbers
 		ADDED, bytes=0, packets=0, table=1, priority=1000, selector=[IN_PORT:65536, VLAN_VID:2], treatment=[immediate=[VLAN_POP], transition=TABLE:2,
 		meter=METER:2, metadata=METADATA:1000004100000020/0]
 		ONU
@@ -2163,7 +2168,7 @@ func TestSuite(t *testing.T) {
 	if err != nil {
 		logger.Fatalf(ctx, "could not create CPU profile: %v\n ", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	runtime.SetBlockProfileRate(1)
 	runtime.SetMutexProfileFraction(-1)
 	runtime.SetCPUProfileRate(200)

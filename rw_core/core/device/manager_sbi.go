@@ -500,6 +500,7 @@ func (dMgr *Manager) ReconcileChildDevices(ctx context.Context, parentDeviceID *
 	return &empty.Empty{}, nil
 }
 
+//nolint:staticcheck
 func (dMgr *Manager) UpdateImageDownload(ctx context.Context, img *voltha.ImageDownload) (*empty.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "UpdateImageDownload")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
