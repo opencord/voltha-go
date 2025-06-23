@@ -180,7 +180,7 @@ func (dat *DATest) updateDeviceConcurrently(t *testing.T, da *Agent, globalWG *s
 		model        = "go-mock"
 		serialNumber = com.GetRandomSerialNumber()
 		macAddress   = strings.ToUpper(com.GetRandomMacAddress())
-		vlan         = rand.Uint32()
+		vlan         = rand.Uint32() //nolint:gosec
 		reason       = "testing concurrent device update"
 		portToAdd    = &voltha.Port{PortNo: 101, Label: "uni-101", Type: voltha.Port_ETHERNET_UNI, AdminState: voltha.AdminState_ENABLED,
 			OperStatus: voltha.OperStatus_ACTIVE}
@@ -341,7 +341,7 @@ func changeToGroupList(groupList map[uint32]*ofp.OfpGroupEntry) []*ofp.OfpGroupE
 	return groups
 }
 func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
-	//Add new Flows on empty list
+	// Add new Flows on empty list
 	newFlows := []*ofp.OfpFlowStats{
 		{Id: 123, TableId: 1230, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1230000, PacketCount: 0},
 		{Id: 124, TableId: 1240, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1240000, PacketCount: 0},
@@ -354,7 +354,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 	daFlows := changeToFlowList(da.listDeviceFlows())
 	assert.True(t, isFlowSliceEqual(newFlows, daFlows))
 
-	//Add new Flows on existing ones
+	// Add new Flows on existing ones
 	newFlows = []*ofp.OfpFlowStats{
 		{Id: 126, TableId: 1260, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
 		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270000, PacketCount: 0},
@@ -374,7 +374,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 	daFlows = changeToFlowList(da.listDeviceFlows())
 	assert.True(t, isFlowSliceEqual(expectedFlows, daFlows))
 
-	//Add existing Flows again with a new flow
+	// Add existing Flows again with a new flow
 	newFlows = []*ofp.OfpFlowStats{
 		{Id: 126, TableId: 1260, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
 		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270001, PacketCount: 0},
@@ -396,7 +396,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 	daFlows = changeToFlowList(da.listDeviceFlows())
 	assert.True(t, isFlowSliceEqual(expectedFlows, daFlows))
 
-	//Add already existing flows again
+	// Add already existing flows again
 	newFlows = []*ofp.OfpFlowStats{
 		{Id: 126, TableId: 1260, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
 		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270001, PacketCount: 0},
@@ -417,7 +417,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 	daFlows = changeToFlowList(da.listDeviceFlows())
 	assert.True(t, isFlowSliceEqual(expectedFlows, daFlows))
 
-	//Delete flows
+	// Delete flows
 	flowsToDelete := []*ofp.OfpFlowStats{
 		{Id: 126, TableId: 1260, Priority: 100, IdleTimeout: 0, Flags: 0, Cookie: 1260000, PacketCount: 0},
 		{Id: 127, TableId: 1270, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1270001, PacketCount: 0},
@@ -435,7 +435,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 	assert.True(t, strings.Contains(err.Error(), "Aborted"))
 	daFlows = changeToFlowList(da.listDeviceFlows())
 	assert.True(t, isFlowSliceEqual(expectedFlows, daFlows))
-	//Delete flows with an unexisting one
+	// Delete flows with an unexisting one
 	flowsToDelete = []*ofp.OfpFlowStats{
 		{Id: 125, TableId: 1250, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1250000, PacketCount: 0},
 		{Id: 129, TableId: 1290, Priority: 1000, IdleTimeout: 0, Flags: 0, Cookie: 1290000, PacketCount: 0},
@@ -454,7 +454,7 @@ func (dat *DATest) testFlowAddDeletes(t *testing.T, da *Agent) {
 }
 
 func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
-	//Add new Groups on empty list
+	// Add new Groups on empty list
 	newGroups := []*ofp.OfpGroupEntry{
 		{Desc: &ofp.OfpGroupDesc{Type: 1, GroupId: 10, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 2, GroupId: 20, Buckets: nil}},
@@ -465,7 +465,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 	daGroups := changeToGroupList(da.listDeviceGroups())
 	assert.True(t, isGroupSliceEqual(newGroups, daGroups))
 
-	//Add new Groups on existing ones
+	// Add new Groups on existing ones
 	newGroups = []*ofp.OfpGroupEntry{
 		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
@@ -482,7 +482,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 	daGroups = changeToGroupList(da.listDeviceGroups())
 	assert.True(t, isGroupSliceEqual(expectedGroups, daGroups))
 
-	//Add new Groups on existing ones
+	// Add new Groups on existing ones
 	newGroups = []*ofp.OfpGroupEntry{
 		{Desc: &ofp.OfpGroupDesc{Type: 3, GroupId: 30, Buckets: nil}},
 		{Desc: &ofp.OfpGroupDesc{Type: 44, GroupId: 40, Buckets: nil}},
@@ -501,7 +501,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 	daGroups = changeToGroupList(da.listDeviceGroups())
 	assert.True(t, isGroupSliceEqual(expectedGroups, daGroups))
 
-	//Modify Group
+	// Modify Group
 	updtGroups := []*ofp.OfpGroupEntry{
 		{Desc: &ofp.OfpGroupDesc{Type: 33, GroupId: 30, Buckets: nil}},
 	}
@@ -518,7 +518,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 	daGroups = changeToGroupList(da.listDeviceGroups())
 	assert.True(t, isGroupSliceEqual(expectedGroups, daGroups))
 
-	//Delete Group
+	// Delete Group
 	delGroups := []*ofp.OfpGroupEntry{
 		{Desc: &ofp.OfpGroupDesc{Type: 33, GroupId: 30, Buckets: nil}},
 	}
@@ -534,7 +534,7 @@ func (dat *DATest) testGroupAddDeletes(t *testing.T, da *Agent) {
 	daGroups = changeToGroupList(da.listDeviceGroups())
 	assert.True(t, isGroupSliceEqual(expectedGroups, daGroups))
 
-	//Delete Group
+	// Delete Group
 	delGroups = []*ofp.OfpGroupEntry{
 		{Desc: &ofp.OfpGroupDesc{Type: 4, GroupId: 40, Buckets: nil}},
 	}

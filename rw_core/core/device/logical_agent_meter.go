@@ -116,7 +116,7 @@ func (agent *LogicalAgent) meterDelete(ctx context.Context, meterMod *ofp.OfpMet
 	}
 	defer meterHandle.Unlock()
 
-	//TODO: A meter lock is held here while flow lock(s) are acquired, if this is done in opposite order anywhere
+	// TODO: A meter lock is held here while flow lock(s) are acquired, if this is done in opposite order anywhere
 	//      there's potential for deadlock.
 	if err := agent.deleteFlowsHavingMeter(ctx, meterMod.MeterId); err != nil {
 		return err

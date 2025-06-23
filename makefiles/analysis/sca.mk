@@ -25,7 +25,8 @@ sca:
 	@$(RM) -r ./sca-report
 	@mkdir -p ./sca-report
 	@echo "Running static code analysis..."
-	@${GOLANGCI_LINT} run --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
+	@${GOLANGCI_LINT} run -vv ./... | tee ./sca-report/sca-report.json
+	@cat ./sca-report/sca-report.json | ${GO_JUNIT_REPORT} > ./sca-report/sca-report.xml
 	@echo ""
 	@echo "Static code analysis OK"
 

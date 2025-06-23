@@ -92,11 +92,11 @@ func TestRequestQueueCancellation(t *testing.T) {
 			if err := rq.WaitForGreenLight(ctx); err != nil {
 				if !willCancel || err != context.Canceled {
 					t.Errorf("wait gave unexpected error %s", err)
-				} //else cancellation was expected
+				} // else cancellation was expected
 			} else {
 				if willCancel {
 					t.Error("this should have been canceled")
-				} //else completed as expected
+				} // else completed as expected
 				rq.RequestComplete()
 			}
 			wg.Done()

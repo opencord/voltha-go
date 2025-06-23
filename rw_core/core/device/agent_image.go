@@ -33,6 +33,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+//nolint:staticcheck
 func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	var err error
 	var desc string
@@ -72,6 +73,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	}
 
 	// Save the image
+	//nolint:staticcheck
 	clonedImg := proto.Clone(img).(*voltha.ImageDownload)
 	clonedImg.DownloadState = voltha.ImageDownload_DOWNLOAD_REQUESTED
 	cloned := agent.cloneDeviceWithoutLock()
@@ -101,7 +103,7 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		var response *voltha.ImageDownload
+		var response *voltha.ImageDownload //nolint:staticcheck
 		response, err = client.DownloadImage(subCtx, &ca.ImageDownloadMessage{
 			Device: cloned,
 			Image:  clonedImg,
@@ -121,6 +123,8 @@ func (agent *Agent) downloadImage(ctx context.Context, img *voltha.ImageDownload
 }
 
 // getImage is a helper method to figure out if an image is already registered
+//
+//nolint:staticcheck
 func getImage(img *voltha.ImageDownload, device *voltha.Device) (*voltha.ImageDownload, int, error) {
 	for pos, image := range device.ImageDownloads {
 		if image.Id == img.Id && image.Name == img.Name {
@@ -131,6 +135,7 @@ func getImage(img *voltha.ImageDownload, device *voltha.Device) (*voltha.ImageDo
 		device.Id, img.Name)
 }
 
+//nolint:staticcheck
 func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 
 	var err error
@@ -204,6 +209,7 @@ func (agent *Agent) cancelImageDownload(ctx context.Context, img *voltha.ImageDo
 	return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_SUCCESS}, nil
 }
 
+//nolint:staticcheck
 func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
 	var err error
 	var desc string
@@ -285,6 +291,7 @@ func (agent *Agent) activateImage(ctx context.Context, img *voltha.ImageDownload
 	return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_SUCCESS}, nil
 }
 
+//nolint:staticcheck
 func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) (*voltha.OperationResp, error) {
 	var err error
 	var desc string
@@ -354,6 +361,7 @@ func (agent *Agent) revertImage(ctx context.Context, img *voltha.ImageDownload) 
 	return &voltha.OperationResp{Code: voltha.OperationResp_OPERATION_SUCCESS}, nil
 }
 
+//nolint:staticcheck
 func (agent *Agent) getImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	logger.Debugw(ctx, "get-image-download-status", log.Fields{"device-id": agent.deviceID})
 
@@ -387,6 +395,7 @@ func (agent *Agent) getImageDownloadStatus(ctx context.Context, img *voltha.Imag
 	})
 }
 
+//nolint:staticcheck
 func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDownload) error {
 	var err error
 	var desc string
@@ -408,7 +417,7 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 	}
 
 	// Update the image as well as remove it if the download was cancelled
-	clonedImages := make([]*voltha.ImageDownload, len(cloned.ImageDownloads))
+	clonedImages := make([]*voltha.ImageDownload, len(cloned.ImageDownloads)) //nolint:staticcheck
 	for _, image := range cloned.ImageDownloads {
 		if image.Id == img.Id && image.Name == img.Name {
 			if image.DownloadState != voltha.ImageDownload_DOWNLOAD_CANCELLED {
@@ -427,6 +436,7 @@ func (agent *Agent) updateImageDownload(ctx context.Context, img *voltha.ImageDo
 	return agent.updateDeviceAndReleaseLock(ctx, cloned)
 }
 
+//nolint:staticcheck
 func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	logger.Info(ctx, "get-image-download", log.Fields{"device-id": agent.deviceID})
 
@@ -442,6 +452,7 @@ func (agent *Agent) getImageDownload(ctx context.Context, img *voltha.ImageDownl
 	return nil, status.Errorf(codes.NotFound, "image-not-found:%s", img.Name)
 }
 
+//nolint:staticcheck
 func (agent *Agent) listImageDownloads(ctx context.Context, deviceID string) (*voltha.ImageDownloads, error) {
 	logger.Info(ctx, "list-image-downloads", log.Fields{"device-id": agent.deviceID})
 
@@ -487,7 +498,7 @@ func (agent *Agent) onImageFailure(ctx context.Context, imgErr error) {
 		logger.Errorw(subCtx, "rpc-failed", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "error": imgErr})
 		cloned := agent.cloneDeviceWithoutLock()
 		// TODO base this on IMAGE ID when created
-		var imageFailed *voltha.ImageDownload
+		var imageFailed *voltha.ImageDownload //nolint:staticcheck
 		var index int
 		if cloned.ImageDownloads != nil {
 			for pos, image := range cloned.ImageDownloads {
@@ -544,7 +555,7 @@ func (agent *Agent) onImageSuccess(ctx context.Context, response interface{}) {
 	}
 	logger.Infow(ctx, "rpc-successful", log.Fields{"rpc": rpc, "device-id": agent.deviceID, "response": response})
 	// TODO base this on IMAGE ID when created
-	var imageSucceeded *voltha.ImageDownload
+	var imageSucceeded *voltha.ImageDownload //nolint:staticcheck
 	var index int
 	if cloned.ImageDownloads != nil {
 		for pos, image := range cloned.ImageDownloads {

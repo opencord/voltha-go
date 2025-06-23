@@ -300,7 +300,7 @@ func cleanUpCreatedDevice(timeout time.Duration, nbi voltha.VolthaServiceClient,
 	ch := make(chan int, 1)
 	done := false
 	go func() {
-		//Force Remove the device - use a loop in case the initial delete fails
+		// Force Remove the device - use a loop in case the initial delete fails
 		for {
 			logger.Debugw(context.Background(), "sending delete force ", log.Fields{"device-id": deviceID})
 			var err error
@@ -308,7 +308,7 @@ func cleanUpCreatedDevice(timeout time.Duration, nbi voltha.VolthaServiceClient,
 				logger.Debugw(context.Background(), "delete failed", log.Fields{"device-id": deviceID, "error": err})
 				if strings.Contains(err.Error(), "NotFound") {
 					logger.Debugw(context.Background(), "delete not found", log.Fields{"device-id": deviceID, "error": err})
-					//ch <- 1
+					// ch <- 1
 					break
 				}
 				time.Sleep(retryInterval)
@@ -345,7 +345,7 @@ func cleanUpCreatedDevices(timeout time.Duration, nbi voltha.VolthaServiceClient
 	ch := make(chan int, 1)
 	done := false
 	go func() {
-		//Force Remove the device - use a loop in case the initial delete fails
+		// Force Remove the device - use a loop in case the initial delete fails
 		for {
 			if _, err := nbi.ForceDeleteDevice(getContext(), &common.ID{Id: parentDeviceID}); err != nil {
 				if strings.Contains(err.Error(), "NotFound") {

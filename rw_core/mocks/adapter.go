@@ -55,7 +55,7 @@ func macAddressToUint32Array(mac string) []uint32 {
 		if tmp, err = strconv.ParseInt(val, 16, 32); err != nil {
 			return []uint32{1, 2, 3, 4, 5, 6}
 		}
-		result[index] = uint32(tmp)
+		result[index] = uint32(tmp) // nolint:gosec
 	}
 	return result
 }
@@ -314,24 +314,30 @@ func (ta *Adapter) CommitOnuImage(ctx context.Context, request *voltha.DeviceIma
 }
 
 // Deprecated image APIs
+//
+// nolint:staticcheck
 func (ta *Adapter) DownloadImage(ctx context.Context, in *ca.ImageDownloadMessage) (*voltha.ImageDownload, error) {
-	return &voltha.ImageDownload{}, nil
+	return &voltha.ImageDownload{}, nil // nolint:staticcheck
 }
 
+// nolint:staticcheck
 func (ta *Adapter) GetImageDownloadStatus(ctx context.Context, in *ca.ImageDownloadMessage) (*voltha.ImageDownload, error) {
-	return &voltha.ImageDownload{}, nil
+	return &voltha.ImageDownload{}, nil // nolint:staticcheck
 }
 
+// nolint:staticcheck
 func (ta *Adapter) CancelImageDownload(ctx context.Context, in *ca.ImageDownloadMessage) (*voltha.ImageDownload, error) {
-	return &voltha.ImageDownload{}, nil
+	return &voltha.ImageDownload{}, nil // nolint:staticcheck
 }
 
+// nolint:staticcheck
 func (ta *Adapter) ActivateImageUpdate(ctx context.Context, in *ca.ImageDownloadMessage) (*voltha.ImageDownload, error) {
-	return &voltha.ImageDownload{}, nil
+	return &voltha.ImageDownload{}, nil // nolint:staticcheck
 }
 
+// nolint:staticcheck
 func (ta *Adapter) RevertImageUpdate(ctx context.Context, in *ca.ImageDownloadMessage) (*voltha.ImageDownload, error) {
-	return &voltha.ImageDownload{}, nil
+	return &voltha.ImageDownload{}, nil // nolint:staticcheck
 }
 
 // OMCI test

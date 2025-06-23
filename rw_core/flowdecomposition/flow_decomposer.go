@@ -330,7 +330,7 @@ func (fd *FlowDecomposer) processDownstreamFlowWithNextTable(ctx context.Context
 			switch len(recalculatedRoute) {
 			case 0:
 				logger.Errorw(ctx, "no-route", log.Fields{"inPortNo": inPortNo, "outPortNo": portNumber, "comment": "deleting-flow", "metadata": metadataFromwriteMetadata})
-				//TODO: Delete flow
+				// TODO: Delete flow
 				return deviceRules, nil
 			case 2:
 				logger.Debugw(ctx, "route-found", log.Fields{"ingressHop": ingressHop, "egressHop": egressHop})

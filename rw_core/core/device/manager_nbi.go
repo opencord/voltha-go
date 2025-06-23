@@ -199,6 +199,8 @@ func (dMgr *Manager) GetDevice(ctx context.Context, id *voltha.ID) (*voltha.Devi
 var operationFailureResp = &common.OperationResp{Code: voltha.OperationResp_OPERATION_FAILURE}
 
 // DownloadImage execute an image download request
+//
+//nolint:staticcheck
 func (dMgr *Manager) DownloadImage(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "DownloadImage")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
@@ -216,6 +218,8 @@ func (dMgr *Manager) DownloadImage(ctx context.Context, img *voltha.ImageDownloa
 }
 
 // CancelImageDownload cancels image download request
+//
+//nolint:staticcheck
 func (dMgr *Manager) CancelImageDownload(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "CancelImageDownload")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
@@ -233,6 +237,8 @@ func (dMgr *Manager) CancelImageDownload(ctx context.Context, img *voltha.ImageD
 }
 
 // ActivateImageUpdate activates image update request
+//
+//nolint:staticcheck
 func (dMgr *Manager) ActivateImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "ActivateImageUpdate")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
@@ -250,6 +256,8 @@ func (dMgr *Manager) ActivateImageUpdate(ctx context.Context, img *voltha.ImageD
 }
 
 // RevertImageUpdate reverts image update
+//
+//nolint:staticcheck
 func (dMgr *Manager) RevertImageUpdate(ctx context.Context, img *voltha.ImageDownload) (*common.OperationResp, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "RevertImageUpdate")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
@@ -657,9 +665,11 @@ func (dMgr *Manager) CommitImage(ctx context.Context, request *voltha.DeviceImag
 }
 
 // convenience to avoid redefining
-var imageDownloadFailureResp = &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN}
+var imageDownloadFailureResp = &voltha.ImageDownload{DownloadState: voltha.ImageDownload_DOWNLOAD_UNKNOWN} //nolint:staticcheck
 
 // GetImageDownloadStatus returns status of image download
+//
+//nolint:staticcheck
 func (dMgr *Manager) GetImageDownloadStatus(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "GetImageDownloadStatus")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
@@ -677,6 +687,8 @@ func (dMgr *Manager) GetImageDownloadStatus(ctx context.Context, img *voltha.Ima
 }
 
 // GetImageDownload returns image download
+//
+//nolint:staticcheck
 func (dMgr *Manager) GetImageDownload(ctx context.Context, img *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "GetImageDownload")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
@@ -694,6 +706,8 @@ func (dMgr *Manager) GetImageDownload(ctx context.Context, img *voltha.ImageDown
 }
 
 // ListImageDownloads returns image downloads
+//
+// nolint:staticcheck
 func (dMgr *Manager) ListImageDownloads(ctx context.Context, id *voltha.ID) (*voltha.ImageDownloads, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "ListImageDownloads")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
@@ -701,11 +715,11 @@ func (dMgr *Manager) ListImageDownloads(ctx context.Context, id *voltha.ID) (*vo
 	logger.Debugw(ctx, "list-image-downloads", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
-		return &voltha.ImageDownloads{Items: []*voltha.ImageDownload{imageDownloadFailureResp}}, status.Errorf(codes.NotFound, "%s", id.Id)
+		return &voltha.ImageDownloads{Items: []*voltha.ImageDownload{imageDownloadFailureResp}}, status.Errorf(codes.NotFound, "%s", id.Id) //nolint:staticcheck
 	}
 	resp, err := agent.listImageDownloads(ctx, id.Id)
 	if err != nil {
-		return &voltha.ImageDownloads{Items: []*voltha.ImageDownload{imageDownloadFailureResp}}, err
+		return &voltha.ImageDownloads{Items: []*voltha.ImageDownload{imageDownloadFailureResp}}, err //nolint:staticcheck
 	}
 	return resp, nil
 }

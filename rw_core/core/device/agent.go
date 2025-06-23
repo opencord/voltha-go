@@ -33,7 +33,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/config"
-	"github.com/opencord/voltha-go/rw_core/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -178,7 +177,7 @@ func (agent *Agent) start(ctx context.Context, deviceExist bool, deviceToCreate 
 			err = status.Errorf(codes.Aborted, "failed-adding-device-%s: %s", agent.deviceID, err)
 			return nil, err
 		}
-		_ = agent.deviceMgr.Agent.SendDeviceStateChangeEvent(ctx, device.OperStatus, device.ConnectStatus, prevState, device, time.Now().Unix())
+		_ = agent.deviceMgr.SendDeviceStateChangeEvent(ctx, device.OperStatus, device.ConnectStatus, prevState, device, time.Now().Unix())
 		requestStatus.Code = common.OperationResp_OPERATION_SUCCESS
 		agent.device = device
 	}
@@ -210,7 +209,7 @@ func (agent *Agent) stop(ctx context.Context) error {
 		return err
 	}
 	// Send the device event to the message bus
-	_ = agent.deviceMgr.Agent.SendDeviceDeletedEvent(ctx, agent.device, time.Now().Unix())
+	_ = agent.deviceMgr.SendDeviceDeletedEvent(ctx, agent.device, time.Now().Unix())
 
 	close(agent.exitChannel)
 
@@ -940,7 +939,7 @@ func (agent *Agent) updateDeviceAttribute(ctx context.Context, name string, valu
 		}
 	}
 	logger.Debugw(ctx, "update-field-status", log.Fields{"device-id": cloned.Id, "name": name, "updated": updated})
-	//	Save the data
+	// 	Save the data
 
 	if err := agent.updateDeviceAndReleaseLock(ctx, cloned); err != nil {
 		logger.Warnw(ctx, "attribute-update-failed", log.Fields{"attribute": name, "value": value})
@@ -1007,7 +1006,7 @@ func (agent *Agent) updateDeviceAndReleaseLock(ctx context.Context, device *volt
 	agent.device = device
 	// If any of the states has chenged, send the change event.
 	if prevDevice.OperStatus != device.OperStatus || prevDevice.ConnectStatus != device.ConnectStatus || prevDevice.AdminState != device.AdminState {
-		_ = agent.deviceMgr.Agent.SendDeviceStateChangeEvent(ctx, prevDevice.OperStatus, prevDevice.ConnectStatus, prevDevice.AdminState, device, time.Now().Unix())
+		_ = agent.deviceMgr.SendDeviceStateChangeEvent(ctx, prevDevice.OperStatus, prevDevice.ConnectStatus, prevDevice.AdminState, device, time.Now().Unix())
 	}
 	deviceTransientState := agent.getTransientState()
 
@@ -1059,7 +1058,7 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 	agent.device = device
 	// If any of the states has chenged, send the change event.
 	if prevDevice.OperStatus != device.OperStatus || prevDevice.ConnectStatus != device.ConnectStatus || prevDevice.AdminState != device.AdminState {
-		_ = agent.deviceMgr.Agent.SendDeviceStateChangeEvent(ctx, prevDevice.OperStatus, prevDevice.ConnectStatus, prevDevice.AdminState, device, time.Now().Unix())
+		_ = agent.deviceMgr.SendDeviceStateChangeEvent(ctx, prevDevice.OperStatus, prevDevice.ConnectStatus, prevDevice.AdminState, device, time.Now().Unix())
 	}
 
 	// release lock before processing transition
@@ -1401,7 +1400,7 @@ func (agent *Agent) abortAllProcessing(ctx context.Context) error {
 
 func (agent *Agent) DeleteDevicePostAdapterRestart(ctx context.Context) error {
 	logger.Debugw(ctx, "delete-post-restart", log.Fields{"device-id": agent.deviceID})
-	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DelteDevicePostAdapterRestart")
+	ctx = coreutils.WithNewSpanAndRPCMetadataContext(ctx, "DelteDevicePostAdapterRestart")
 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err

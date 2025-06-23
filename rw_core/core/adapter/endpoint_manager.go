@@ -23,6 +23,8 @@ import (
 
 	"github.com/buraksezer/consistent"
 	"github.com/cespare/xxhash"
+
+	// nolint:staticcheck
 	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v7/pkg/db"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"

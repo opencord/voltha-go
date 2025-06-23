@@ -195,7 +195,7 @@ func (ldMgr *LogicalManager) stopManagingLogicalDeviceWithDeviceID(ctx context.C
 
 // getLogicalDeviceFromModel retrieves the logical device data from the model.
 //
-//nolint:unparam
+// nolint:unparam
 func (ldMgr *LogicalManager) getLogicalDeviceFromModel(ctx context.Context, lDeviceID string) (*voltha.LogicalDevice, error) {
 	logicalDevice := &voltha.LogicalDevice{}
 	if have, err := ldMgr.ldProxy.Get(ctx, lDeviceID, logicalDevice); err != nil {
@@ -281,7 +281,7 @@ func (ldMgr *LogicalManager) getLogicalDeviceID(ctx context.Context, device *vol
 		return &device.ParentId, nil
 	}
 	// Device is child device
-	//	retrieve parent device using child device ID
+	// 	retrieve parent device using child device ID
 	// TODO: return (string, have) instead of *string
 	//       also: If not root device, just return device.parentID instead of loading the parent device.
 	if parentDevice := ldMgr.deviceMgr.getParentDevice(ctx, device); parentDevice != nil {
@@ -623,6 +623,6 @@ loop:
 
 func (ldMgr *LogicalManager) SendRPCEvent(ctx context.Context, resourceID, desc string, context map[string]string,
 	id string, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
-	ldMgr.Manager.Agent.GetAndSendRPCEvent(ctx, resourceID, desc, context, id,
+	ldMgr.Agent.GetAndSendRPCEvent(ctx, resourceID, desc, context, id,
 		category, subCategory, raisedTs)
 }

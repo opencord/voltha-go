@@ -144,7 +144,7 @@ loop:
 		}
 	}
 
-	//TODO: Find an elegant way to get out of the above loop when the Core is stopped
+	// TODO: Find an elegant way to get out of the above loop when the Core is stopped
 	return nil
 }
 

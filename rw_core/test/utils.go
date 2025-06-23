@@ -207,7 +207,7 @@ func CreateAndRegisterAdapters(
 			onuAdapter, ok := adpt.(*cm.ONUAdapter)
 			assert.True(t, ok)
 			assert.NotNil(t, onuAdapter)
-			//	Register the adapter
+			// 	Register the adapter
 			adapterID := fmt.Sprintf("%s-%d", adapterType, replica)
 			adapterToRegister := &voltha.Adapter{
 				Id:             adapterID,
@@ -246,7 +246,7 @@ func CreateAndRegisterAdapters(
 			assert.True(t, ok)
 			assert.NotNil(t, oltAdapter)
 
-			//	Register the adapter
+			// 	Register the adapter
 			adapterID := fmt.Sprintf("%s-%d", adapterType, replica)
 			adapterToRegister := &voltha.Adapter{
 				Id:             adapterID,

@@ -200,10 +200,10 @@ func (oltA *OLTAdapter) AdoptDevice(ctx context.Context, device *voltha.Device) 
 						ParentId:        d.Id,
 						ParentPortNo:    1,
 						ChildDeviceType: oltA.ChildDeviceType,
-						ChannelId:       uint32(initialUniPortNo + seqNo),
+						ChannelId:       uint32(initialUniPortNo + seqNo), // nolint:gosec
 						VendorId:        oltA.childVendor,
 						SerialNumber:    com.GetRandomSerialNumber(),
-						OnuId:           uint32(seqNo),
+						OnuId:           uint32(seqNo), // nolint:gosec
 					}); err != nil {
 					logger.Fatalw(ctx, "failure-sending-child-device", log.Fields{"error": err, "parent-id": d.Id, "child-device-type": oltA.ChildDeviceType})
 				}
@@ -336,7 +336,7 @@ func (oltA *OLTAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 }
 
 // Enable_port -
-func (oltA *OLTAdapter) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) { //nolint
+func (oltA *OLTAdapter) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) { // nolint
 	go func() {
 		c, err := oltA.GetCoreClient()
 		if err != nil {
@@ -360,7 +360,7 @@ func (oltA *OLTAdapter) EnablePort(ctx context.Context, port *voltha.Port) (*emp
 }
 
 // Disable_port -
-func (oltA *OLTAdapter) DisablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) { //nolint
+func (oltA *OLTAdapter) DisablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) { // nolint
 	go func() {
 		c, err := oltA.GetCoreClient()
 		if err != nil {

@@ -262,7 +262,7 @@ func (aMgr *Manager) addDeviceTypes(ctx context.Context, deviceTypes *voltha.Dev
 				logger.Errorw(ctx, "Failed-to--device-types-from-cluster-data-proxy", log.Fields{"error": err})
 				return err
 			} else if !have {
-				//	Does not exist - save it
+				// 	Does not exist - save it
 				clonedDType := (proto.Clone(deviceType)).(*voltha.DeviceType)
 				if err := aMgr.deviceTypeDbProxy.Set(log.WithSpanFromContext(context.Background(), ctx), deviceType.Id, clonedDType); err != nil {
 					logger.Errorw(ctx, "Failed-to-add-device-types-to-cluster-data-proxy", log.Fields{"error": err})
@@ -364,8 +364,8 @@ func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *core_ada
 			}
 			aMgr.SetRollingUpdate(ctx, adapter.Endpoint, true)
 		} else {
-			//	Adapter registered and version is the same. The adapter may have restarted.
-			//	Trigger the reconcile process for that adapter
+			// 	Adapter registered and version is the same. The adapter may have restarted.
+			// 	Trigger the reconcile process for that adapter
 			logger.Warnw(ctx, "adapter-restarted", log.Fields{"adapter": adpt.Id, "endpoint": adpt.Endpoint})
 			agt.resetConnection(ctx)
 		}

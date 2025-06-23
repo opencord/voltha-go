@@ -399,6 +399,8 @@ func getDeviceStates(device *voltha.Device, transientState core.DeviceTransientS
 }
 
 // isMatched matches a state transition. It returns whether there is a match and if there is whether it is an exact match
+//
+// nolint:gocyclo
 func getHandler(previous deviceState, current deviceState, transition *transition) ([]transitionHandler, *match) {
 	m := &match{}
 	var waitForOtherStatesMatch bool
@@ -424,17 +426,18 @@ func getHandler(previous deviceState, current deviceState, transition *transitio
 	}
 
 	// Do we have Admin state match?
-	if current.Admin == transition.currentState.Admin && transition.currentState.Admin != voltha.AdminState_UNKNOWN {
+	switch {
+	case current.Admin == transition.currentState.Admin && transition.currentState.Admin != voltha.AdminState_UNKNOWN:
 		if previous.Admin == transition.previousState.Admin {
 			m.admin = currPrevStateMatch
 		} else if transition.previousState.Admin == voltha.AdminState_UNKNOWN {
 			m.admin = currStateOnlyMatch
 		}
-	} else if current.Admin == transition.currentState.Admin && transition.currentState.Admin == voltha.AdminState_UNKNOWN {
+	case current.Admin == transition.currentState.Admin && transition.currentState.Admin == voltha.AdminState_UNKNOWN:
 		if previous.Admin == transition.previousState.Admin || transition.previousState.Admin == voltha.AdminState_UNKNOWN {
 			m.admin = currWildcardMatch
 		}
-	} else if transition.previousState.Admin == voltha.AdminState_UNKNOWN && transition.currentState.Admin == voltha.AdminState_UNKNOWN {
+	case transition.previousState.Admin == voltha.AdminState_UNKNOWN && transition.currentState.Admin == voltha.AdminState_UNKNOWN:
 		// Will only be the case of DELETION currently.(to allow only transient match, we can avoid this check if
 		// we can allow wild card in admin state)
 		waitForOtherStatesMatch = true
