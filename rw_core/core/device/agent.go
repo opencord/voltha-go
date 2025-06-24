@@ -723,6 +723,7 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 	defer func() { agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc) }()
 
 	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		logger.Errorw(ctx, "can't obtain device agent lock during delete device", log.Fields{"device-id": agent.deviceID, "error": err})
 		desc = err.Error()
 		return err
 	}
