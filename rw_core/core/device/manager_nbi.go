@@ -109,12 +109,31 @@ func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 	ctx = utils.WithRPCMetadataContext(ctx, "DeleteDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
-	logger.Info(ctx, "delete-device", log.Fields{"device-id": id.Id})
+	logger.Infow(ctx, "delete-device", log.Fields{"device-id": id.Id})
 	agent := dMgr.getDeviceAgent(ctx, id.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return &empty.Empty{}, agent.deleteDevice(ctx)
+	if err := agent.deleteDevice(ctx); err != nil {
+		if statusErr, ok := status.FromError(err); ok {
+			switch statusErr.Code() {
+			case codes.NotFound:
+				logger.Warnw(ctx, "The device handler/device  entry is not found , further clean up ", log.Fields{"device-id": id.Id, "Error": err})
+                          	return &empty.Empty{}, nil
+			case codes.Unavailable:
+				logger.Errorw(ctx, "Failed to delete device", log.Fields{"device-id": id.Id, "Error": err})
+				return nil, err
+			case codes.Internal:
+				logger.Errorw(ctx, "Failed to delete device due to an Internal error at Adapter ", log.Fields{"device-id": id.Id, "Error": err})
+				return nil, err
+			default:
+				logger.Errorw(ctx, "Unexpected error", log.Fields{"device-id": id.Id, "Error": err})
+				return nil, err
+			}
+		}
+
+	}
+	return &empty.Empty{}, nil
 }
 
 // ForceDeleteDevice removes a device from the data model forcefully without successfully waiting for the adapters.
