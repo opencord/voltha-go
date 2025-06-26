@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6219da44_97a68850",
+        "filename": "rw_core/core/device/manager_nbi.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2025-06-26T05:07:36Z",
+      "side": 1,
+      "message": "I don\u0027t see a return here. Is this intentional",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 7
+      },
+      "revId": "f3f5cdcc5a56585af0d4943fd54d00b0f4c0a967",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
