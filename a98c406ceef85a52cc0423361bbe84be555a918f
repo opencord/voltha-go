@@ -67,6 +67,42 @@
       "message": "VERSION needs to be increased",
       "revId": "a98c406ceef85a52cc0423361bbe84be555a918f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "92726763_f26d91ad",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001023
+      },
+      "writtenOn": "2025-06-26T12:22:09Z",
+      "side": 1,
+      "message": "recheck",
+      "parentUuid": "19f27cec_ed79b1be",
+      "revId": "a98c406ceef85a52cc0423361bbe84be555a918f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d60244b0_0570d77d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001023
+      },
+      "writtenOn": "2025-06-26T12:22:09Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "0d7088c3_5127a653",
+      "revId": "a98c406ceef85a52cc0423361bbe84be555a918f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
