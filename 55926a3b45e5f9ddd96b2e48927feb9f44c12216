@@ -56,6 +56,30 @@
       },
       "revId": "55926a3b45e5f9ddd96b2e48927feb9f44c12216",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a48232c3_22f35137",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1001019
+      },
+      "writtenOn": "2025-06-26T12:50:30Z",
+      "side": 1,
+      "message": "Added the additional condition as mentioned.",
+      "parentUuid": "58351869_8c0072ea",
+      "range": {
+        "startLine": 1015,
+        "startChar": 0,
+        "endLine": 1015,
+        "endChar": 2
+      },
+      "revId": "55926a3b45e5f9ddd96b2e48927feb9f44c12216",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
