@@ -75,13 +75,14 @@ func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modC
 	oldMeter := meterHandle.GetReadOnly()
 	// avoiding using proto.Clone by only copying what have changed (this assumes that the oldMeter will never be modified)
 	newStats := *oldMeter.Stats
-	if flowCommand == ofp.OfpFlowModCommand_OFPFC_ADD {
+	switch flowCommand {
+	case ofp.OfpFlowModCommand_OFPFC_ADD:
 		if revertUpdate {
 			newStats.FlowCount--
 		} else {
 			newStats.FlowCount++
 		}
-	} else if flowCommand == ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT {
+	case ofp.OfpFlowModCommand_OFPFC_DELETE_STRICT:
 		if revertUpdate {
 			newStats.FlowCount++
 		} else {
