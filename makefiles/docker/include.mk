@@ -17,7 +17,7 @@
 
 $(if $(DEBUG),$(warning ENTER))
 
-VOLTHA_TOOLS_VERSION ?= 3.1.1
+VOLTHA_TOOLS_VERSION ?= 3.1.2
 
 # ---------------------------
 # Macros: command refactoring

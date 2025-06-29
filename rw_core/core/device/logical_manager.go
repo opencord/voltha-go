@@ -623,6 +623,6 @@ loop:
 
 func (ldMgr *LogicalManager) SendRPCEvent(ctx context.Context, resourceID, desc string, context map[string]string,
 	id string, category voltha.EventCategory_Types, subCategory *voltha.EventSubCategory_Types, raisedTs int64) {
-	ldMgr.Manager.Agent.GetAndSendRPCEvent(ctx, resourceID, desc, context, id,
+	ldMgr.Agent.GetAndSendRPCEvent(ctx, resourceID, desc, context, id,
 		category, subCategory, raisedTs)
 }
