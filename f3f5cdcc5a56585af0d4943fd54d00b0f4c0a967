@@ -46,6 +46,30 @@
       },
       "revId": "f3f5cdcc5a56585af0d4943fd54d00b0f4c0a967",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "96c0348d_b6ce3d39",
+        "filename": "rw_core/core/device/manager_nbi.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2025-07-04T00:08:17Z",
+      "side": 1,
+      "message": "What about the non-grpc errors? I\u0027m not hundred percent sure but status.FromError only gets the grpc errors.\n+1 on Mahir\u0027s comment, best practice should be explicitly return here as return \u0026empty.Empty{}, nil so the reader can understand the intention.",
+      "parentUuid": "ad4202e2_33b9a015",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 7
+      },
+      "revId": "f3f5cdcc5a56585af0d4943fd54d00b0f4c0a967",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
