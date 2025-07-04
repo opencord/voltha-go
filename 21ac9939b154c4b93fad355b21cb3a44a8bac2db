@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6ed87ed1_d7ab0aa8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001024
+      },
+      "writtenOn": "2025-07-04T05:12:05Z",
+      "side": 1,
+      "message": "\u003e Patch Set 3: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/2073/ : ABORTED\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-lint/2958/ : ABORTED\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_licensed/3212/ : FAILURE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-tests/2962/ : SUCCESS\n\nRecheck",
+      "revId": "21ac9939b154c4b93fad355b21cb3a44a8bac2db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
