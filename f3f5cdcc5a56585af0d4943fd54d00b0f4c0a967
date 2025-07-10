@@ -94,6 +94,30 @@
       },
       "revId": "f3f5cdcc5a56585af0d4943fd54d00b0f4c0a967",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9c03df57_7b6725b8",
+        "filename": "rw_core/core/device/manager_nbi.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2025-07-10T05:27:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de2aa663_cb46125c",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 7
+      },
+      "revId": "f3f5cdcc5a56585af0d4943fd54d00b0f4c0a967",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
