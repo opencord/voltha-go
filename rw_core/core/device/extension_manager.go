@@ -21,6 +21,7 @@ import (
 
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/extension"
+	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -48,6 +49,14 @@ func (e ExtensionManager) GetExtValue(ctx context.Context, request *extension.Si
 		agent = e.DeviceManager.getDeviceAgent(ctx, parentId)
 		if agent == nil {
 			return nil, status.Errorf(codes.NotFound, "target-id %s, parent-id %s", request.TargetId, parentId)
+		}
+		if agent.device.GetOperStatus() != voltha.OperStatus_ACTIVE {
+			logger.Errorw(ctx, "device-not-active",
+				log.Fields{
+					"device-id":        agent.deviceID,
+					"device-type":      agent.deviceType,
+					"adapter-endpoint": agent.adapterEndpoint})
+			return nil, status.Errorf(codes.FailedPrecondition, "device not active: %s", agent.deviceID)
 		}
 	default:
 		agent = e.DeviceManager.getDeviceAgent(ctx, request.TargetId)
