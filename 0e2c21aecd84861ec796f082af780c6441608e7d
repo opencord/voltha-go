@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "75ab8c52_d281ed7b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001025
+      },
+      "writtenOn": "2025-07-14T06:16:02Z",
+      "side": 1,
+      "message": "\u003e Patch Set 6: Verified+1\n\u003e \n\u003e Build Successful \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/2098/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_licensed/3232/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-lint/2978/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-tests/2982/ : SUCCESS\n\nrecheck",
+      "revId": "0e2c21aecd84861ec796f082af780c6441608e7d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
