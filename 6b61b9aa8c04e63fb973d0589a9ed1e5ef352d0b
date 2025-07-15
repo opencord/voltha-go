@@ -16,6 +16,29 @@
       "message": "\u003e Patch Set 8: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-tests/2985/ : FAILURE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_sanity-test/2101/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_licensed/3235/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_voltha-go_unit-test-lint/2981/ : SUCCESS\n\nrecheck",
       "revId": "6b61b9aa8c04e63fb973d0589a9ed1e5ef352d0b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "afb42d31_f4ae7eea",
+        "filename": "rw_core/core/device/logical_agent_port.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2025-07-15T17:34:11Z",
+      "side": 1,
+      "message": "In which case do we fall into this case? Why do we have port but not the logical port? If there is a bug causing this then creating the logical port here might mask the actual problem.",
+      "range": {
+        "startLine": 156,
+        "startChar": 0,
+        "endLine": 156,
+        "endChar": 6
+      },
+      "revId": "6b61b9aa8c04e63fb973d0589a9ed1e5ef352d0b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
