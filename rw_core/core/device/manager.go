@@ -881,3 +881,20 @@ func (dMgr *Manager) adapterRestartedHandler(ctx context.Context, endpoint strin
 	logger.Errorw(ctx, "restarted-adapter-not-found", log.Fields{"endpoint": endpoint})
 	return fmt.Errorf("restarted adapter at endpoint %s not found", endpoint)
 }
+
+func (dMgr *Manager) GetOnuDeviceIdBySerial(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon) (string, error) {
+	var onuDeviceId string
+	dMgr.deviceAgents.Range(func(key, value interface{}) bool {
+		devAgent := value.(*Agent)
+		dev := devAgent.device
+		if dev.SerialNumber == device.GetSerialNumber() && dev.ParentId == device.GetOltDeviceId().Id {
+			onuDeviceId = dev.Id
+			return false
+		}
+		return true
+	})
+	if onuDeviceId != "" {
+		return onuDeviceId, nil
+	}
+	return "", fmt.Errorf("ONU with serial %s not found under OLT %s", device.GetSerialNumber(), device.GetOltDeviceId().Id)
+}
