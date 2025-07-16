@@ -338,3 +338,19 @@ loop:
 	logger.Errorw(ctx, "connection-down", log.Fields{"remote-client": remoteClient, "error": err, "initial-conn-time": initialRequestTime})
 	return err
 }
+
+func (onuA *ONUAdapter) DisableChildSerialNumber(ctx context.Context, in *voltha.OnuSerialNumberOfOLTPon) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (onuA *ONUAdapter) EnableChildSerialNumber(ctx context.Context, in *voltha.OnuSerialNumberOfOLTPon) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (onuA *ONUAdapter) DisableChildDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (onuA *ONUAdapter) EnableChildDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}

@@ -940,3 +940,80 @@ func (dMgr *Manager) PutVoipSystemProfile(ctx context.Context, voipSystemProfile
 func (dMgr *Manager) DeleteVoipSystemProfile(ctx context.Context, key *common.Key) (*empty.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "delete-voip-system-profile-not-implemented")
 }
+
+func (dMgr *Manager) DisableChildDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+	ctx = utils.WithRPCMetadataContext(ctx, "DisableDevice")
+	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
+
+	logger.Info(ctx, "disable-child-device", log.Fields{"device-id": id.Id})
+	agent := dMgr.getDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+	}
+
+	oltAgent := dMgr.getDeviceAgent(ctx, agent.device.ParentId)
+	if oltAgent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", agent.device.ParentId)
+	}
+	logger.Debugw(ctx, "serial-no to be diabled", log.Fields{"serial-number": agent.device.SerialNumber})
+	return &empty.Empty{}, agent.disableChildDevice(ctx, oltAgent.adapterEndpoint)
+}
+
+func (dMgr *Manager) EnableChildDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+	ctx = utils.WithRPCMetadataContext(ctx, "EnableDevice")
+	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
+
+	logger.Info(ctx, "enable-child-device", log.Fields{"device-id": id.Id})
+	agent := dMgr.getDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+	}
+
+	oltAgent := dMgr.getDeviceAgent(ctx, agent.device.ParentId)
+	if oltAgent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", agent.device.ParentId)
+	}
+	logger.Debugw(ctx, "serial-no to be enabled", log.Fields{"serial-number": agent.device.SerialNumber})
+	return &empty.Empty{}, agent.enableChildDevice(ctx, oltAgent.adapterEndpoint)
+}
+
+func (dMgr *Manager) DisableChildSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOfOLTPon) (*empty.Empty, error) {
+	ctx = utils.WithRPCMetadataContext(ctx, "DisableChildSerialNumber")
+	log.EnrichSpan(ctx, log.Fields{"device-id": device.OltDeviceId})
+
+	logger.Infow(ctx, "disable-child serial number", log.Fields{"device-id": device.OltDeviceId, "serial-number": device.SerialNumber, "pon-port": device.Port})
+	oltAgent := dMgr.getDeviceAgent(ctx, device.OltDeviceId.GetId())
+	if oltAgent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", device.OltDeviceId)
+	}
+
+	onuDeviceID, err := dMgr.GetOnuDeviceIdBySerial(ctx, device)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "onu-device-id-not-found-for-serial-number-%s", device.SerialNumber)
+	}
+
+	agent := dMgr.getDeviceAgent(ctx, onuDeviceID)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", onuDeviceID)
+	}
+	return &empty.Empty{}, agent.disableChildSerialNumber(ctx, device, oltAgent.adapterEndpoint)
+}
+
+func (dMgr *Manager) EnableChildSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOfOLTPon) (*empty.Empty, error) {
+	ctx = utils.WithRPCMetadataContext(ctx, "EnableChildSerialNumber")
+	log.EnrichSpan(ctx, log.Fields{"device-id": device.OltDeviceId})
+
+	logger.Info(ctx, "enable-child serial number", log.Fields{"device-id": device.OltDeviceId, "serial-number": device.SerialNumber, "pon-port": device.Port})
+	oltAgent := dMgr.getDeviceAgent(ctx, device.OltDeviceId.GetId())
+	if oltAgent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", device.OltDeviceId)
+	}
+
+	var agent *Agent
+	onuDeviceID, err := dMgr.GetOnuDeviceIdBySerial(ctx, device)
+	if err == nil && onuDeviceID != "" {
+		agent = dMgr.getDeviceAgent(ctx, onuDeviceID)
+	}
+
+	return &empty.Empty{}, oltAgent.enableChildSerialNumber(ctx, device, agent)
+}
