@@ -489,3 +489,19 @@ func (oltA *OLTAdapter) SetDeviceRebooted(deviceID string) {
 	}
 
 }
+
+func (onuA *OLTAdapter) DisableOnuSerialNumber(ctx context.Context, in *voltha.OnuSerialNumberOfOLTPon) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (onuA *OLTAdapter) EnableOnuSerialNumber(ctx context.Context, in *voltha.OnuSerialNumberOfOLTPon) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (onuA *OLTAdapter) DisableOnuDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (onuA *OLTAdapter) EnableOnuDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
