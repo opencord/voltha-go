@@ -1,0 +1,104 @@
+---
+name: Gerrit Composed Maven Verify
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+    inputs:
+      GERRIT_BRANCH:
+        description: "Branch that change is against"
+        required: true
+        type: string
+      GERRIT_CHANGE_ID:
+        description: "The ID for the change"
+        required: true
+        type: string
+      GERRIT_CHANGE_NUMBER:
+        description: "The Gerrit number"
+        required: true
+        type: string
+      GERRIT_CHANGE_URL:
+        description: "URL to the change"
+        required: true
+        type: string
+      GERRIT_EVENT_TYPE:
+        description: "Type of Gerrit event"
+        required: true
+        type: string
+      GERRIT_PATCHSET_NUMBER:
+        description: "The patch number for the change"
+        required: true
+        type: string
+      GERRIT_PATCHSET_REVISION:
+        description: "The revision sha"
+        required: true
+        type: string
+      GERRIT_PROJECT:
+        description: "Project in Gerrit"
+        required: true
+        type: string
+      GERRIT_REFSPEC:
+        description: "Gerrit refspec of change"
+        required: true
+        type: string
+
+concurrency:
+  # yamllint disable-line rule:line-length
+  group: compose-maven-verify-${{ github.workflow }}-${{ github.event.inputs.GERRIT_CHANGE_ID || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  license-check:
+    uses: onosproject/.github/.github/workflows/license-check.yml@main
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [lint, sca, test]
+    steps:
+      - name: Gerrit Checkout
+        # yamllint disable-line rule:line-length
+        uses: lfit/checkout-gerrit-change-action@54d751e8bd167bc91f7d665dabe33fae87aaaa63 # v0.9
+        with:
+          gerrit-refspec: ${{ inputs.GERRIT_REFSPEC }}
+          gerrit-project: ${{ inputs.GERRIT_PROJECT }}
+          gerrit-url: ${{ vars.GERRIT_URL }}
+          delay: "0s"
+          submodules: "true"
+      - name: Run unit tests
+        env:
+          # TODO: This is a test. Once in production, these should be inputs
+          # supplied by the calling job to the reusable workflow.
+          DEST_GOPATH: github.com/opencord
+          UNIT_TEST_TARGETS: ${{ matrix.target }}
+          UNIT_TEST_KEEP_GOING: false
+          GOPROXY: https://proxy.golang.org
+          TEST_PROJECT: ${{ github.repository }}
+          WORKSPACE: ${{ github.workspace }}
+          #ONF_MAKE_SUBDIR: "lf/onf-make"
+          #PROJECT: "${TEST_PROJECT:-}"
+          #REPO: "https://gerrit.opencord.org/$PROJECT"
+        run: |
+          export GOPATH=${GOPATH:-$WORKSPACE/go}
+          mkdir -p "$GOPATH/src/$DEST_GOPATH"
+          export PATH=$PATH:/usr/lib/go-1.12/bin:/usr/local/go/bin:$GOPATH/bin
+          test_path="$GOPATH/src/$DEST_GOPATH/$TEST_PROJECT"
+          mv "$WORKSPACE/$TEST_PROJECT" "$test_path"
+
+          if [ ! -f "$test_path/Makefile" ]; then
+            echo "Makefile not found at ${test_path}/Makefile"
+            exit 1
+          else
+            pushd "$test_path"
+
+            # we want to split the make targets apart on spaces, so:
+            # shellcheck disable=SC2086
+            if [ "$UNIT_TEST_KEEP_GOING" = "true" ]; then
+              make -k $UNIT_TEST_TARGETS
+            else
+              make $UNIT_TEST_TARGETS
+            fi
+
+            popd
+          fi
