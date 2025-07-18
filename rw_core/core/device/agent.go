@@ -1583,21 +1583,16 @@ retry:
 		agent.requestQueue.RequestComplete()
 
 		if state != core.DeviceTransientState_REBOOT_IN_PROGRESS {
+			var err error
 			if state != core.DeviceTransientState_RECONCILE_IN_PROGRESS {
 				// set transient state to RECONCILE IN PROGRESS
-				if err := agent.UpdateTransientStateToReconcile(ctx); err != nil {
-					logger.Errorw(ctx, "setting-transient-state-failed", log.Fields{"error": err})
-					agent.stopReconcilingMutex.Lock()
-					if agent.stopReconciling != nil {
-						agent.stopReconciling = nil
-					}
-					desc = "Failed-to-update-transient-state"
-					agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
-					agent.stopReconcilingMutex.Unlock()
-					break retry
+				if err = agent.UpdateTransientStateToReconcile(ctx); err != nil {
+					logger.Warn(ctx, "setting-transient-state-failed, will be retried", log.Fields{"error": err})
 				}
 			}
-			reconcileErr = agent.sendReconcileRequestToAdapter(ctx, device)
+			if err == nil {
+				reconcileErr = agent.sendReconcileRequestToAdapter(ctx, device)
+			}
 		}
 
 		if errors.Is(reconcileErr, errContextExpired) || errors.Is(reconcileErr, errReconcileAborted) {
