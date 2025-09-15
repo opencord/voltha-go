@@ -154,21 +154,19 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 		logger.Debugw(ctx, "Switch-capability", log.Fields{"Desc": ld.Desc, "fromAd": switchCap.Desc})
 		ld.SwitchFeatures = (proto.Clone(switchCap.SwitchFeatures)).(*ofp.OfpSwitchFeatures)
 
+		agent.logicalDevice = ld
+
+		// Setup the logicalports - internal processing, no need to propagate the client context
+		err = agent.setupLogicalPorts(ctx)
+		if err != nil {
+			logger.Errorw(ctx, "unable-to-setup-logical-ports", log.Fields{"error": err})
+		}
 		// Save the logical device
 		if err = agent.ldProxy.Set(ctx, ld.Id, ld); err != nil {
 			logger.Errorw(ctx, "failed-to-add-logical-device", log.Fields{"logical-device-id": agent.logicalDeviceID})
 			return
 		}
 		logger.Debugw(ctx, "logical-device-created", log.Fields{"logical-device-id": agent.logicalDeviceID, "root-id": ld.RootDeviceId})
-
-		agent.logicalDevice = ld
-
-		// Setup the logicalports - internal processing, no need to propagate the client context
-
-		err = agent.setupLogicalPorts(ctx)
-		if err != nil {
-			logger.Errorw(ctx, "unable-to-setup-logical-ports", log.Fields{"error": err})
-		}
 
 	} else {
 		// Check to see if we need to load from dB
