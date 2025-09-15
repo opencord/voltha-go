@@ -1,5 +1,6 @@
 [gerrit]
-host=gerrit.opencord.org
-port=29418
+host=gerrit.lfbroadband.org
+port=443
 project=voltha-go.git
-defaultremote=master
+defaultbranch=master
+scheme=https
