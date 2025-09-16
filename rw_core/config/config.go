@@ -24,7 +24,9 @@ import (
 
 // RW Core service default constants
 const (
-	KVStoreName = "etcd"
+	KVStoreName             = "etcd"
+	defaultProducerRetryMax = 10
+	defaultMetadataRetryMax = 15
 )
 
 // RWCoreFlags represents the set of configurations used by the read-write core service
@@ -62,6 +64,8 @@ type RWCoreFlags struct {
 	DisplayVersionOnly          bool
 	TraceEnabled                bool
 	LogCorrelationEnabled       bool
+	ProducerRetryMax            int
+	MetadataRetryMax            int
 }
 
 // ParseCommandArguments parses the arguments when running read-write core service
@@ -212,4 +216,12 @@ func (cf *RWCoreFlags) ParseCommandArguments(args []string) {
 		0,
 		"The maximum number of times olt adaptor will retry in case grpc request timeouts")
 	_ = fs.Parse(args)
+	flag.IntVar(&cf.ProducerRetryMax,
+		"producer_retry_max",
+		defaultProducerRetryMax,
+		"This option specifies the maximum number of times the producer will retry sending messages before giving up")
+	flag.IntVar(&cf.MetadataRetryMax,
+		"metadata_retry_max",
+		defaultMetadataRetryMax,
+		"This option specifies the maximum number of times retry to receive messages before giving up")
 }
