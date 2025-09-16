@@ -75,10 +75,10 @@ func NewCore(ctx context.Context, id string, cf *config.RWCoreFlags) (*Core, con
 		kafka.Address(cf.KafkaClusterAddress),
 		kafka.ProducerReturnOnErrors(true),
 		kafka.ProducerReturnOnSuccess(true),
-		kafka.ProducerMaxRetries(6),
+		kafka.ProducerMaxRetries(cf.ProducerRetryMax),
 		kafka.ProducerRetryBackoff(time.Millisecond*30),
 		kafka.AutoCreateTopic(true),
-		kafka.MetadatMaxRetries(15),
+		kafka.MetadatMaxRetries(cf.MetadataRetryMax),
 	)
 
 	// new threads will be given a new cancelable context, so that they can be aborted later when Stop() is called
