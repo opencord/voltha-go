@@ -45,6 +45,10 @@ func NewRequestQueue() *RequestQueue {
 // proceeding.  The caller can also provide a context with timeout.  The timeout will be triggered if the wait is
 // too long (previous requests taking too long)
 func (rq *RequestQueue) WaitForGreenLight(ctx context.Context) error {
+	// if ctx is already canceled, no need to create a request
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	// add ourselves to the end of the queue
 	rq.mutex.Lock()
 	waitingOn := rq.lastCompleteCh
@@ -74,15 +78,28 @@ func (rq *RequestQueue) WaitForGreenLight(ctx context.Context) error {
 			rq.releaseWithoutLock()
 		default:
 			// on abort, skip our position in the queue
-			r.prev.notifyOnComplete = r.notifyOnComplete
-			// and remove ourselves from the queue
-			if r.next != nil { // if we are somewhere in the middle of the queue
+			if r.prev != nil {
+				r.prev.notifyOnComplete = r.notifyOnComplete
+			} else if rq.current != nil {
+				// On abort, if the previous pointer is nil, transfer notifyOnComplete to the current processing request
+				rq.current.notifyOnComplete = r.notifyOnComplete
+			}
+			// Remove ourselves from the queue
+			if r.next != nil && r.prev != nil { // If we are somewhere in the middle of the queue
 				r.prev.next = r.next
 				r.next.prev = r.prev
-			} else { // if we are at the end of the queue
+			} else if r.prev != nil { // If we are at the end of the queue
 				rq.last = r.prev
 				r.prev.next = nil
+			} else if r.next != nil { // If we are at the start of the queue
+				r.next.prev = nil
+			} else { // If we are the only request in the queue
+				rq.last = nil
 			}
+
+			// Clear references to help garbage collection
+			r.prev = nil
+			r.next = nil
 		}
 		return ctx.Err()
 
@@ -90,10 +107,24 @@ func (rq *RequestQueue) WaitForGreenLight(ctx context.Context) error {
 		// Previous request has signaled that it is complete.
 		// This request now can proceed as the active
 		// request
-
 		rq.mutex.Lock()
 		defer rq.mutex.Unlock()
 		rq.current = r
+
+		// Remove the processed request from the queue
+		if r.prev != nil {
+			r.prev.next = r.next
+		}
+		if r.next != nil {
+			r.next.prev = r.prev
+		}
+		if rq.last == r {
+			rq.last = r.prev
+		}
+
+		// Clear references to help garbage collection
+		r.prev = nil
+		r.next = nil
 		return nil
 	}
 }
@@ -109,9 +140,15 @@ func (rq *RequestQueue) RequestComplete() {
 
 func (rq *RequestQueue) releaseWithoutLock() {
 	// Notify the next waiting request.  This will panic if the lock is released more than once.
-	close(rq.current.notifyOnComplete)
+	if rq.current.notifyOnComplete != nil {
+		close(rq.current.notifyOnComplete)
+		rq.current.notifyOnComplete = nil
+	}
 
 	if rq.current.next != nil {
 		rq.current.next.prev = nil
 	}
+
+	// Clear the current request reference to help garbage collection
+	rq.current = nil
 }
