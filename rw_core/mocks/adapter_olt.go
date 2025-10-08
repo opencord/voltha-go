@@ -489,3 +489,9 @@ func (oltA *OLTAdapter) SetDeviceRebooted(deviceID string) {
 	}
 
 }
+
+func (onuA *OLTAdapter) UpdateDevice(ctx context.Context, req *voltha.Device) (*empty.Empty, error) {
+	logger.Debugw(ctx, "UpdateDevice called", log.Fields{"device-config": req})
+	// You can add logic here to update the device in your mock if needed.
+	return &empty.Empty{}, nil
+}

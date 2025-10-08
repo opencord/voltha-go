@@ -940,3 +940,29 @@ func (dMgr *Manager) PutVoipSystemProfile(ctx context.Context, voipSystemProfile
 func (dMgr *Manager) DeleteVoipSystemProfile(ctx context.Context, key *common.Key) (*empty.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "delete-voip-system-profile-not-implemented")
 }
+
+// UpdateDevice updates the configuration of a device, such as changing the IP address of an OLT device.
+func (dMgr *Manager) UpdateDevice(ctx context.Context, config *voltha.UpdateDeviceConfig) (*empty.Empty, error) {
+	ctx = utils.WithRPCMetadataContext(ctx, "UpdateDevice")
+	log.EnrichSpan(ctx, log.Fields{"device-id": config.Id})
+
+	logger.Infow(ctx, "update-ip-for the device", log.Fields{"device-id": config.Id, "config": config})
+
+	// Validate input
+	if config.Id == "" || config.Address == nil {
+		return nil, status.Error(codes.InvalidArgument, "missing device id or address")
+	}
+
+	// Get the device agent
+	agent := dMgr.getDeviceAgent(ctx, config.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "device-%s", config.Id)
+	}
+
+	// Validate that this is a root device (typically OLT)
+	if !agent.isRootDevice {
+		return nil, status.Error(codes.InvalidArgument, "device-update-only-supported-for-olt-devices")
+	}
+
+	return &empty.Empty{}, agent.updateDevice(ctx, config)
+}
