@@ -354,3 +354,9 @@ func (onuA *ONUAdapter) DisableOnuDevice(ctx context.Context, device *voltha.Dev
 func (onuA *ONUAdapter) EnableOnuDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
+
+func (onuA *ONUAdapter) UpdateDevice(ctx context.Context, req *voltha.Device) (*empty.Empty, error) {
+	logger.Debugw(ctx, "UpdateDevice called", log.Fields{"device-config": req})
+	// You can add logic here to update the device in your mock if needed.
+	return &empty.Empty{}, nil
+}

@@ -5,11 +5,12 @@ package voltha
 
 import (
 	fmt "fmt"
+	math "math"
+
 	proto "github.com/golang/protobuf/proto"
 	any "github.com/golang/protobuf/ptypes/any"
 	common "github.com/opencord/voltha-protos/v5/go/common"
 	openflow_13 "github.com/opencord/voltha-protos/v5/go/openflow_13"
-	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -769,7 +770,7 @@ func (m *PmConfigs) GetMaxSkew() uint32 {
 	return 0
 }
 
-//Object representing an image
+// Object representing an image
 type Image struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Version, this is the sole identifier of the image. it's the vendor specified OMCI version
@@ -2424,6 +2425,109 @@ func (m *OnuSerialNumberOnOLTPon) GetSerialNumber() string {
 	return ""
 }
 
+type UpdateDeviceConfig struct {
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Types that are valid to be assigned to Address:
+	//	*UpdateDeviceConfig_Ipv4Address
+	//	*UpdateDeviceConfig_Ipv6Address
+	//	*UpdateDeviceConfig_HostAndPort
+	Address              isUpdateDeviceConfig_Address `protobuf_oneof:"address"`
+	XXX_NoUnkeyedLiteral struct{}                     `json:"-"`
+	XXX_unrecognized     []byte                       `json:"-"`
+	XXX_sizecache        int32                        `json:"-"`
+}
+
+func (m *UpdateDeviceConfig) Reset()         { *m = UpdateDeviceConfig{} }
+func (m *UpdateDeviceConfig) String() string { return proto.CompactTextString(m) }
+func (*UpdateDeviceConfig) ProtoMessage()    {}
+func (*UpdateDeviceConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_200940f73d155856, []int{22}
+}
+
+func (m *UpdateDeviceConfig) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpdateDeviceConfig.Unmarshal(m, b)
+}
+func (m *UpdateDeviceConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpdateDeviceConfig.Marshal(b, m, deterministic)
+}
+func (m *UpdateDeviceConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateDeviceConfig.Merge(m, src)
+}
+func (m *UpdateDeviceConfig) XXX_Size() int {
+	return xxx_messageInfo_UpdateDeviceConfig.Size(m)
+}
+func (m *UpdateDeviceConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateDeviceConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateDeviceConfig proto.InternalMessageInfo
+
+func (m *UpdateDeviceConfig) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+type isUpdateDeviceConfig_Address interface {
+	isUpdateDeviceConfig_Address()
+}
+
+type UpdateDeviceConfig_Ipv4Address struct {
+	Ipv4Address string `protobuf:"bytes,2,opt,name=ipv4_address,json=ipv4Address,proto3,oneof"`
+}
+
+type UpdateDeviceConfig_Ipv6Address struct {
+	Ipv6Address string `protobuf:"bytes,3,opt,name=ipv6_address,json=ipv6Address,proto3,oneof"`
+}
+
+type UpdateDeviceConfig_HostAndPort struct {
+	HostAndPort string `protobuf:"bytes,4,opt,name=host_and_port,json=hostAndPort,proto3,oneof"`
+}
+
+func (*UpdateDeviceConfig_Ipv4Address) isUpdateDeviceConfig_Address() {}
+
+func (*UpdateDeviceConfig_Ipv6Address) isUpdateDeviceConfig_Address() {}
+
+func (*UpdateDeviceConfig_HostAndPort) isUpdateDeviceConfig_Address() {}
+
+func (m *UpdateDeviceConfig) GetAddress() isUpdateDeviceConfig_Address {
+	if m != nil {
+		return m.Address
+	}
+	return nil
+}
+
+func (m *UpdateDeviceConfig) GetIpv4Address() string {
+	if x, ok := m.GetAddress().(*UpdateDeviceConfig_Ipv4Address); ok {
+		return x.Ipv4Address
+	}
+	return ""
+}
+
+func (m *UpdateDeviceConfig) GetIpv6Address() string {
+	if x, ok := m.GetAddress().(*UpdateDeviceConfig_Ipv6Address); ok {
+		return x.Ipv6Address
+	}
+	return ""
+}
+
+func (m *UpdateDeviceConfig) GetHostAndPort() string {
+	if x, ok := m.GetAddress().(*UpdateDeviceConfig_HostAndPort); ok {
+		return x.HostAndPort
+	}
+	return ""
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*UpdateDeviceConfig) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*UpdateDeviceConfig_Ipv4Address)(nil),
+		(*UpdateDeviceConfig_Ipv6Address)(nil),
+		(*UpdateDeviceConfig_HostAndPort)(nil),
+	}
+}
+
 func init() {
 	proto.RegisterEnum("device.PmConfig_PmType", PmConfig_PmType_name, PmConfig_PmType_value)
 	proto.RegisterEnum("device.ImageDownload_ImageDownloadState", ImageDownload_ImageDownloadState_name, ImageDownload_ImageDownloadState_value)
@@ -2460,6 +2564,7 @@ func init() {
 	proto.RegisterType((*Devices)(nil), "device.Devices")
 	proto.RegisterType((*SimulateAlarmRequest)(nil), "device.SimulateAlarmRequest")
 	proto.RegisterType((*OnuSerialNumberOnOLTPon)(nil), "device.OnuSerialNumberOnOLTPon")
+	proto.RegisterType((*UpdateDeviceConfig)(nil), "device.UpdateDeviceConfig")
 }
 
 func init() { proto.RegisterFile("voltha_protos/device.proto", fileDescriptor_200940f73d155856) }

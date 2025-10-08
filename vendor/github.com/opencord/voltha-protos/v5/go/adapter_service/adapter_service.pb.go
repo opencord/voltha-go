@@ -6,6 +6,8 @@ package adapter_service
 import (
 	context "context"
 	fmt "fmt"
+	math "math"
+
 	proto "github.com/golang/protobuf/proto"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	common "github.com/opencord/voltha-protos/v5/go/common"
@@ -17,7 +19,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -159,6 +160,7 @@ type AdapterServiceClient interface {
 	EnableOnuDevice(ctx context.Context, in *voltha.Device, opts ...grpc.CallOption) (*empty.Empty, error)
 	DisableOnuSerialNumber(ctx context.Context, in *voltha.OnuSerialNumberOnOLTPon, opts ...grpc.CallOption) (*empty.Empty, error)
 	EnableOnuSerialNumber(ctx context.Context, in *voltha.OnuSerialNumberOnOLTPon, opts ...grpc.CallOption) (*empty.Empty, error)
+	UpdateDevice(ctx context.Context, in *voltha.Device, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type adapterServiceClient struct {
@@ -547,6 +549,15 @@ func (c *adapterServiceClient) EnableOnuSerialNumber(ctx context.Context, in *vo
 	return out, nil
 }
 
+func (c *adapterServiceClient) UpdateDevice(ctx context.Context, in *voltha.Device, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/adapter_service.AdapterService/UpdateDevice", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdapterServiceServer is the server API for AdapterService service.
 type AdapterServiceServer interface {
 	// GetHealthStatus is used by an AdapterService client to verify connectivity
@@ -600,6 +611,7 @@ type AdapterServiceServer interface {
 	EnableOnuDevice(context.Context, *voltha.Device) (*empty.Empty, error)
 	DisableOnuSerialNumber(context.Context, *voltha.OnuSerialNumberOnOLTPon) (*empty.Empty, error)
 	EnableOnuSerialNumber(context.Context, *voltha.OnuSerialNumberOnOLTPon) (*empty.Empty, error)
+	UpdateDevice(context.Context, *voltha.Device) (*empty.Empty, error)
 }
 
 // UnimplementedAdapterServiceServer can be embedded to have forward compatible implementations.
@@ -722,6 +734,9 @@ func (*UnimplementedAdapterServiceServer) DisableOnuSerialNumber(ctx context.Con
 }
 func (*UnimplementedAdapterServiceServer) EnableOnuSerialNumber(ctx context.Context, req *voltha.OnuSerialNumberOnOLTPon) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EnableOnuSerialNumber not implemented")
+}
+func (*UnimplementedAdapterServiceServer) UpdateDevice(ctx context.Context, req *voltha.Device) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDevice not implemented")
 }
 
 func RegisterAdapterServiceServer(s *grpc.Server, srv AdapterServiceServer) {
@@ -1438,6 +1453,24 @@ func _AdapterService_EnableOnuSerialNumber_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdapterService_UpdateDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(voltha.Device)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdapterServiceServer).UpdateDevice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/adapter_service.AdapterService/UpdateDevice",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdapterServiceServer).UpdateDevice(ctx, req.(*voltha.Device))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _AdapterService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "adapter_service.AdapterService",
 	HandlerType: (*AdapterServiceServer)(nil),
@@ -1593,6 +1626,10 @@ var _AdapterService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EnableOnuSerialNumber",
 			Handler:    _AdapterService_EnableOnuSerialNumber_Handler,
+		},
+		{
+			MethodName: "UpdateDevice",
+			Handler:    _AdapterService_UpdateDevice_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

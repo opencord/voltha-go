@@ -6,6 +6,8 @@ package voltha
 import (
 	context "context"
 	fmt "fmt"
+	math "math"
+
 	proto "github.com/golang/protobuf/proto"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	common "github.com/opencord/voltha-protos/v5/go/common"
@@ -19,7 +21,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -648,6 +649,8 @@ type VolthaServiceClient interface {
 	DisableOnuSerialNumber(ctx context.Context, in *OnuSerialNumberOnOLTPon, opts ...grpc.CallOption) (*empty.Empty, error)
 	// Disables the ONU at the PLOAM , different from EnableDevice. This would be used if the Device is not present in the VOLTHA
 	EnableOnuSerialNumber(ctx context.Context, in *OnuSerialNumberOnOLTPon, opts ...grpc.CallOption) (*empty.Empty, error)
+	// Update the Device configuration, for now only ip address updation is supported
+	UpdateDevice(ctx context.Context, in *UpdateDeviceConfig, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type volthaServiceClient struct {
@@ -1384,6 +1387,15 @@ func (c *volthaServiceClient) EnableOnuSerialNumber(ctx context.Context, in *Onu
 	return out, nil
 }
 
+func (c *volthaServiceClient) UpdateDevice(ctx context.Context, in *UpdateDeviceConfig, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/voltha.VolthaService/UpdateDevice", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VolthaServiceServer is the server API for VolthaService service.
 type VolthaServiceServer interface {
 	// Get high level information on the Voltha cluster
@@ -1559,6 +1571,8 @@ type VolthaServiceServer interface {
 	DisableOnuSerialNumber(context.Context, *OnuSerialNumberOnOLTPon) (*empty.Empty, error)
 	// Disables the ONU at the PLOAM , different from EnableDevice. This would be used if the Device is not present in the VOLTHA
 	EnableOnuSerialNumber(context.Context, *OnuSerialNumberOnOLTPon) (*empty.Empty, error)
+	// Update the Device configuration, for now only ip address updation is supported
+	UpdateDevice(context.Context, *UpdateDeviceConfig) (*empty.Empty, error)
 }
 
 // UnimplementedVolthaServiceServer can be embedded to have forward compatible implementations.
@@ -1780,6 +1794,9 @@ func (*UnimplementedVolthaServiceServer) DisableOnuSerialNumber(ctx context.Cont
 }
 func (*UnimplementedVolthaServiceServer) EnableOnuSerialNumber(ctx context.Context, req *OnuSerialNumberOnOLTPon) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EnableOnuSerialNumber not implemented")
+}
+func (*UnimplementedVolthaServiceServer) UpdateDevice(ctx context.Context, req *UpdateDeviceConfig) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDevice not implemented")
 }
 
 func RegisterVolthaServiceServer(s *grpc.Server, srv VolthaServiceServer) {
@@ -3096,6 +3113,24 @@ func _VolthaService_EnableOnuSerialNumber_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VolthaService_UpdateDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateDeviceConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VolthaServiceServer).UpdateDevice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/voltha.VolthaService/UpdateDevice",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VolthaServiceServer).UpdateDevice(ctx, req.(*UpdateDeviceConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _VolthaService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "voltha.VolthaService",
 	HandlerType: (*VolthaServiceServer)(nil),
@@ -3375,6 +3410,10 @@ var _VolthaService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EnableOnuSerialNumber",
 			Handler:    _VolthaService_EnableOnuSerialNumber_Handler,
+		},
+		{
+			MethodName: "UpdateDevice",
+			Handler:    _VolthaService_UpdateDevice_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
