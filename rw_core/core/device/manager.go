@@ -898,3 +898,39 @@ func (dMgr *Manager) GetOnuDeviceIdBySerial(ctx context.Context, device *voltha.
 	}
 	return "", fmt.Errorf("ONU with serial %s not found under OLT %s", device.GetSerialNumber(), device.GetOltDeviceId().Id)
 }
+
+func (dMgr *Manager) checkIPExists(ctx context.Context, config *voltha.UpdateDevice) error {
+
+	newType, newIP := utils.GetAddrTypeAndValue(config.Address)
+	if newType == "" {
+		return errInvalidAddr
+	}
+
+	for id := range dMgr.rootDevices {
+
+		agent := dMgr.getDeviceAgent(ctx, id)
+		if agent == nil || agent.device == nil {
+			continue
+		}
+
+		existingType, existingIP := utils.GetAddrTypeAndValue(agent.device.Address)
+		if existingType == "" || existingType != newType {
+			continue
+		}
+
+		if existingIP == newIP {
+
+			// Same device → no change
+			if agent.device.Id == config.Id {
+				logger.Debugw(ctx, "no-change-in-device-address", log.Fields{"device-id": agent.device.Id})
+				return errNoAddrChange
+			}
+
+			// Another root device → duplicate
+			logger.Debugw(ctx, "ip-address-already-used-by-another-device", log.Fields{"device-id": agent.device.Id, "type": newType, "address": newIP})
+			return errAddrDuplicate
+		}
+	}
+
+	return nil
+}

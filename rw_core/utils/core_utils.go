@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
@@ -251,5 +252,26 @@ func WaitForExit(ctx context.Context) int {
 	default:
 		logger.Infow(ctx, "unexpected-signal-received", log.Fields{"signal": s})
 		return 1
+	}
+}
+
+func GetAddrTypeAndValue(addr interface{}) (string, string) {
+	switch a := addr.(type) {
+
+	case *voltha.UpdateDevice_Ipv4Address:
+		return "ipv4", a.Ipv4Address
+	case *voltha.UpdateDevice_Ipv6Address:
+		return "ipv6", a.Ipv6Address
+	case *voltha.UpdateDevice_HostAndPort:
+		return "hostport", a.HostAndPort
+
+	case *voltha.Device_Ipv4Address:
+		return "ipv4", a.Ipv4Address
+	case *voltha.Device_Ipv6Address:
+		return "ipv6", a.Ipv6Address
+	case *voltha.Device_HostAndPort:
+		return "hostport", a.HostAndPort
+	default:
+		return "", ""
 	}
 }

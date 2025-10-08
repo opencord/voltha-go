@@ -55,6 +55,9 @@ import (
 var errReconcileAborted = errors.New("reconcile aborted")
 var errContextExpired = errors.New("context expired")
 var errNoConnection = errors.New("no connection")
+var errNoAddrChange = errors.New("no change in device address")
+var errAddrDuplicate = errors.New("ip address already in use")
+var errInvalidAddr = errors.New("invalid address type")
 
 // Agent represents device agent attributes
 type Agent struct {
@@ -2204,4 +2207,68 @@ func extractLastRpcError(err error) string {
 		return strings.TrimSpace(s[i:])
 	}
 	return s
+}
+
+// UpdateDevice updates the configuration of a device, such as changing the IP address of an OLT device.
+func (agent *Agent) updateDevice(ctx context.Context, config *voltha.UpdateDevice) error {
+	var desc string
+	var err error
+	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+	defer func() { agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc) }()
+
+	clonedDevice := agent.cloneDeviceWithoutLock()
+	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return err
+	}
+
+	agent.UpdateAddress(ctx, clonedDevice, config)
+
+	logger.Infow(ctx, "update-device-ip-address", log.Fields{
+		"device-id": agent.deviceID,
+		"config":    config,
+	})
+
+	if !agent.proceedWithRequest(clonedDevice) && clonedDevice.OperStatus != voltha.OperStatus_RECONCILING {
+		agent.requestQueue.RequestComplete()
+		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress/failed: %s", agent.deviceID)
+		return err
+	}
+
+	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+	if err != nil {
+		agent.requestQueue.RequestComplete()
+		logger.Errorw(ctx, "grpc-client-nil",
+			log.Fields{
+				"error":            err,
+				"device-id":        agent.deviceID,
+				"device-type":      agent.deviceType,
+				"adapter-endpoint": clonedDevice.AdapterEndpoint,
+			})
+		return err
+	}
+
+	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
+	defer cancel()
+	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
+	logger.Infow(ctx, "sending-update-to-adapter", log.Fields{"device-id": agent.deviceID, "adapter-endpoint": clonedDevice.AdapterEndpoint, "config": config})
+	if _, err = client.UpdateDevice(subCtx, config); err == nil {
+		agent.onSuccess(subCtx, nil, nil, true)
+	} else {
+		logger.Errorw(ctx, "update-device-ip-failed", log.Fields{"device-id": agent.deviceID, "error": err})
+		agent.onFailure(subCtx, err, nil, nil, true)
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+	return agent.updateDeviceAndReleaseLock(ctx, clonedDevice)
+}
+
+func (agent *Agent) UpdateAddress(ctx context.Context, device *voltha.Device, deviceConfig *voltha.UpdateDevice) {
+	switch addr := deviceConfig.Address.(type) {
+	case *voltha.UpdateDevice_Ipv4Address:
+		device.Address = &voltha.Device_Ipv4Address{Ipv4Address: addr.Ipv4Address}
+	case *voltha.UpdateDevice_Ipv6Address:
+		device.Address = &voltha.Device_Ipv6Address{Ipv6Address: addr.Ipv6Address}
+	case *voltha.UpdateDevice_HostAndPort:
+		device.Address = &voltha.Device_HostAndPort{HostAndPort: addr.HostAndPort}
+	}
 }

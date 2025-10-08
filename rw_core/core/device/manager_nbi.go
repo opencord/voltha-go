@@ -1032,3 +1032,43 @@ func (dMgr *Manager) EnableOnuSerialNumber(ctx context.Context, device *voltha.O
 
 	return &empty.Empty{}, agent.enableOnuSerialNumber(ctx, device, oltAgent.adapterEndpoint)
 }
+
+// UpdateDevice updates the configuration of a device, such as changing the IP address of an OLT device.
+func (dMgr *Manager) UpdateDevice(ctx context.Context, config *voltha.UpdateDevice) (*empty.Empty, error) {
+	ctx = utils.WithRPCMetadataContext(ctx, "UpdateDevice")
+	log.EnrichSpan(ctx, log.Fields{"device-id": config.Id})
+
+	logger.Infow(ctx, "update-ip-for-the-device", log.Fields{"device-id": config.Id, "config": config})
+
+	// Validate input
+	if config.Id == "" || config.Address == nil {
+		return nil, status.Error(codes.InvalidArgument, "missing device id or address")
+	}
+
+	// check if ip already exists
+	if err := dMgr.checkIPExists(ctx, config); err != nil {
+		switch {
+		case errors.Is(err, errNoAddrChange):
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		case errors.Is(err, errAddrDuplicate):
+			return nil, status.Error(codes.AlreadyExists, err.Error())
+		case errors.Is(err, errInvalidAddr):
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	}
+
+	// Get the device agent
+	agent := dMgr.getDeviceAgent(ctx, config.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "device-%s", config.Id)
+	}
+
+	// Validate that this is a root device (typically OLT)
+	if !agent.isRootDevice {
+		return nil, status.Error(codes.InvalidArgument, "device-update-only-supported-for-olt-devices")
+	}
+
+	return &empty.Empty{}, agent.updateDevice(ctx, config)
+}
