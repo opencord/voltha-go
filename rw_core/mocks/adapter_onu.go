@@ -338,3 +338,9 @@ loop:
 	logger.Errorw(ctx, "connection-down", log.Fields{"remote-client": remoteClient, "error": err, "initial-conn-time": initialRequestTime})
 	return err
 }
+
+func (onuA *ONUAdapter) UpdateDevice(ctx context.Context, req *voltha.Device) (*empty.Empty, error) {
+	logger.Debugw(ctx, "UpdateDevice called", log.Fields{"device-config": req})
+	// You can add logic here to update the device in your mock if needed.
+	return &empty.Empty{}, nil
+}
