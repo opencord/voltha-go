@@ -89,7 +89,7 @@ WORKDIR /app
 
 # -------------
 # Image creation stage
-FROM gcr.io/distroless/static:nonroot as prod
+FROM gcr.io/distroless/static:nonroot AS prod
 
 # Set the working directory
 WORKDIR /app
