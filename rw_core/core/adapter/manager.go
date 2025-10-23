@@ -544,25 +544,6 @@ func (aMgr *Manager) SignalOnRxStreamCloseCh(ctx context.Context, endpoint strin
 	delete(aMgr.rxStreamCloseChMap, endpoint)
 }
 
-func (aMgr *Manager) WaitOnRxStreamCloseCh(ctx context.Context, endpoint string) {
-	var closeCh chan bool
-	ok := false
-	aMgr.rxStreamCloseChLock.RLock()
-	if closeCh, ok = aMgr.rxStreamCloseChMap[endpoint]; !ok {
-		logger.Warnw(ctx, "no entry on rxStreamCloseChMap", log.Fields{"endpoint": endpoint})
-		aMgr.rxStreamCloseChLock.RUnlock()
-		return
-	}
-	aMgr.rxStreamCloseChLock.RUnlock()
-
-	select {
-	case <-closeCh:
-		logger.Infow(ctx, "rx stream closed for endpoint", log.Fields{"endpoint": endpoint})
-	case <-time.After(60 * time.Second):
-		logger.Warnw(ctx, "timeout waiting for rx stream close", log.Fields{"endpoint": endpoint})
-	}
-}
-
 func (aMgr *Manager) getAgent(ctx context.Context, adapterID string) (*agent, error) {
 	aMgr.lockAdapterAgentsMap.RLock()
 	defer aMgr.lockAdapterAgentsMap.RUnlock()

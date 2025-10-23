@@ -866,9 +866,6 @@ func (dMgr *Manager) adapterRestartedHandler(ctx context.Context, endpoint strin
 	if a, _ := dMgr.adapterMgr.GetAdapterWithEndpoint(ctx, endpoint); a != nil {
 		if rollingUpdate, _ := dMgr.adapterMgr.GetRollingUpdate(ctx, endpoint); rollingUpdate {
 			dMgr.adapterMgr.RegisterOnRxStreamCloseChMap(ctx, endpoint)
-			// Blocking call. wait for the old adapters rx stream to close.
-			// That is a signal that the old adapter is completely down
-			dMgr.adapterMgr.WaitOnRxStreamCloseCh(ctx, endpoint)
 			dMgr.adapterMgr.DeleteRollingUpdate(ctx, endpoint)
 			// In case of rolling update we need to start the connection towards the new adapter instance now
 			if err := dMgr.adapterMgr.StartAdapterWithEndPoint(ctx, endpoint); err != nil {
