@@ -16,6 +16,41 @@
       "message": "\u003e Patch Set 1: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_unit-test-lint/3001/ : FAILURE\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_unit-test-tests/3003/ : SUCCESS\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_sanity-test/2121/ : SUCCESS\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_licensed/3255/ : SUCCESS\n\nrecheck",
       "revId": "c687a35687bc4b24cdf12dccf829652b7bf613a5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "febd6f33_755d149b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001019
+      },
+      "writtenOn": "2025-10-27T11:30:12Z",
+      "side": 1,
+      "message": "recheck",
+      "parentUuid": "9f917843_dd7a5f99",
+      "revId": "c687a35687bc4b24cdf12dccf829652b7bf613a5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6d423714_87da70db",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001019
+      },
+      "writtenOn": "2025-10-27T11:30:12Z",
+      "side": 1,
+      "message": "recheck",
+      "revId": "c687a35687bc4b24cdf12dccf829652b7bf613a5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
