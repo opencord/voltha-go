@@ -101,6 +101,17 @@ func (dMgr *Manager) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
+	if !agent.isRootDevice {
+		parentAgent := dMgr.getDeviceAgent(ctx, agent.device.ParentId)
+		if parentAgent != nil {
+			parentDevice := parentAgent.getDeviceReadOnlyWithoutLock()
+			if parentDevice.ConnectStatus != voltha.ConnectStatus_REACHABLE {
+				return nil, status.Errorf(codes.FailedPrecondition, "cannot complete operation as parent device :%s is in operstatus:%s ,connect-status:%s", parentAgent.deviceID, parentDevice.OperStatus, parentDevice.ConnectStatus)
+			}
+		} else {
+			return nil, status.Errorf(codes.NotFound, "device agent for parent id %s for child %s", agent.device.ParentId, id.Id)
+		}
+	}
 	return &empty.Empty{}, agent.rebootDevice(ctx)
 }
 
