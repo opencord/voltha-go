@@ -628,6 +628,11 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 
 	device := agent.getDeviceReadOnlyWithoutLock()
 
+	if device.ConnectStatus != voltha.ConnectStatus_REACHABLE {
+		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device :%s is in operstatus:%s ,connect-status:%s", agent.deviceID, device.OperStatus, device.ConnectStatus)
+		return err
+	}
+
 	if !agent.proceedWithRequest(device) {
 		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress or reconciling is in progress/failed:%s", agent.deviceID)
 		return err
