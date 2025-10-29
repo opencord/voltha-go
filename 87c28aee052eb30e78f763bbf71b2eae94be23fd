@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5571a6f5_09aefcc5",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 12
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001025
+      },
+      "writtenOn": "2025-10-29T13:11:53Z",
+      "side": 1,
+      "message": "\u003e Patch Set 11: Verified+1\n\u003e \n\u003e Build Successful \n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_licensed/3288/ : SUCCESS\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_unit-test-tests/3036/ : SUCCESS\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_sanity-test/2164/ : SUCCESS\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_unit-test-lint/3034/ : SUCCESS\n\nrecheck\n",
+      "revId": "87c28aee052eb30e78f763bbf71b2eae94be23fd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
