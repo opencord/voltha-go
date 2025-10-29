@@ -305,19 +305,27 @@ func (agent *Agent) onForceDeleteResponse(ctx context.Context, prevState, currSt
 
 // onDeleteSuccess is a common callback for scenarios where we receive a nil response following a delete request
 // to an adapter.
-func (agent *Agent) onDeleteSuccess(ctx context.Context, prevState, currState *common.AdminState_Types) {
+func (agent *Agent) onDeleteSuccess(ctx context.Context, prevState, currState *common.AdminState_Types) error {
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		logger.Errorw(ctx, "delete-device-failure", log.Fields{"device-id": agent.deviceID, "error": err})
+		return err
 	}
 	previousDeviceTransientState := agent.getTransientState()
 	newDevice := agent.cloneDeviceWithoutLock()
 	if err := agent.updateDeviceWithTransientStateAndReleaseLock(ctx, newDevice,
 		core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE, previousDeviceTransientState); err != nil {
+		ctx1, cancel1 := context.WithTimeout(context.Background(), agent.rpcTimeout)               // incase of ctx cancellation, updatetranscientstate will fail , so creating a new context for updating
+		if err1 := agent.updateTransientState(ctx1, core.DeviceTransientState_NONE); err1 != nil { // reset the device transient state if the transition handlers fail, so the next retry can go through
+			logger.Errorf(ctx, "failed-to-reset-transient-state-to-none: %s", err1)
+		}
+		cancel1()
 		logger.Errorw(ctx, "delete-device-failure", log.Fields{"device-id": agent.deviceID, "error": err})
+		return err
 	}
 	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}
 	desc := "adapter-response"
 	agent.logDeviceUpdate(ctx, prevState, currState, requestStatus, nil, desc)
+	return nil
 }
 
 // onDeleteFailure is a common callback for scenarios where we receive an error response following a delete request
@@ -754,6 +762,12 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 	// Update device and release lock
 	if err = agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device,
 		currentDeviceTransientState, previousDeviceTransientState); err != nil {
+		ctx1, cancel1 := context.WithTimeout(context.Background(), agent.rpcTimeout)               // incase of ctx cancellation, updatetranscientstate will fail , so creating a new context for updating
+		if err1 := agent.updateTransientState(ctx1, core.DeviceTransientState_NONE); err1 != nil { // reset the device transient state if the transition handlers fail, so the next retry can go through
+			logger.Errorf(ctx, "failed-to-reset-transient-state-to-none: %s", err1)
+		}
+		cancel1()
+
 		desc = err.Error()
 		return err
 	}
@@ -774,10 +788,12 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 		}
 		subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
 		requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
-		if _, err = client.DeleteDevice(subCtx, device); err != nil {
-			agent.onDeleteFailure(subCtx, err, &previousAdminState, &agent.device.AdminState)
+		_, err = client.DeleteDevice(subCtx, device)
+		if (err == nil) || (status.Code(err) == codes.NotFound) {
+			err = agent.onDeleteSuccess(subCtx, &previousAdminState, &agent.device.AdminState) // return error is the device transition update fails , so that northbound can retry
+
 		} else {
-			agent.onDeleteSuccess(subCtx, &previousAdminState, &agent.device.AdminState)
+			agent.onDeleteFailure(subCtx, err, &previousAdminState, &agent.device.AdminState)
 		}
 		cancel()
 	}
@@ -1084,6 +1100,7 @@ func (agent *Agent) updateDeviceWithTransientStateAndReleaseLock(ctx context.Con
 		rpce := agent.deviceMgr.NewRPCEvent(ctx, agent.deviceID, err.Error(), nil)
 		go agent.deviceMgr.SendRPCEvent(ctx, "RPC_ERROR_RAISE_EVENT", rpce, voltha.EventCategory_COMMUNICATION,
 			nil, time.Now().Unix())
+		return err
 	}
 
 	return nil
@@ -1137,7 +1154,7 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 	}
 	if err = agent.deviceMgr.canAdapterRequestProceed(ctx, agent.deviceID); err != nil {
 		logger.Errorw(ctx, "adapter-request-cannot-proceed", log.Fields{"device-id": agent.deviceID, "error": err})
-		return err
+		return nil // as we are returning the err for childdevice lost call , and canAdapterRequestProceed will fail for forceDeleteDevice of OLT , so returning nil here
 	}
 	// send request to adapter
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
