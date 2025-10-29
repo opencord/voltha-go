@@ -679,14 +679,18 @@ func (dMgr *Manager) setParentID(ctx context.Context, device *voltha.Device, par
 	return status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
-func (dMgr *Manager) getParentDevice(ctx context.Context, childDevice *voltha.Device) *voltha.Device {
+func (dMgr *Manager) getParentDevice(ctx context.Context, childDevice *voltha.Device) (*voltha.Device, error) {
 	//	Sanity check
 	if childDevice.Root {
 		// childDevice is the parent device
-		return childDevice
+		return childDevice, nil
 	}
-	parentDevice, _ := dMgr.getDeviceReadOnly(ctx, childDevice.ParentId)
-	return parentDevice
+	parentDevice, err := dMgr.getDeviceReadOnly(ctx, childDevice.ParentId)
+	if err != nil {
+		return nil, err
+	}
+	return parentDevice, nil
+
 }
 
 /*
