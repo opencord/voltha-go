@@ -2163,7 +2163,7 @@ func TestSuite(t *testing.T) {
 	if err != nil {
 		logger.Fatalf(ctx, "could not create CPU profile: %v\n ", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	runtime.SetBlockProfileRate(1)
 	runtime.SetMutexProfileFraction(-1)
 	runtime.SetCPUProfileRate(200)

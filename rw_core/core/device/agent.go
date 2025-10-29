@@ -33,7 +33,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/config"
-	"github.com/opencord/voltha-go/rw_core/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -1418,7 +1417,7 @@ func (agent *Agent) abortAllProcessing(ctx context.Context) error {
 
 func (agent *Agent) DeleteDevicePostAdapterRestart(ctx context.Context) error {
 	logger.Debugw(ctx, "delete-post-restart", log.Fields{"device-id": agent.deviceID})
-	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DelteDevicePostAdapterRestart")
+	ctx = coreutils.WithNewSpanAndRPCMetadataContext(ctx, "DelteDevicePostAdapterRestart")
 
 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		return err

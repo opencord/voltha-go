@@ -400,6 +400,8 @@ func getDeviceStates(device *voltha.Device, transientState core.DeviceTransientS
 }
 
 // isMatched matches a state transition. It returns whether there is a match and if there is whether it is an exact match
+//
+//nolint:gocyclo
 func getHandler(previous deviceState, current deviceState, transition *transition) ([]transitionHandler, *match) {
 	m := &match{}
 	var waitForOtherStatesMatch bool
