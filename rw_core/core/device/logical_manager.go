@@ -284,10 +284,12 @@ func (ldMgr *LogicalManager) getLogicalDeviceID(ctx context.Context, device *vol
 	//	retrieve parent device using child device ID
 	// TODO: return (string, have) instead of *string
 	//       also: If not root device, just return device.parentID instead of loading the parent device.
-	if parentDevice := ldMgr.deviceMgr.getParentDevice(ctx, device); parentDevice != nil {
+	parentDevice, err := ldMgr.deviceMgr.getParentDevice(ctx, device)
+	if parentDevice != nil && err == nil {
+
 		return &parentDevice.ParentId, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
+	return nil, status.Errorf(codes.NotFound, "LogicalDeviceId for %s NotFound with Error %v", device.Id, err)
 }
 
 func (ldMgr *LogicalManager) getLogicalDeviceIDFromDeviceID(ctx context.Context, deviceID string) (*string, error) {
