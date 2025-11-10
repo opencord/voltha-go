@@ -94,7 +94,7 @@ func NewGrpcServer(
 /*
 Start prepares the GRPC server and starts servicing requests
 */
-func (s *GrpcServer) Start(ctx context.Context) {
+func (s *GrpcServer) Start(ctx context.Context, opts ...grpc.ServerOption) {
 
 	lis, err := net.Listen("tcp", s.address)
 	if err != nil {
@@ -118,10 +118,10 @@ func (s *GrpcServer) Start(ctx context.Context) {
 		}
 
 		serverOptions = append(serverOptions, grpc.Creds(creds))
-		s.gs = grpc.NewServer(serverOptions...)
+		s.gs = grpc.NewServer(append(serverOptions, opts...)...)
 	} else {
 		logger.Info(ctx, "starting-insecure-grpc-server")
-		s.gs = grpc.NewServer(serverOptions...)
+		s.gs = grpc.NewServer(append(serverOptions, opts...)...)
 	}
 
 	// Register all required services

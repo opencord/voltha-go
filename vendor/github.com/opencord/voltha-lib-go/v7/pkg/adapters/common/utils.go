@@ -23,26 +23,26 @@ import (
 
 // GetRandomSerialNumber returns a serial number formatted as "HOST:PORT"
 func GetRandomSerialNumber() string {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return fmt.Sprintf("%d.%d.%d.%d:%d",
-		rand.Intn(255),
-		rand.Intn(255),
-		rand.Intn(255),
-		rand.Intn(255),
-		rand.Intn(9000)+1000,
+		r.Intn(255),
+		r.Intn(255),
+		r.Intn(255),
+		r.Intn(255),
+		r.Intn(9000)+1000,
 	)
 }
 
 // GetRandomMacAddress returns a random mac address
 func GetRandomMacAddress() string {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
-		rand.Intn(128),
-		rand.Intn(128),
-		rand.Intn(128),
-		rand.Intn(128),
-		rand.Intn(128),
-		rand.Intn(128),
+		r.Intn(128),
+		r.Intn(128),
+		r.Intn(128),
+		r.Intn(128),
+		r.Intn(128),
+		r.Intn(128),
 	)
 }
 

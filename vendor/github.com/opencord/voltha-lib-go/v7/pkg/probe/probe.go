@@ -240,7 +240,7 @@ func (p *Probe) detailzFunc(w http.ResponseWriter, req *http.Request) {
 	}
 	comma := ""
 	for c, s := range p.status {
-		if _, err := w.Write([]byte(fmt.Sprintf("%s\"%s\": \"%s\"", comma, c, s.String()))); err != nil {
+		if _, err := fmt.Fprintf(w, "%s\"%s\": \"%s\"", comma, c, s.String()); err != nil {
 			logger.Errorw(ctx, "write-response", log.Fields{"error": err})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
