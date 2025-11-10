@@ -20,10 +20,9 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
-	"go.etcd.io/etcd/embed"
+	"go.etcd.io/etcd/server/v3/embed"
 )
 
 const (
@@ -58,28 +57,26 @@ func MKConfig(ctx context.Context, configName string, clientPort, peerPort int, 
 	cfg := embed.NewConfig()
 	cfg.Name = configName
 	cfg.Dir = localPersistentStorageDir
-	// cfg.Logger = "zap"
+
 	if !islogLevelValid(logLevel) {
-		logger.Fatalf(ctx, "Invalid log level -%s", logLevel)
+		logger.Fatalf(ctx, "Invalid log level - %s", logLevel)
 	}
-	// cfg.LogLevel = logLevel
-	cfg.Debug = strings.EqualFold(logLevel, "debug")
-	cfg.LogPkgLevels = "*=C"
-	cfg.SetupLogging()
+
+	cfg.Logger = "zap"
 
 	acurl, err := url.Parse(fmt.Sprintf("http://localhost:%d", clientPort))
 	if err != nil {
-		logger.Fatalf(ctx, "Invalid client port -%d", clientPort)
+		logger.Fatalf(ctx, "Invalid client port - %d", clientPort)
 	}
-	cfg.ACUrls = []url.URL{*acurl}
-	cfg.LCUrls = []url.URL{*acurl}
+	cfg.ListenClientUrls = []url.URL{*acurl}
+	cfg.AdvertiseClientUrls = []url.URL{*acurl}
 
 	apurl, err := url.Parse(fmt.Sprintf("http://localhost:%d", peerPort))
 	if err != nil {
-		logger.Fatalf(ctx, "Invalid peer port -%d", peerPort)
+		logger.Fatalf(ctx, "Invalid peer port - %d", peerPort)
 	}
-	cfg.LPUrls = []url.URL{*apurl}
-	cfg.APUrls = []url.URL{*apurl}
+	cfg.ListenPeerUrls = []url.URL{*apurl}
+	cfg.AdvertisePeerUrls = []url.URL{*apurl}
 
 	cfg.ClusterState = embed.ClusterStateFlagNew
 	cfg.InitialCluster = cfg.Name + "=" + apurl.String()
@@ -90,9 +87,7 @@ func MKConfig(ctx context.Context, configName string, clientPort, peerPort int, 
 // getDefaultCfg specifies the default config
 func getDefaultCfg() *embed.Config {
 	cfg := embed.NewConfig()
-	cfg.Debug = false
-	cfg.LogPkgLevels = "*=C"
-	cfg.SetupLogging()
+	cfg.Logger = "zap"
 	cfg.Dir = defaultLocalPersistentStorage
 	return cfg
 }

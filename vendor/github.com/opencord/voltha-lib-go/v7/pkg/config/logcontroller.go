@@ -56,7 +56,7 @@ func NewComponentLogController(ctx context.Context, cm *ConfigManager) (*Compone
 	logger.Debug(ctx, "creating-new-component-log-controller")
 	componentName := os.Getenv("COMPONENT_NAME")
 	if componentName == "" {
-		return nil, errors.New("Unable to retrieve PoD Component Name from Runtime env")
+		return nil, errors.New("unable to retrieve PoD Component Name from Runtime env")
 	}
 
 	var defaultLogLevel string

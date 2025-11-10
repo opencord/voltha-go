@@ -10,7 +10,7 @@ import (
 )
 
 // Scan parses bytes `b` to `v` with appropriate type.
-// nolint: gocyclo
+//nolint:gocyclo
 func Scan(b []byte, v interface{}) error {
 	switch v := v.(type) {
 	case nil:
@@ -106,6 +106,13 @@ func Scan(b []byte, v interface{}) error {
 		var err error
 		*v, err = time.Parse(time.RFC3339Nano, util.BytesToString(b))
 		return err
+	case *time.Duration:
+		n, err := util.ParseInt(b, 10, 64)
+		if err != nil {
+			return err
+		}
+		*v = time.Duration(n)
+		return nil
 	case encoding.BinaryUnmarshaler:
 		return v.UnmarshalBinary(b)
 	default:
@@ -131,7 +138,7 @@ func ScanSlice(data []string, slice interface{}) error {
 	for i, s := range data {
 		elem := next()
 		if err := Scan([]byte(s), elem.Addr().Interface()); err != nil {
-			err = fmt.Errorf("redis: ScanSlice index=%d value=%q failed: %s", i, s, err)
+			err = fmt.Errorf("redis: ScanSlice index=%d value=%q failed: %w", i, s, err)
 			return err
 		}
 	}
