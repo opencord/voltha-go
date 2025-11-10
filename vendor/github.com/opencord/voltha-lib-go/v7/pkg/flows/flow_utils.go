@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+//nolint:staticcheck
 package flows
 
 import (
@@ -347,7 +348,14 @@ func UpdateOutputPortByActionType(flow *ofp.OfpFlowStats, actionType uint32, toP
 	if flow == nil {
 		return nil
 	}
-	nFlow := (proto.Clone(flow)).(*ofp.OfpFlowStats)
+	flowData, err := proto.Marshal(flow)
+	if err != nil {
+		return nil // Handle error appropriately
+	}
+	nFlow := &ofp.OfpFlowStats{}
+	if err := proto.Unmarshal(flowData, nFlow); err != nil {
+		return nil // Handle error appropriately
+	}
 	nFlow.Instructions = nil
 	nInsts := make([]*ofp.OfpInstruction, 0)
 	for _, instruction := range flow.Instructions {

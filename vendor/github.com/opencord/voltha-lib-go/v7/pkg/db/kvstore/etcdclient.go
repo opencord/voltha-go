@@ -25,8 +25,9 @@ import (
 	"time"
 
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
-	v3Client "go.etcd.io/etcd/clientv3"
-	v3rpcTypes "go.etcd.io/etcd/etcdserver/api/v3rpc/rpctypes"
+	v3rpcTypes "go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 const (
@@ -43,7 +44,7 @@ const (
 type EtcdClient struct {
 	pool               EtcdClientAllocator
 	watchedChannels    sync.Map
-	watchedClients     map[string]*v3Client.Client
+	watchedClients     map[string]*clientv3.Client
 	watchedClientsLock sync.RWMutex
 }
 
@@ -82,7 +83,7 @@ func NewEtcdCustomClient(ctx context.Context, addr string, timeout time.Duration
 	logger.Infow(ctx, "etcd-pool-created", log.Fields{"capacity": capacity, "max-usage": maxUsage})
 
 	return &EtcdClient{pool: pool,
-		watchedClients: make(map[string]*v3Client.Client),
+		watchedClients: make(map[string]*clientv3.Client),
 	}, nil
 }
 
@@ -101,6 +102,25 @@ func (c *EtcdClient) IsConnectionUp(ctx context.Context) bool {
 	return true
 }
 
+// KeyExists returns boolean value based on the existence of the key in kv-store. Timeout defines how long the function will
+// wait for a response
+func (c *EtcdClient) KeyExists(ctx context.Context, key string) (bool, error) {
+	client, err := c.pool.Get(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer c.pool.Put(client)
+	resp, err := client.Get(ctx, key, clientv3.WithKeysOnly(), clientv3.WithCountOnly())
+	if err != nil {
+		logger.Error(ctx, err)
+		return false, err
+	}
+	if resp.Count > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
 // List returns an array of key-value pairs with key as a prefix.  Timeout defines how long the function will
 // wait for a response
 func (c *EtcdClient) List(ctx context.Context, key string) (map[string]*KVPair, error) {
@@ -109,7 +129,7 @@ func (c *EtcdClient) List(ctx context.Context, key string) (map[string]*KVPair, 
 		return nil, err
 	}
 	defer c.pool.Put(client)
-	resp, err := client.Get(ctx, key, v3Client.WithPrefix())
+	resp, err := client.Get(ctx, key, clientv3.WithPrefix())
 
 	if err != nil {
 		logger.Error(ctx, err)
@@ -182,7 +202,7 @@ func (c *EtcdClient) GetWithPrefix(ctx context.Context, prefixKey string) (map[s
 	defer c.pool.Put(client)
 
 	// Fetch keys with the prefix
-	resp, err := client.Get(ctx, prefixKey, v3Client.WithPrefix())
+	resp, err := client.Get(ctx, prefixKey, clientv3.WithPrefix())
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch entries for prefix %s: %w", prefixKey, err)
 	}
@@ -208,7 +228,7 @@ func (c *EtcdClient) GetWithPrefixKeysOnly(ctx context.Context, prefixKey string
 	defer c.pool.Put(client)
 
 	// Fetch keys with the prefix
-	resp, err := client.Get(ctx, prefixKey, v3Client.WithPrefix(), v3Client.WithKeysOnly())
+	resp, err := client.Get(ctx, prefixKey, clientv3.WithPrefix(), clientv3.WithKeysOnly())
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch entries for prefix %s: %w", prefixKey, err)
 	}
@@ -327,7 +347,7 @@ func (c *EtcdClient) DeleteWithPrefix(ctx context.Context, prefixKey string) err
 	defer c.pool.Put(client)
 
 	//delete the prefix
-	if _, err := client.Delete(ctx, prefixKey, v3Client.WithPrefix()); err != nil {
+	if _, err := client.Delete(ctx, prefixKey, clientv3.WithPrefix()); err != nil {
 		logger.Errorw(ctx, "failed-to-delete-prefix-key", log.Fields{"key": prefixKey, "error": err})
 		return err
 	}
@@ -353,11 +373,11 @@ func (c *EtcdClient) Watch(ctx context.Context, key string, withPrefix bool) cha
 	}
 	c.watchedClientsLock.Unlock()
 
-	w := v3Client.NewWatcher(client)
+	w := clientv3.NewWatcher(client)
 	ctx, cancel := context.WithCancel(ctx)
-	var channel v3Client.WatchChan
+	var channel clientv3.WatchChan
 	if withPrefix {
-		channel = w.Watch(ctx, key, v3Client.WithPrefix())
+		channel = w.Watch(ctx, key, clientv3.WithPrefix())
 	} else {
 		channel = w.Watch(ctx, key)
 	}
@@ -366,7 +386,7 @@ func (c *EtcdClient) Watch(ctx context.Context, key string, withPrefix bool) cha
 	ch := make(chan *Event, maxClientChannelBufferSize)
 
 	// Keep track of the created channels so they can be closed when required
-	channelMap := make(map[chan *Event]v3Client.Watcher)
+	channelMap := make(map[chan *Event]clientv3.Watcher)
 	channelMap[ch] = w
 	channelMaps := c.addChannelMap(key, channelMap)
 
@@ -380,33 +400,33 @@ func (c *EtcdClient) Watch(ctx context.Context, key string, withPrefix bool) cha
 
 }
 
-func (c *EtcdClient) addChannelMap(key string, channelMap map[chan *Event]v3Client.Watcher) []map[chan *Event]v3Client.Watcher {
+func (c *EtcdClient) addChannelMap(key string, channelMap map[chan *Event]clientv3.Watcher) []map[chan *Event]clientv3.Watcher {
 	var channels interface{}
 	var exists bool
 
 	if channels, exists = c.watchedChannels.Load(key); exists {
-		channels = append(channels.([]map[chan *Event]v3Client.Watcher), channelMap)
+		channels = append(channels.([]map[chan *Event]clientv3.Watcher), channelMap)
 	} else {
-		channels = []map[chan *Event]v3Client.Watcher{channelMap}
+		channels = []map[chan *Event]clientv3.Watcher{channelMap}
 	}
 	c.watchedChannels.Store(key, channels)
 
-	return channels.([]map[chan *Event]v3Client.Watcher)
+	return channels.([]map[chan *Event]clientv3.Watcher)
 }
 
-func (c *EtcdClient) removeChannelMap(key string, pos int) []map[chan *Event]v3Client.Watcher {
+func (c *EtcdClient) removeChannelMap(key string, pos int) []map[chan *Event]clientv3.Watcher {
 	var channels interface{}
 	var exists bool
 
 	if channels, exists = c.watchedChannels.Load(key); exists {
-		channels = append(channels.([]map[chan *Event]v3Client.Watcher)[:pos], channels.([]map[chan *Event]v3Client.Watcher)[pos+1:]...)
+		channels = append(channels.([]map[chan *Event]clientv3.Watcher)[:pos], channels.([]map[chan *Event]clientv3.Watcher)[pos+1:]...)
 		c.watchedChannels.Store(key, channels)
 	}
 
-	return channels.([]map[chan *Event]v3Client.Watcher)
+	return channels.([]map[chan *Event]clientv3.Watcher)
 }
 
-func (c *EtcdClient) getChannelMaps(key string) ([]map[chan *Event]v3Client.Watcher, bool) {
+func (c *EtcdClient) getChannelMaps(key string) ([]map[chan *Event]clientv3.Watcher, bool) {
 	var channels interface{}
 	var exists bool
 
@@ -416,14 +436,14 @@ func (c *EtcdClient) getChannelMaps(key string) ([]map[chan *Event]v3Client.Watc
 		return nil, exists
 	}
 
-	return channels.([]map[chan *Event]v3Client.Watcher), exists
+	return channels.([]map[chan *Event]clientv3.Watcher), exists
 }
 
 // CloseWatch closes a specific watch. Both the key and the channel are required when closing a watch as there
 // may be multiple listeners on the same key.  The previously created channel serves as a key
 func (c *EtcdClient) CloseWatch(ctx context.Context, key string, ch chan *Event) {
 	// Get the array of channels mapping
-	var watchedChannels []map[chan *Event]v3Client.Watcher
+	var watchedChannels []map[chan *Event]clientv3.Watcher
 	var ok bool
 
 	if watchedChannels, ok = c.getChannelMaps(key); !ok {
@@ -463,7 +483,7 @@ func (c *EtcdClient) CloseWatch(ctx context.Context, key string, ch chan *Event)
 	logger.Infow(ctx, "watcher-channel-exiting", log.Fields{"key": key, "channel": channelMaps})
 }
 
-func (c *EtcdClient) listenForKeyChange(ctx context.Context, channel v3Client.WatchChan, ch chan<- *Event, cancel context.CancelFunc) {
+func (c *EtcdClient) listenForKeyChange(ctx context.Context, channel clientv3.WatchChan, ch chan<- *Event, cancel context.CancelFunc) {
 	logger.Debug(ctx, "start-listening-on-channel ...")
 	defer cancel()
 	defer close(ch)
@@ -475,11 +495,11 @@ func (c *EtcdClient) listenForKeyChange(ctx context.Context, channel v3Client.Wa
 	logger.Debug(ctx, "stop-listening-on-channel ...")
 }
 
-func getEventType(event *v3Client.Event) int {
+func getEventType(event *clientv3.Event) int {
 	switch event.Type {
-	case v3Client.EventTypePut:
+	case clientv3.EventTypePut:
 		return PUT
-	case v3Client.EventTypeDelete:
+	case clientv3.EventTypeDelete:
 		return DELETE
 	}
 	return UNKNOWN

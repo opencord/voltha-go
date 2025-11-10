@@ -179,6 +179,21 @@ func (b *Backend) isErrorIndicatingAliveKvstore(err error) bool {
 	return alive
 }
 
+// KeyExists checks if the specified key exists in kv-store or not
+func (b *Backend) KeyExists(ctx context.Context, key string) (bool, error) {
+	span, ctx := log.CreateChildSpan(ctx, "kvs-key-exists")
+	defer span.Finish()
+
+	formattedPath := b.makePath(ctx, key)
+	logger.Debugw(ctx, "checking-key-exists", log.Fields{"key": key, "path": formattedPath})
+
+	keyExists, err := b.Client.KeyExists(ctx, formattedPath)
+
+	b.updateLiveness(ctx, b.isErrorIndicatingAliveKvstore(err))
+
+	return keyExists, err
+}
+
 // List retrieves one or more items that match the specified key
 func (b *Backend) List(ctx context.Context, key string) (map[string]*kvstore.KVPair, error) {
 	span, ctx := log.CreateChildSpan(ctx, "kvs-list")

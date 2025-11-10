@@ -18,6 +18,7 @@
 * release 2.9.  It is no longer used for inter voltha container
 * communication.
  */
+//nolint:staticcheck
 package kafka
 
 import (
