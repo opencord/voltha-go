@@ -25,8 +25,9 @@ import (
 	"time"
 
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
-	v3Client "go.etcd.io/etcd/clientv3"
-	v3rpcTypes "go.etcd.io/etcd/etcdserver/api/v3rpc/rpctypes"
+	v3rpcTypes "go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 const (
@@ -35,15 +36,17 @@ const (
 )
 
 const (
-	defaultMaxPoolCapacity = 1000 // Default size of an Etcd Client pool
-	defaultMaxPoolUsage    = 100  // Maximum concurrent request an Etcd Client is allowed to process
+	defaultMaxPoolCapacity         = 1000            // Default size of an Etcd Client pool
+	defaultMaxPoolUsage            = 100             // Maximum concurrent request an Etcd Client is allowed to process
+	defaultMaxAttempts             = 10              // Default number of attempts to retry an operation
+	defaultOperationContextTimeout = 3 * time.Second // Default context timeout for operations
 )
 
 // EtcdClient represents the Etcd KV store client
 type EtcdClient struct {
 	pool               EtcdClientAllocator
 	watchedChannels    sync.Map
-	watchedClients     map[string]*v3Client.Client
+	watchedClients     map[string]*clientv3.Client
 	watchedClientsLock sync.RWMutex
 }
 
@@ -82,7 +85,7 @@ func NewEtcdCustomClient(ctx context.Context, addr string, timeout time.Duration
 	logger.Infow(ctx, "etcd-pool-created", log.Fields{"capacity": capacity, "max-usage": maxUsage})
 
 	return &EtcdClient{pool: pool,
-		watchedClients: make(map[string]*v3Client.Client),
+		watchedClients: make(map[string]*clientv3.Client),
 	}, nil
 }
 
@@ -101,6 +104,25 @@ func (c *EtcdClient) IsConnectionUp(ctx context.Context) bool {
 	return true
 }
 
+// KeyExists returns boolean value based on the existence of the key in kv-store. Timeout defines how long the function will
+// wait for a response
+func (c *EtcdClient) KeyExists(ctx context.Context, key string) (bool, error) {
+	client, err := c.pool.Get(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer c.pool.Put(client)
+	resp, err := client.Get(ctx, key, clientv3.WithKeysOnly(), clientv3.WithCountOnly())
+	if err != nil {
+		logger.Error(ctx, err)
+		return false, err
+	}
+	if resp.Count > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
 // List returns an array of key-value pairs with key as a prefix.  Timeout defines how long the function will
 // wait for a response
 func (c *EtcdClient) List(ctx context.Context, key string) (map[string]*KVPair, error) {
@@ -109,7 +131,7 @@ func (c *EtcdClient) List(ctx context.Context, key string) (map[string]*KVPair, 
 		return nil, err
 	}
 	defer c.pool.Put(client)
-	resp, err := client.Get(ctx, key, v3Client.WithPrefix())
+	resp, err := client.Get(ctx, key, clientv3.WithPrefix())
 
 	if err != nil {
 		logger.Error(ctx, err)
@@ -132,35 +154,49 @@ func (c *EtcdClient) Get(ctx context.Context, key string) (*KVPair, error) {
 	defer c.pool.Put(client)
 
 	attempt := 0
-
 startLoop:
 	for {
-		resp, err := client.Get(ctx, key)
+		retryCtx, cancel := context.WithTimeout(ctx, defaultOperationContextTimeout)
+		resp, err := client.Get(retryCtx, key)
+		cancel()
+		if attempt >= defaultMaxAttempts {
+			logger.Warnw(ctx, "get-retries-exceeded", log.Fields{"key": key, "error": err, "attempt": attempt})
+			return nil, err
+		}
 		if err != nil {
 			switch err {
 			case context.Canceled:
+				// Check if the parent context was cancelled, if so don't retry
+				if ctx.Err() != nil {
+					logger.Warnw(ctx, "parent-context-cancelled", log.Fields{"error": err})
+					return nil, err
+				}
+				// Otherwise retry
 				logger.Warnw(ctx, "context-cancelled", log.Fields{"error": err})
 			case context.DeadlineExceeded:
-				logger.Warnw(ctx, "context-deadline-exceeded", log.Fields{"error": err, "context": ctx})
+				logger.Warnw(ctx, "context-deadline-exceeded", log.Fields{"error": err, "attempt": attempt})
 			case v3rpcTypes.ErrEmptyKey:
 				logger.Warnw(ctx, "etcd-client-error", log.Fields{"error": err})
+				return nil, err
 			case v3rpcTypes.ErrLeaderChanged,
 				v3rpcTypes.ErrGRPCNoLeader,
 				v3rpcTypes.ErrTimeout,
 				v3rpcTypes.ErrTimeoutDueToLeaderFail,
 				v3rpcTypes.ErrTimeoutDueToConnectionLost:
 				// Retry for these server errors
-				attempt += 1
-				if er := backoff(ctx, attempt); er != nil {
-					logger.Warnw(ctx, "get-retries-failed", log.Fields{"key": key, "error": er, "attempt": attempt})
-					return nil, err
-				}
-				logger.Warnw(ctx, "retrying-get", log.Fields{"key": key, "error": err, "attempt": attempt})
-				goto startLoop
-			default:
 				logger.Warnw(ctx, "etcd-server-error", log.Fields{"error": err})
+			default:
+				logger.Warnw(ctx, "etcd-unknown-error", log.Fields{"error": err})
 			}
-			return nil, err
+
+			// Common retry logic for all error cases
+			attempt++
+			if er := backoff(ctx, attempt); er != nil {
+				logger.Warnw(ctx, "get-retries-failed", log.Fields{"key": key, "error": er, "attempt": attempt})
+				return nil, err
+			}
+			logger.Warnw(ctx, "retrying-get", log.Fields{"key": key, "error": err, "attempt": attempt})
+			goto startLoop
 		}
 
 		for _, ev := range resp.Kvs {
@@ -182,7 +218,7 @@ func (c *EtcdClient) GetWithPrefix(ctx context.Context, prefixKey string) (map[s
 	defer c.pool.Put(client)
 
 	// Fetch keys with the prefix
-	resp, err := client.Get(ctx, prefixKey, v3Client.WithPrefix())
+	resp, err := client.Get(ctx, prefixKey, clientv3.WithPrefix())
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch entries for prefix %s: %w", prefixKey, err)
 	}
@@ -208,7 +244,7 @@ func (c *EtcdClient) GetWithPrefixKeysOnly(ctx context.Context, prefixKey string
 	defer c.pool.Put(client)
 
 	// Fetch keys with the prefix
-	resp, err := client.Get(ctx, prefixKey, v3Client.WithPrefix(), v3Client.WithKeysOnly())
+	resp, err := client.Get(ctx, prefixKey, clientv3.WithPrefix(), clientv3.WithKeysOnly())
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch entries for prefix %s: %w", prefixKey, err)
 	}
@@ -226,7 +262,6 @@ func (c *EtcdClient) GetWithPrefixKeysOnly(ctx context.Context, prefixKey string
 // accepts only a string as a value for a put operation. Timeout defines how long the function will
 // wait for a response
 func (c *EtcdClient) Put(ctx context.Context, key string, value interface{}) error {
-
 	// Validate that we can convert value to a string as etcd API expects a string
 	var val string
 	var err error
@@ -243,32 +278,47 @@ func (c *EtcdClient) Put(ctx context.Context, key string, value interface{}) err
 	attempt := 0
 startLoop:
 	for {
-		_, err = client.Put(ctx, key, val)
+		retryCtx, cancel := context.WithTimeout(ctx, defaultOperationContextTimeout)
+		_, err = client.Put(retryCtx, key, val)
+		cancel()
+		if attempt >= defaultMaxAttempts {
+			logger.Warnw(ctx, "put-retries-exceeded", log.Fields{"key": key, "error": err, "attempt": attempt})
+			return err
+		}
 		if err != nil {
 			switch err {
 			case context.Canceled:
+				// Check if the parent context was cancelled, if so don't retry
+				if ctx.Err() != nil {
+					logger.Warnw(ctx, "parent-context-cancelled", log.Fields{"error": err})
+					return err
+				}
+				// Otherwise retry
 				logger.Warnw(ctx, "context-cancelled", log.Fields{"error": err})
 			case context.DeadlineExceeded:
-				logger.Warnw(ctx, "context-deadline-exceeded", log.Fields{"error": err, "context": ctx})
+				logger.Warnw(ctx, "context-deadline-exceeded", log.Fields{"error": err, "attempt": attempt})
 			case v3rpcTypes.ErrEmptyKey:
 				logger.Warnw(ctx, "etcd-client-error", log.Fields{"error": err})
+				return err
 			case v3rpcTypes.ErrLeaderChanged,
 				v3rpcTypes.ErrGRPCNoLeader,
 				v3rpcTypes.ErrTimeout,
 				v3rpcTypes.ErrTimeoutDueToLeaderFail,
 				v3rpcTypes.ErrTimeoutDueToConnectionLost:
 				// Retry for these server errors
-				attempt += 1
-				if er := backoff(ctx, attempt); er != nil {
-					logger.Warnw(ctx, "put-retries-failed", log.Fields{"key": key, "error": er, "attempt": attempt})
-					return err
-				}
-				logger.Warnw(ctx, "retrying-put", log.Fields{"key": key, "error": err, "attempt": attempt})
-				goto startLoop
-			default:
 				logger.Warnw(ctx, "etcd-server-error", log.Fields{"error": err})
+			default:
+				logger.Warnw(ctx, "etcd-unknown-error", log.Fields{"error": err})
 			}
-			return err
+
+			// Common retry logic for all error cases
+			attempt++
+			if er := backoff(ctx, attempt); er != nil {
+				logger.Warnw(ctx, "put-retries-failed", log.Fields{"key": key, "error": er, "attempt": attempt})
+				return err
+			}
+			logger.Warnw(ctx, "retrying-put", log.Fields{"key": key, "error": err, "attempt": attempt})
+			goto startLoop
 		}
 		return nil
 	}
@@ -286,32 +336,47 @@ func (c *EtcdClient) Delete(ctx context.Context, key string) error {
 	attempt := 0
 startLoop:
 	for {
-		_, err = client.Delete(ctx, key)
+		retryCtx, cancel := context.WithTimeout(ctx, defaultOperationContextTimeout)
+		_, err = client.Delete(retryCtx, key)
+		cancel()
+		if attempt >= defaultMaxAttempts {
+			logger.Warnw(ctx, "delete-retries-exceeded", log.Fields{"key": key, "error": err, "attempt": attempt})
+			return err
+		}
 		if err != nil {
 			switch err {
 			case context.Canceled:
+				// Check if the parent context was cancelled, if so don't retry
+				if ctx.Err() != nil {
+					logger.Warnw(ctx, "parent-context-cancelled", log.Fields{"error": err})
+					return err
+				}
+				// Otherwise retry
 				logger.Warnw(ctx, "context-cancelled", log.Fields{"error": err})
 			case context.DeadlineExceeded:
-				logger.Warnw(ctx, "context-deadline-exceeded", log.Fields{"error": err, "context": ctx})
+				logger.Warnw(ctx, "context-deadline-exceeded", log.Fields{"error": err, "attempt": attempt})
 			case v3rpcTypes.ErrEmptyKey:
 				logger.Warnw(ctx, "etcd-client-error", log.Fields{"error": err})
+				return err
 			case v3rpcTypes.ErrLeaderChanged,
 				v3rpcTypes.ErrGRPCNoLeader,
 				v3rpcTypes.ErrTimeout,
 				v3rpcTypes.ErrTimeoutDueToLeaderFail,
 				v3rpcTypes.ErrTimeoutDueToConnectionLost:
 				// Retry for these server errors
-				attempt += 1
-				if er := backoff(ctx, attempt); er != nil {
-					logger.Warnw(ctx, "delete-retries-failed", log.Fields{"key": key, "error": er, "attempt": attempt})
-					return err
-				}
-				logger.Warnw(ctx, "retrying-delete", log.Fields{"key": key, "error": err, "attempt": attempt})
-				goto startLoop
-			default:
 				logger.Warnw(ctx, "etcd-server-error", log.Fields{"error": err})
+			default:
+				logger.Warnw(ctx, "etcd-unknown-error", log.Fields{"error": err})
 			}
-			return err
+
+			// Common retry logic for all error cases
+			attempt++
+			if er := backoff(ctx, attempt); er != nil {
+				logger.Warnw(ctx, "delete-retries-failed", log.Fields{"key": key, "error": er, "attempt": attempt})
+				return err
+			}
+			logger.Warnw(ctx, "retrying-delete", log.Fields{"key": key, "error": err, "attempt": attempt})
+			goto startLoop
 		}
 		logger.Debugw(ctx, "key(s)-deleted", log.Fields{"key": key})
 		return nil
@@ -327,7 +392,7 @@ func (c *EtcdClient) DeleteWithPrefix(ctx context.Context, prefixKey string) err
 	defer c.pool.Put(client)
 
 	//delete the prefix
-	if _, err := client.Delete(ctx, prefixKey, v3Client.WithPrefix()); err != nil {
+	if _, err := client.Delete(ctx, prefixKey, clientv3.WithPrefix()); err != nil {
 		logger.Errorw(ctx, "failed-to-delete-prefix-key", log.Fields{"key": prefixKey, "error": err})
 		return err
 	}
@@ -353,11 +418,11 @@ func (c *EtcdClient) Watch(ctx context.Context, key string, withPrefix bool) cha
 	}
 	c.watchedClientsLock.Unlock()
 
-	w := v3Client.NewWatcher(client)
+	w := clientv3.NewWatcher(client)
 	ctx, cancel := context.WithCancel(ctx)
-	var channel v3Client.WatchChan
+	var channel clientv3.WatchChan
 	if withPrefix {
-		channel = w.Watch(ctx, key, v3Client.WithPrefix())
+		channel = w.Watch(ctx, key, clientv3.WithPrefix())
 	} else {
 		channel = w.Watch(ctx, key)
 	}
@@ -366,7 +431,7 @@ func (c *EtcdClient) Watch(ctx context.Context, key string, withPrefix bool) cha
 	ch := make(chan *Event, maxClientChannelBufferSize)
 
 	// Keep track of the created channels so they can be closed when required
-	channelMap := make(map[chan *Event]v3Client.Watcher)
+	channelMap := make(map[chan *Event]clientv3.Watcher)
 	channelMap[ch] = w
 	channelMaps := c.addChannelMap(key, channelMap)
 
@@ -380,33 +445,33 @@ func (c *EtcdClient) Watch(ctx context.Context, key string, withPrefix bool) cha
 
 }
 
-func (c *EtcdClient) addChannelMap(key string, channelMap map[chan *Event]v3Client.Watcher) []map[chan *Event]v3Client.Watcher {
+func (c *EtcdClient) addChannelMap(key string, channelMap map[chan *Event]clientv3.Watcher) []map[chan *Event]clientv3.Watcher {
 	var channels interface{}
 	var exists bool
 
 	if channels, exists = c.watchedChannels.Load(key); exists {
-		channels = append(channels.([]map[chan *Event]v3Client.Watcher), channelMap)
+		channels = append(channels.([]map[chan *Event]clientv3.Watcher), channelMap)
 	} else {
-		channels = []map[chan *Event]v3Client.Watcher{channelMap}
+		channels = []map[chan *Event]clientv3.Watcher{channelMap}
 	}
 	c.watchedChannels.Store(key, channels)
 
-	return channels.([]map[chan *Event]v3Client.Watcher)
+	return channels.([]map[chan *Event]clientv3.Watcher)
 }
 
-func (c *EtcdClient) removeChannelMap(key string, pos int) []map[chan *Event]v3Client.Watcher {
+func (c *EtcdClient) removeChannelMap(key string, pos int) []map[chan *Event]clientv3.Watcher {
 	var channels interface{}
 	var exists bool
 
 	if channels, exists = c.watchedChannels.Load(key); exists {
-		channels = append(channels.([]map[chan *Event]v3Client.Watcher)[:pos], channels.([]map[chan *Event]v3Client.Watcher)[pos+1:]...)
+		channels = append(channels.([]map[chan *Event]clientv3.Watcher)[:pos], channels.([]map[chan *Event]clientv3.Watcher)[pos+1:]...)
 		c.watchedChannels.Store(key, channels)
 	}
 
-	return channels.([]map[chan *Event]v3Client.Watcher)
+	return channels.([]map[chan *Event]clientv3.Watcher)
 }
 
-func (c *EtcdClient) getChannelMaps(key string) ([]map[chan *Event]v3Client.Watcher, bool) {
+func (c *EtcdClient) getChannelMaps(key string) ([]map[chan *Event]clientv3.Watcher, bool) {
 	var channels interface{}
 	var exists bool
 
@@ -416,14 +481,14 @@ func (c *EtcdClient) getChannelMaps(key string) ([]map[chan *Event]v3Client.Watc
 		return nil, exists
 	}
 
-	return channels.([]map[chan *Event]v3Client.Watcher), exists
+	return channels.([]map[chan *Event]clientv3.Watcher), exists
 }
 
 // CloseWatch closes a specific watch. Both the key and the channel are required when closing a watch as there
 // may be multiple listeners on the same key.  The previously created channel serves as a key
 func (c *EtcdClient) CloseWatch(ctx context.Context, key string, ch chan *Event) {
 	// Get the array of channels mapping
-	var watchedChannels []map[chan *Event]v3Client.Watcher
+	var watchedChannels []map[chan *Event]clientv3.Watcher
 	var ok bool
 
 	if watchedChannels, ok = c.getChannelMaps(key); !ok {
@@ -463,7 +528,7 @@ func (c *EtcdClient) CloseWatch(ctx context.Context, key string, ch chan *Event)
 	logger.Infow(ctx, "watcher-channel-exiting", log.Fields{"key": key, "channel": channelMaps})
 }
 
-func (c *EtcdClient) listenForKeyChange(ctx context.Context, channel v3Client.WatchChan, ch chan<- *Event, cancel context.CancelFunc) {
+func (c *EtcdClient) listenForKeyChange(ctx context.Context, channel clientv3.WatchChan, ch chan<- *Event, cancel context.CancelFunc) {
 	logger.Debug(ctx, "start-listening-on-channel ...")
 	defer cancel()
 	defer close(ch)
@@ -475,11 +540,11 @@ func (c *EtcdClient) listenForKeyChange(ctx context.Context, channel v3Client.Wa
 	logger.Debug(ctx, "stop-listening-on-channel ...")
 }
 
-func getEventType(event *v3Client.Event) int {
+func getEventType(event *clientv3.Event) int {
 	switch event.Type {
-	case v3Client.EventTypePut:
+	case clientv3.EventTypePut:
 		return PUT
-	case v3Client.EventTypeDelete:
+	case clientv3.EventTypeDelete:
 		return DELETE
 	}
 	return UNKNOWN
