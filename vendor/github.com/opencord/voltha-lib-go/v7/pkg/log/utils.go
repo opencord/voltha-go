@@ -23,13 +23,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opentracing/opentracing-go"
-	jtracing "github.com/uber/jaeger-client-go"
-	jcfg "github.com/uber/jaeger-client-go/config"
 	"io"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/opentracing/opentracing-go"
+	jtracing "github.com/uber/jaeger-client-go"
+	jcfg "github.com/uber/jaeger-client-go/config"
 )
 
 const (
@@ -103,7 +104,7 @@ func (c traceCloser) Close() error {
 func (lfm *LogFeaturesManager) InitTracingAndLogCorrelation(tracePublishEnabled bool, traceAgentAddress string, logCorrelationEnabled bool) (io.Closer, error) {
 	lfm.componentName = os.Getenv("COMPONENT_NAME")
 	if lfm.componentName == "" {
-		return nil, errors.New("Unable to retrieve PoD Component Name from Runtime env")
+		return nil, errors.New("unable to retrieve PoD Component Name from Runtime env")
 	}
 
 	lfm.lock.Lock()

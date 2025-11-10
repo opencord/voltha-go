@@ -25,6 +25,7 @@ import (
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"github.com/jhump/protoreflect/grpcreflect"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
@@ -57,6 +58,12 @@ const (
 	DefaultBackoffMaxInterval     = 5 * time.Second
 	DefaultBackoffMaxElapsedTime  = 0 * time.Second // No time limit
 	DefaultGRPCMonitorInterval    = 5 * time.Second
+)
+
+const (
+	// [VOL-5434] Setting max receive message size to 20 MB,
+	// Default value of 'defaultServerMaxReceiveMessageSize' is 4 MB
+	grpcRecvMsgSizeLimit = 20
 )
 
 const (
@@ -605,15 +612,21 @@ func (c *Client) connectToEndpoint(ctx context.Context, p *probe.Probe, retry_in
 	// 1. automatically inject
 	// 2. publish Open Tracing Spans by this GRPC Client
 	// 3. detect connection failure on client calls such that the reconnection process can begin
-	interceptor_opts := []grpc.UnaryClientInterceptor{grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(log.ActiveTracerProxy{}))}
+	interceptor_opts := []grpc.UnaryClientInterceptor{
+		grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(log.ActiveTracerProxy{})),
+		grpc_prometheus.UnaryClientInterceptor,
+	}
 
+	grpc_prometheus.EnableClientHandlingTimeHistogram()
 	if len(retry_interceptor) > 0 {
 		interceptor_opts = append(interceptor_opts, retry_interceptor...)
 	}
 	conn, err := grpc.Dial(c.serverEndPoint,
 		grpc.WithInsecure(),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(grpcRecvMsgSizeLimit*1024*1024)),
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
 			grpc_opentracing.StreamClientInterceptor(grpc_opentracing.WithTracer(log.ActiveTracerProxy{})),
+			grpc_prometheus.StreamClientInterceptor,
 		)),
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(interceptor_opts...)),
 	)
