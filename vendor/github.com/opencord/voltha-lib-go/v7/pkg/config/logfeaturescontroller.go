@@ -44,7 +44,7 @@ func NewComponentLogFeaturesController(ctx context.Context, cm *ConfigManager) (
 	logger.Debug(ctx, "creating-new-component-log-features-controller")
 	componentName := os.Getenv("COMPONENT_NAME")
 	if componentName == "" {
-		return nil, errors.New("Unable to retrieve PoD Component Name from Runtime env")
+		return nil, errors.New("unable to retrieve PoD Component Name from Runtime env")
 	}
 
 	tracingStatus := log.GetGlobalLFM().GetTracePublishingStatus()

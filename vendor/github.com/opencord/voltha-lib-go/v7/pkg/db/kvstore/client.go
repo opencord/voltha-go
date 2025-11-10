@@ -75,6 +75,7 @@ func NewEvent(eventType int, key interface{}, value interface{}, version int64) 
 // Client represents the set of APIs a KV Client must implement
 type Client interface {
 	List(ctx context.Context, key string) (map[string]*KVPair, error)
+	KeyExists(ctx context.Context, key string) (bool, error)
 	Get(ctx context.Context, key string) (*KVPair, error)
 	GetWithPrefix(ctx context.Context, prefixKey string) (map[string]*KVPair, error)
 	GetWithPrefixKeysOnly(ctx context.Context, prefixKey string) ([]string, error)

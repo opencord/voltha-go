@@ -120,6 +120,19 @@ func (c *RedisClient) scanAllKeysWithPrefix(ctx context.Context, key string) ([]
 	return allkeys, nil
 }
 
+func (c *RedisClient) KeyExists(ctx context.Context, key string) (bool, error) {
+	var err error
+	var keyCount int64
+
+	if keyCount, err = c.redisAPI.Exists(ctx, key).Result(); err != nil {
+		return false, err
+	}
+	if keyCount > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
 func (c *RedisClient) List(ctx context.Context, key string) (map[string]*KVPair, error) {
 	var err error
 	var keys []string

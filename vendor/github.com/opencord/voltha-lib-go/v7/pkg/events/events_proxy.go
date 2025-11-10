@@ -128,8 +128,8 @@ func (ep *EventProxy) SendDeviceEvent(ctx context.Context, deviceEvent *voltha.D
 /* Send out device events with key*/
 func (ep *EventProxy) SendDeviceEventWithKey(ctx context.Context, deviceEvent *voltha.DeviceEvent, category eventif.EventCategory, subCategory eventif.EventSubCategory, raisedTs int64, key string) error {
 	if deviceEvent == nil {
-		logger.Error(ctx, "Recieved empty device event")
-		return errors.New("Device event nil")
+		logger.Error(ctx, "recieved empty device event")
+		return errors.New("device event nil")
 	}
 	var event voltha.Event
 	var de voltha.Event_DeviceEvent
