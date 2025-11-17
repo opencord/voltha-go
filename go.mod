@@ -1,6 +1,6 @@
 module github.com/opencord/voltha-go
 
-go 1.24.5
+go 1.25.3
 
 replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4

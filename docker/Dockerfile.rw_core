@@ -30,7 +30,7 @@
 # -------------
 # Build stage
 
-FROM golang:1.24.5-alpine3.22 AS dev
+FROM golang:1.25.3-alpine3.22 AS dev
 
 # Install required packages
 
