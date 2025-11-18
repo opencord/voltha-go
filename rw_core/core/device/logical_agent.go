@@ -196,8 +196,8 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 		// load the meters from KV to cache
 		agent.meterLoader.Load(ctx)
 
-		// load the logical ports from KV to cache
-		agent.portLoader.Load(ctx)
+		// Setup the logical ports from loaded physical ports
+		agent.setupLogicalPorts(ctx)
 	}
 
 	// Setup the device routes. Building routes may fail if the pre-conditions are not satisfied (e.g. no PON ports present)
