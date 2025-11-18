@@ -21,6 +21,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 )
 
+//nolint:unused
 var logger log.CLogger
 
 func init() {

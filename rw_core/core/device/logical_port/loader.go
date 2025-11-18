@@ -18,14 +18,10 @@ package port
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/opencord/voltha-go/db/model"
-	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Loader hides all low-level locking & synchronization related to port state updates
@@ -53,23 +49,6 @@ func NewLoader(dbProxy *model.Proxy) *Loader {
 	}
 }
 
-// Load queries existing ports from the kv,
-// and should only be called once when first created.
-func (loader *Loader) Load(ctx context.Context) {
-	loader.lock.Lock()
-	defer loader.lock.Unlock()
-
-	var ports []*voltha.LogicalPort
-	if err := loader.dbProxy.List(ctx, &ports); err != nil {
-		logger.Errorw(ctx, "failed-to-list-ports-from-cluster-data-proxy", log.Fields{"error": err})
-		return
-	}
-	for _, port := range ports {
-		loader.ports[port.OfpPort.PortNo] = &chunk{port: port}
-		loader.addLookup(port.DeviceId, port.OfpPort.PortNo)
-	}
-}
-
 // LockOrCreate locks this port if it exists, or creates a new port if it does not.
 // In the case of port creation, the provided "port" must not be modified afterwards.
 func (loader *Loader) LockOrCreate(ctx context.Context, port *voltha.LogicalPort) (*Handle, bool, error) {
@@ -87,17 +66,6 @@ func (loader *Loader) LockOrCreate(ctx context.Context, port *voltha.LogicalPort
 		entry.lock.Lock()
 		loader.lock.Unlock()
 
-		if err := loader.dbProxy.Set(ctx, fmt.Sprint(port.OfpPort.PortNo), port); err != nil {
-			// revert the map
-			loader.lock.Lock()
-			delete(loader.ports, port.OfpPort.PortNo)
-			loader.removeLookup(port.DeviceId, port.OfpPort.PortNo)
-			loader.lock.Unlock()
-
-			entry.deleted = true
-			entry.lock.Unlock()
-			return nil, false, err
-		}
 		return &Handle{loader: loader, chunk: entry}, true, nil
 	}
 	loader.lock.Unlock()
@@ -143,21 +111,15 @@ func (h *Handle) GetReadOnly() *voltha.LogicalPort {
 	return h.chunk.port
 }
 
-// Update updates an existing port in the kv.
+// Update updates an existing port in the cache.
 // The provided "port" must not be modified afterwards.
 func (h *Handle) Update(ctx context.Context, port *voltha.LogicalPort) error {
-	if err := h.loader.dbProxy.Set(ctx, fmt.Sprint(port.OfpPort.PortNo), port); err != nil {
-		return status.Errorf(codes.Internal, "failed-update-port-%v: %s", port.OfpPort.PortNo, err)
-	}
 	h.chunk.port = port
 	return nil
 }
 
-// Delete removes the device from the kv
+// Delete removes the device from the cache and marks it as deleted.
 func (h *Handle) Delete(ctx context.Context) error {
-	if err := h.loader.dbProxy.Remove(ctx, fmt.Sprint(h.chunk.port.OfpPort.PortNo)); err != nil {
-		return fmt.Errorf("couldnt-delete-port-from-store-%v", h.chunk.port.OfpPort.PortNo)
-	}
 	h.chunk.deleted = true
 
 	h.loader.lock.Lock()

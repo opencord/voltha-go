@@ -90,15 +90,6 @@ func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modC
 		}
 	}
 
-	newMeter := &ofp.OfpMeterEntry{
-		Config: oldMeter.Config,
-		Stats:  &newStats,
-	}
-	if err := meterHandle.Update(ctx, newMeter); err != nil {
-		logger.Debugw(ctx, "unable-to-update-meter-in-db", log.Fields{"logical-device-id": agent.logicalDeviceID, "meterID": meterID})
-		return false
-	}
-
 	logger.Debugw(ctx, "updated-meter-flow-stats", log.Fields{"meterId": meterID})
 	return true
 }
