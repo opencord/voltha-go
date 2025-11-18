@@ -1138,23 +1138,21 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 	defer func() { agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc) }()
 
 	// Remove the associated peer ports on the parent device
-	for portID := range agent.portLoader.ListIDs() {
-		if portHandle, have := agent.portLoader.Lock(portID); have {
-			oldPort := portHandle.GetReadOnly()
-			updatedPeers := make([]*voltha.Port_PeerPort, 0)
-			for _, peerPort := range oldPort.Peers {
-				if peerPort.DeviceId != device.Id {
-					updatedPeers = append(updatedPeers, peerPort)
-				}
+	if portHandle, have := agent.portLoader.Lock(device.ParentPortNo); have {
+		oldPort := portHandle.GetReadOnly()
+		updatedPeers := make([]*voltha.Port_PeerPort, 0)
+		for _, peerPort := range oldPort.Peers {
+			if peerPort.DeviceId != device.Id {
+				updatedPeers = append(updatedPeers, peerPort)
 			}
-			newPort := *oldPort
-			newPort.Peers = updatedPeers
-			if err = portHandle.Update(ctx, &newPort); err != nil {
-				portHandle.Unlock()
-				return nil
-			}
-			portHandle.Unlock()
 		}
+		newPort := *oldPort
+		newPort.Peers = updatedPeers
+		if err = portHandle.Update(ctx, &newPort); err != nil {
+			portHandle.Unlock()
+			return nil
+		}
+		portHandle.Unlock()
 	}
 	if err = agent.deviceMgr.canAdapterRequestProceed(ctx, agent.deviceID); err != nil {
 		logger.Errorw(ctx, "adapter-request-cannot-proceed", log.Fields{"device-id": agent.deviceID, "error": err})
