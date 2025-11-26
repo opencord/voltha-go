@@ -658,16 +658,14 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	}
 	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
 	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
-	go func() {
-		defer cancel()
-		_, err := client.RebootDevice(subCtx, device)
-		if err == nil {
-			agent.onSuccess(subCtx, nil, nil, true)
-		} else {
-			agent.onFailure(subCtx, err, nil, nil, true)
-		}
-	}()
-	return nil
+	_, err = client.RebootDevice(subCtx, device)
+	if err == nil {
+		agent.onSuccess(subCtx, nil, nil, true)
+	} else {
+		agent.onFailure(subCtx, err, nil, nil, true)
+	}
+	cancel()
+	return err
 }
 
 func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
@@ -721,6 +719,11 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 	// Update device
 	if err = agent.updateDeviceWithTransientStateAndReleaseLock(ctx, device,
 		core.DeviceTransientState_FORCE_DELETING, previousDeviceTransientState); err != nil {
+		ctx1, cancel1 := context.WithTimeout(context.Background(), agent.rpcTimeout)               // incase of ctx cancellation, updatetranscientstate will fail , so creating a new context for updating
+		if err1 := agent.updateTransientState(ctx1, core.DeviceTransientState_NONE); err1 != nil { // reset the device transient state if the transition handlers fail, so the next retry can go through
+			logger.Errorf(ctx, "failed-to-reset-transient-state-to-none: %s", err1)
+		}
+		cancel1()
 		return err
 	}
 	return nil
