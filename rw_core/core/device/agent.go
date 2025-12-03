@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -1795,4 +1796,364 @@ func (agent *Agent) canDeviceRequestProceed(ctx context.Context) error {
 		return nil
 	}
 	return fmt.Errorf("device-cannot-process-request-%s", agent.deviceID)
+}
+
+func (agent *Agent) disableOnuDevice(ctx context.Context, adapterEndpoint string) error {
+	var err error
+	var desc string
+	var prevAdminState, currAdminState common.AdminState_Types
+	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+
+	defer func() {
+		agent.logDeviceUpdate(ctx, &prevAdminState, &currAdminState, requestStatus, err, desc)
+	}()
+
+	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return err
+	}
+	logger.Debugw(ctx, "disable-child-device", log.Fields{"device-id": agent.deviceID, "serial-number": agent.device.SerialNumber})
+
+	prevAdminState = agent.device.AdminState
+
+	cloned, desc, err := agent.checkDisableEligibility()
+	if err != nil {
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	cloned.AdminState = voltha.AdminState_DISABLED
+
+	client, err := agent.adapterMgr.GetAdapterClient(ctx, adapterEndpoint)
+	if err != nil {
+		logger.Errorw(ctx, "grpc-client-nil",
+			log.Fields{
+				"error":            err,
+				"device-id":        agent.deviceID,
+				"device-type":      agent.deviceType,
+				"adapter-endpoint": adapterEndpoint,
+			})
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
+	defer cancel()
+	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
+
+	resultCh := make(chan error, 1)
+
+	go func() {
+		if _, callErr := client.DisableOnuDevice(subCtx, cloned); callErr == nil {
+			logger.Infow(subCtx, "disable-child-device-success", log.Fields{"device-id": cloned.Id, "serial-number": cloned.SerialNumber})
+			agent.onSuccess(subCtx, nil, nil, true)
+			resultCh <- nil
+		} else {
+			logger.Errorw(subCtx, "disable-child-device-failed", log.Fields{"device-id": cloned.Id, "serial-number": cloned.SerialNumber, "error": callErr})
+			agent.onFailure(subCtx, callErr, nil, nil, true)
+			trimmedErr := extractLastRpcError(callErr)
+			resultCh <- fmt.Errorf("disable-child-device-failed: %s", trimmedErr)
+		}
+	}()
+
+	select {
+	case resultErr := <-resultCh:
+		if resultErr != nil {
+			agent.requestQueue.RequestComplete()
+			return resultErr
+		}
+	case <-ctx.Done():
+		err = fmt.Errorf("operation cancelled or timed out: %w", ctx.Err())
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	if updateErr := agent.updateDeviceAndReleaseLock(subCtx, cloned); updateErr != nil {
+		return fmt.Errorf("update-device-failed: %w", updateErr)
+	}
+
+	currAdminState = cloned.AdminState
+	return nil
+}
+
+func (agent *Agent) enableOnuDevice(ctx context.Context, adapterEndpoint string) error {
+	var err error
+	var desc string
+	var prevAdminState, currAdminState common.AdminState_Types
+	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+
+	defer func() { agent.logDeviceUpdate(ctx, &prevAdminState, &currAdminState, requestStatus, err, desc) }()
+
+	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return err
+	}
+	logger.Debugw(ctx, "enable-child-device", log.Fields{"device-id": agent.deviceID, "serial-number": agent.device.SerialNumber})
+
+	prevAdminState = agent.device.AdminState
+
+	newDevice, err := agent.checkEnableEligibility()
+	if err != nil {
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	// Update the Admin State and set the operational state to activating before sending the request to the Adapters
+	newDevice.AdminState = voltha.AdminState_ENABLED
+
+	client, err := agent.adapterMgr.GetAdapterClient(ctx, adapterEndpoint)
+	if err != nil {
+		logger.Errorw(ctx, "grpc-client-nil",
+			log.Fields{
+				"error":            err,
+				"device-id":        agent.deviceID,
+				"device-type":      agent.deviceType,
+				"adapter-endpoint": adapterEndpoint,
+			})
+
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
+	defer cancel()
+	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
+
+	resultCh := make(chan error, 1)
+
+	go func() {
+		_, callErr := client.EnableOnuDevice(subCtx, newDevice)
+
+		if callErr == nil {
+			logger.Infow(subCtx, "enable-child-device-success", log.Fields{"device-id": newDevice.Id, "serial-number": newDevice.SerialNumber})
+			agent.onSuccess(subCtx, nil, nil, true)
+			resultCh <- nil
+		} else {
+			logger.Errorw(subCtx, "enable-child-device-failed", log.Fields{"device-id": newDevice.Id, "serial-number": newDevice.SerialNumber, "error": callErr})
+			agent.onFailure(subCtx, callErr, nil, nil, true)
+			trimmedErr := extractLastRpcError(callErr)
+			resultCh <- fmt.Errorf("enable-child-device-failed: %s", trimmedErr)
+		}
+	}()
+
+	select {
+	case resultErr := <-resultCh:
+		if resultErr != nil {
+			agent.requestQueue.RequestComplete()
+			return resultErr
+		}
+	case <-ctx.Done():
+		err = fmt.Errorf("operation cancelled or timed out: %w", ctx.Err())
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	if updateErr := agent.updateDeviceAndReleaseLock(subCtx, newDevice); updateErr != nil {
+		return fmt.Errorf("update-device-failed: %w", updateErr)
+	}
+
+	currAdminState = newDevice.AdminState
+	return nil
+
+}
+
+func (agent *Agent) disableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon, adapterEndpoint string) error {
+	var err error
+	var desc string
+	var prevAdminState, currAdminState common.AdminState_Types
+	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+
+	defer func() {
+		agent.logDeviceUpdate(ctx, &prevAdminState, &currAdminState, requestStatus, err, desc)
+	}()
+
+	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return err
+	}
+	logger.Debugw(ctx, "disable-child-serial-number", log.Fields{"device-id": agent.deviceID, "serial-number": agent.device.SerialNumber})
+
+	prevAdminState = agent.device.AdminState
+	cloned, desc, err := agent.checkDisableEligibility()
+	if err != nil {
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	cloned.AdminState = voltha.AdminState_DISABLED
+
+	client, err := agent.adapterMgr.GetAdapterClient(ctx, adapterEndpoint)
+	if err != nil {
+		logger.Errorw(ctx, "grpc-client-nil",
+			log.Fields{
+				"error":            err,
+				"device-id":        agent.deviceID,
+				"device-type":      agent.deviceType,
+				"adapter-endpoint": adapterEndpoint,
+			})
+
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
+	defer cancel()
+	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
+
+	resultCh := make(chan error, 1)
+
+	go func() {
+		_, callErr := client.DisableOnuSerialNumber(subCtx, device)
+		if callErr == nil {
+			logger.Infow(subCtx, "disable-child-serial-number-success", log.Fields{"device-id": cloned.Id, "serial-number": device.SerialNumber})
+			agent.onSuccess(subCtx, nil, nil, true)
+			resultCh <- nil
+		} else {
+			logger.Errorw(subCtx, "disable-child-serial-number-failed", log.Fields{"device-id": cloned.Id, "serial-number": device.SerialNumber, "error": callErr})
+			agent.onFailure(subCtx, callErr, nil, nil, true)
+			trimmedErr := extractLastRpcError(callErr)
+			resultCh <- fmt.Errorf("disable-child-serial-number-failed: %s", trimmedErr)
+		}
+	}()
+
+	select {
+	case resultErr := <-resultCh:
+		if resultErr != nil {
+			agent.requestQueue.RequestComplete()
+			return resultErr
+		}
+
+	case <-ctx.Done():
+		err = fmt.Errorf("operation cancelled or timed out: %w", ctx.Err())
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	if updateErr := agent.updateDeviceAndReleaseLock(subCtx, cloned); updateErr != nil {
+		return fmt.Errorf("update-device-failed: %w", updateErr)
+	}
+	currAdminState = cloned.AdminState
+	return nil
+
+}
+
+func (agent *Agent) enableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon, adapterEndpoint string) error {
+	var err error
+	var desc string
+	var cloned *voltha.Device
+	var prevAdminState, currAdminState common.AdminState_Types
+	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+
+	defer func() {
+		agent.logDeviceUpdate(ctx, &prevAdminState, &currAdminState, requestStatus, err, desc)
+	}()
+
+	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+		return err
+	}
+	logger.Debugw(ctx, "enable-child-serial-number", log.Fields{"serial-number": device.SerialNumber})
+
+	prevAdminState = agent.device.AdminState
+	cloned, err = agent.checkEnableEligibility()
+	if err != nil {
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	cloned.AdminState = voltha.AdminState_ENABLED
+
+	client, err := agent.adapterMgr.GetAdapterClient(ctx, adapterEndpoint)
+	if err != nil {
+		logger.Errorw(ctx, "grpc-client-nil",
+			log.Fields{
+				"error":            err,
+				"device-id":        agent.deviceID,
+				"device-type":      agent.deviceType,
+				"adapter-endpoint": agent.adapterEndpoint,
+			})
+
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
+	defer cancel()
+	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
+
+	resultCh := make(chan error, 1)
+
+	go func() {
+		_, callErr := client.EnableOnuSerialNumber(subCtx, device)
+		if callErr == nil {
+			logger.Infow(subCtx, "enable-child-serial-number-success", log.Fields{"serial number": device.SerialNumber})
+			agent.onSuccess(subCtx, nil, nil, true)
+			resultCh <- nil
+		} else {
+			logger.Errorw(subCtx, "enable-child-serial-number-failed", log.Fields{"serial number": device.SerialNumber, "error": callErr})
+			agent.onFailure(subCtx, callErr, nil, nil, true)
+			trimmedErr := extractLastRpcError(callErr)
+			resultCh <- fmt.Errorf("enable-child-serial-number-failed: %s", trimmedErr)
+		}
+	}()
+
+	select {
+	case resultErr := <-resultCh:
+		if resultErr != nil {
+			agent.requestQueue.RequestComplete()
+			return resultErr
+		}
+
+	case <-ctx.Done():
+		err = fmt.Errorf("operation cancelled or timed out: %w", ctx.Err())
+		agent.requestQueue.RequestComplete()
+		return err
+	}
+
+	if updateErr := agent.updateDeviceAndReleaseLock(subCtx, cloned); updateErr != nil {
+		return fmt.Errorf("update-device-failed: %w", updateErr)
+	}
+	currAdminState = cloned.AdminState
+	return nil
+}
+
+func (agent *Agent) checkDisableEligibility() (*voltha.Device, string, error) {
+	cloned := agent.cloneDeviceWithoutLock()
+
+	if !agent.proceedWithRequest(cloned) {
+		err := status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress/failed: %s", agent.deviceID)
+		return nil, "", err
+	}
+
+	if cloned.AdminState == voltha.AdminState_DISABLED {
+		err := status.Errorf(codes.FailedPrecondition, "device-already-disabled: %s", agent.deviceID)
+		return nil, "device-already-disabled", err
+	}
+	if cloned.AdminState == voltha.AdminState_PREPROVISIONED {
+		err := status.Errorf(codes.FailedPrecondition, "deviceId:%s, invalid-admin-state:%s", agent.deviceID, cloned.AdminState)
+		return nil, "", err
+	}
+
+	return cloned, "", nil
+}
+
+func (agent *Agent) checkEnableEligibility() (*voltha.Device, error) {
+	device := agent.getDeviceReadOnlyWithoutLock()
+
+	if !agent.proceedWithRequest(device) {
+		err := status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress or reconciling is in progress/failed: %s", agent.deviceID)
+		return nil, err
+	}
+
+	if device.AdminState == voltha.AdminState_ENABLED && device.OperStatus != voltha.OperStatus_FAILED {
+		err := status.Errorf(codes.FailedPrecondition, "device-already-enabled: %s", device.Id)
+		return nil, err
+	}
+
+	cloned := agent.cloneDeviceWithoutLock()
+	return cloned, nil
+}
+
+// extracting only the error message from the rpc error
+func extractLastRpcError(err error) string {
+	s := err.Error()
+	if i := strings.LastIndex(s, "rpc error:"); i >= 0 {
+		return strings.TrimSpace(s[i:])
+	}
+	return s
 }
