@@ -90,6 +90,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "d5a7402e_bdd7c5a6",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 2087,
+      "author": {
+        "id": 1001024
+      },
+      "writtenOn": "2025-12-03T14:25:59Z",
+      "side": 1,
+      "message": "done the changes",
+      "parentUuid": "1b807103_c2e504cd",
+      "revId": "02f455d8b584381141a62adeec9f97eb4a96bd27",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "545fb4ee_8a6e01f9",
         "filename": "rw_core/core/device/manager_nbi.go",
         "patchSetId": 13
@@ -101,6 +119,24 @@
       "writtenOn": "2025-12-03T09:43:38Z",
       "side": 1,
       "message": "Lets use child device agent to call enableOnuSerialNumber(), keeping in line with the other calls.",
+      "revId": "02f455d8b584381141a62adeec9f97eb4a96bd27",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bc5b8015_ebdb08d9",
+        "filename": "rw_core/core/device/manager_nbi.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 1029,
+      "author": {
+        "id": 1001024
+      },
+      "writtenOn": "2025-12-03T14:25:59Z",
+      "side": 1,
+      "message": "Updated",
+      "parentUuid": "545fb4ee_8a6e01f9",
       "revId": "02f455d8b584381141a62adeec9f97eb4a96bd27",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
