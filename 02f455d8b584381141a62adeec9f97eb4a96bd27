@@ -53,6 +53,41 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "3ef695ed_abaeff5d",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 1930,
+      "author": {
+        "id": 1000960
+      },
+      "writtenOn": "2025-12-03T09:48:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a249f9a_dea406a8",
+      "revId": "02f455d8b584381141a62adeec9f97eb4a96bd27",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1b807103_c2e504cd",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 2087,
+      "author": {
+        "id": 1000960
+      },
+      "writtenOn": "2025-12-03T09:48:18Z",
+      "side": 1,
+      "message": "OnSuccess \u0026 OnFailure are being checked on parent device agent whereas other operations like RequestQueue are being done on child device agent. Please correct this and use the child device agent for all the operations similar to other functions implemented.",
+      "revId": "02f455d8b584381141a62adeec9f97eb4a96bd27",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "545fb4ee_8a6e01f9",
