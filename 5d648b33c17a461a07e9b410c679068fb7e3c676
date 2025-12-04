@@ -16,6 +16,24 @@
       "message": "Lets update the description field in all error cases. This will be helpful in debugging.",
       "revId": "5d648b33c17a461a07e9b410c679068fb7e3c676",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "68c3074d_4a47dbfe",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 2120,
+      "author": {
+        "id": 1001024
+      },
+      "writtenOn": "2025-12-04T09:12:38Z",
+      "side": 1,
+      "message": "updated the description in all error cases",
+      "parentUuid": "54ff70ab_7d96a96d",
+      "revId": "5d648b33c17a461a07e9b410c679068fb7e3c676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
