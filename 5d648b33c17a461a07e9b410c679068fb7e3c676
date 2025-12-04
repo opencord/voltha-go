@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "54ff70ab_7d96a96d",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 15
+      },
+      "lineNbr": 2120,
+      "author": {
+        "id": 1000960
+      },
+      "writtenOn": "2025-12-04T06:07:26Z",
+      "side": 1,
+      "message": "Lets update the description field in all error cases. This will be helpful in debugging.",
+      "revId": "5d648b33c17a461a07e9b410c679068fb7e3c676",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
