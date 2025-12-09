@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"time"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-lib-go/v7/pkg/version"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func printBanner() {
@@ -106,6 +108,24 @@ func main() {
 	// Create a context adding the status update channel
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		logger.Infof(ctx, "Metrics available at %s/metrics", cf.PrometheusAddress)
+		// Create HTTP server with explicit timeouts to prevent slowloris attacks and resource exhaustion.
+		// Using http.ListenAndServe() directly doesn't allow setting timeouts, which is a security risk.
+		// The server uses http.DefaultServeMux (nil handler) which includes the /metrics endpoint registered above.
+		metricsServer := &http.Server{
+			Addr:              cf.PrometheusAddress,
+			Handler:           nil,
+			ReadHeaderTimeout: 10 * time.Second,
+			ReadTimeout:       30 * time.Second,
+			WriteTimeout:      30 * time.Second,
+			IdleTimeout:       120 * time.Second,
+		}
+		if err := metricsServer.ListenAndServe(); err != nil {
+			logger.Errorw(ctx, "failed to start metrics HTTP server: ", log.Fields{"error": err})
+		}
+	}()
 
 	/*
 	 * Create and start the liveness and readiness container management probes. This
