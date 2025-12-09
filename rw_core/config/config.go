@@ -43,6 +43,7 @@ type RWCoreFlags struct {
 	RWCoreCert                  string
 	RWCoreCA                    string
 	ProbeAddress                string
+	PrometheusAddress           string
 	TraceAgentAddress           string
 	VolthaStackID               string
 	KVStoreTimeout              time.Duration
@@ -172,6 +173,11 @@ func (cf *RWCoreFlags) ParseCommandArguments(args []string) {
 		"probe_address",
 		":8080",
 		"The address on which to listen to answer liveness and readiness probe queries over HTTP")
+
+	fs.StringVar(&cf.PrometheusAddress,
+		"prometheus_address",
+		":8081",
+		"Used for exposing the metrics to prometheus")
 
 	fs.BoolVar(&(cf.TraceEnabled),
 		"trace_enabled",
