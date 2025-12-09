@@ -704,7 +704,16 @@ func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
 			agent.requestQueue.RequestComplete()
 			return fmt.Errorf("remote-not-reachable %w", errNoConnection)
 		}
-		subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
+		// Use the incoming context deadline if it's longer than the configured rpcTimeout,
+		// otherwise use rpcTimeout. This allows clients to specify longer timeouts for
+		// operations like device delete that may take significant time.
+		timeout := agent.rpcTimeout
+		if deadline, ok := ctx.Deadline(); ok {
+			if ctxTimeout := time.Until(deadline); ctxTimeout > timeout {
+				timeout = ctxTimeout
+			}
+		}
+		subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), timeout)
 		requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 		go func() {
 			defer cancel()
@@ -790,7 +799,16 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 				})
 			return err
 		}
-		subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
+		// Use the incoming context deadline if it's longer than the configured rpcTimeout,
+		// otherwise use rpcTimeout. This allows clients to specify longer timeouts for
+		// operations like device delete that may take significant time.
+		timeout := agent.rpcTimeout
+		if deadline, ok := ctx.Deadline(); ok {
+			if ctxTimeout := time.Until(deadline); ctxTimeout > timeout {
+				timeout = ctxTimeout
+			}
+		}
+		subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), timeout)
 		requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 		_, err = client.DeleteDevice(subCtx, device)
 		if (err == nil) || (status.Code(err) == codes.NotFound) {
@@ -1498,7 +1516,16 @@ retry:
 	agent.requestQueue.RequestComplete()
 
 	// Send the delete request to the adapter
-	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
+	// Use the incoming context deadline if it's longer than the configured rpcTimeout,
+	// otherwise use rpcTimeout. This allows clients to specify longer timeouts for
+	// operations like device delete that may take significant time.
+	timeout := agent.rpcTimeout
+	if deadline, ok := ctx.Deadline(); ok {
+		if ctxTimeout := time.Until(deadline); ctxTimeout > timeout {
+			timeout = ctxTimeout
+		}
+	}
+	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), timeout)
 	defer cancel()
 	_, err = client.DeleteDevice(subCtx, device)
 	agent.onForceDeleteResponse(subCtx, nil, nil, err)
