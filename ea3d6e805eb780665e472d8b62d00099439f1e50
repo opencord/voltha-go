@@ -16,6 +16,23 @@
       "message": "recheck",
       "revId": "ea3d6e805eb780665e472d8b62d00099439f1e50",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e6129212_a1d10bf6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2025-12-10T00:23:04Z",
+      "side": 1,
+      "message": "I think we should still let the server define the timeout, not the client. Methods that need longer timeouts can be marked as long-running methods, and a longer timeout can be set specifically for the method. ",
+      "revId": "ea3d6e805eb780665e472d8b62d00099439f1e50",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
