@@ -20,6 +20,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "f7be679e_5b4e7465",
+        "filename": "rw_core/core/device/agent.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 2272,
+      "author": {
+        "id": 1001024
+      },
+      "writtenOn": "2026-01-15T10:34:55Z",
+      "side": 1,
+      "message": "updated the code to return a specific error (errNoAddrChange) to the caller and added debug logs.",
+      "parentUuid": "9080b88d_40526996",
+      "revId": "9c8910a2e0bf93ad13251acff0600932f33b18a8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "17e3da7c_d7a58f03",
         "filename": "rw_core/core/device/manager_nbi.go",
         "patchSetId": 6
