@@ -48,7 +48,7 @@ func (agent *LogicalAgent) GetRoute(ctx context.Context, ingressPortNo uint32, e
 			}
 
 			// Return a 'half' route to make the flow decomposer logic happy
-			routes, err := agent.deviceRoutes.GetHalfRoute(true, 0, 0)
+			routes, err := agent.deviceRoutes.GetHalfRoute(false, ingressPortNo, 0)
 			if err != nil {
 				return nil, fmt.Errorf("no upstream route from:%d to:%d :%w", ingressPortNo, egressPortNo, route.ErrNoRoute)
 			}
