@@ -126,7 +126,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 		fa := &fu.FlowArgs{
 			KV: fu.OfpFlowModArgs{"priority": uint64(flow.Priority), "cookie": flow.Cookie},
 			MatchFields: []*ofp.OfpOxmOfbField{
-				fu.InPort(egressHop.Egress),
+				fu.InPort(ingressHop.Ingress),
 			},
 			Actions: fu.GetActions(flow),
 		}
@@ -138,7 +138,7 @@ func (fd *FlowDecomposer) processControllerBoundFlow(ctx context.Context, agent 
 			return nil, err
 		}
 		fg.AddFlow(fs)
-		deviceRules.AddFlowsAndGroup(egressHop.DeviceID, fg)
+		deviceRules.AddFlowsAndGroup(ingressHop.DeviceID, fg)
 	} else {
 		// Trap flow for UNI port
 		logger.Debug(ctx, "trap-uni")
