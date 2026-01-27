@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "23b88c64_87d65dc9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2026-01-27T19:40:13Z",
+      "side": 1,
+      "message": "please abondon/update the change and update the jira task accordingly.",
+      "revId": "eb465c5b35e83173cdf93427ee97f35ca1232650",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
