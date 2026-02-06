@@ -233,25 +233,34 @@ func (dMgr *Manager) IsDeviceInCache(id string) bool {
 
 // isParentDeviceExist checks whether device is already preprovisioned.
 func (dMgr *Manager) isParentDeviceExist(ctx context.Context, newDevice *voltha.Device) (bool, error) {
-	hostPort := newDevice.GetHostAndPort()
-	var devices []*voltha.Device
-	if err := dMgr.dProxy.List(ctx, &devices); err != nil {
-		logger.Errorw(ctx, "failed-to-list-devices-from-cluster-data-proxy", log.Fields{"error": err})
-		return false, err
+	if newDevice.Id != "" {
+		var keyExists bool
+		var err error
+		if keyExists, err = dMgr.dProxy.KeyExists(ctx, newDevice.Id); err != nil {
+			logger.Errorw(ctx, "failed-to-check-device-exists-from-cluster-data-proxy", log.Fields{"error": err, "device-id": newDevice.Id})
+			return false, err
+		}
+		return keyExists, nil
+	} else {
+		hostPort := newDevice.GetHostAndPort()
+		var devices []*voltha.Device
+		if err := dMgr.dProxy.List(ctx, &devices); err != nil {
+			logger.Errorw(ctx, "failed-to-list-devices-from-cluster-data-proxy", log.Fields{"error": err})
+			return false, err
+		}
+		for _, device := range devices {
+			if !device.Root {
+				continue
+			}
+			if hostPort != "" && hostPort == device.GetHostAndPort() {
+				return true, nil
+			}
+			if newDevice.MacAddress != "" && newDevice.MacAddress == device.MacAddress {
+				return true, nil
+			}
+		}
+		return false, nil
 	}
-	for _, device := range devices {
-		if !device.Root {
-			continue
-		}
-
-		if hostPort != "" && hostPort == device.GetHostAndPort() {
-			return true, nil
-		}
-		if newDevice.MacAddress != "" && newDevice.MacAddress == device.MacAddress {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 // getDeviceFromModelretrieves the device data from the model.

@@ -67,6 +67,22 @@ func (p *Path) Proxy(resource string) *Proxy {
 
 // List will retrieve information from the data model at the proxy's path location, and write it to the target slice
 // target must be a type of the form *[]<proto.Message Type>  For example: *[]*voltha.Device
+func (p *Proxy) KeyExists(ctx context.Context, id string) (bool, error) {
+	completePath := p.path + id
+
+	logger.Debugw(ctx, "proxy-key-exists", log.Fields{
+		"path": completePath,
+	})
+
+	keyExists, err := p.kvStore.KeyExists(ctx, completePath)
+	if err != nil {
+		return false, fmt.Errorf("failed to retrieve %s from kvstore: %s", p.path, err)
+	}
+	return keyExists, nil
+}
+
+// List will retrieve information from the data model at the proxy's path location, and write it to the target slice
+// target must be a type of the form *[]<proto.Message Type>  For example: *[]*voltha.Device
 func (p *Proxy) List(ctx context.Context, target interface{}) error {
 	logger.Debugw(ctx, "proxy-list", log.Fields{
 		"path": p.path,
