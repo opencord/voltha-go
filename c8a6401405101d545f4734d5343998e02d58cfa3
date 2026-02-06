@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2104c6c1_51d58414",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2026-02-06T17:51:20Z",
+      "side": 1,
+      "message": "What if device id does not exist but there is a device with the same mac address?",
+      "revId": "c8a6401405101d545f4734d5343998e02d58cfa3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
