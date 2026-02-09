@@ -16,6 +16,24 @@
       "message": "What if device id does not exist but there is a device with the same mac address?",
       "revId": "c8a6401405101d545f4734d5343998e02d58cfa3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "df5c1656_6c54b78d",
+        "filename": "rw_core/core/device/manager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1000960
+      },
+      "writtenOn": "2026-02-09T09:29:07Z",
+      "side": 1,
+      "message": "This scenario is already handled in the existing implementation. This change is to avoid looping through devices in DB if there is a device-id already present for the device that is being created.",
+      "parentUuid": "2104c6c1_51d58414",
+      "revId": "c8a6401405101d545f4734d5343998e02d58cfa3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
