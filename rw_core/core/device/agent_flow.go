@@ -81,6 +81,7 @@ func (agent *Agent) addFlowsToAdapter(ctx context.Context, newFlows []*ofp.OfpFl
 			desc = err.Error()
 			return coreutils.DoneResponse(), err
 		}
+		desc = fmt.Sprintf("cookie-%d", flow.Cookie)
 		if created {
 			flowsToAdd = append(flowsToAdd, flow)
 		} else {

@@ -94,6 +94,9 @@ func (agent *LogicalAgent) flowAdd(ctx context.Context, flowUpdate *ofp.FlowTabl
 			return fmt.Errorf("couldnt-updated-flow-stats-%s", strconv.FormatUint(flow.Id, 10))
 		}
 	}
+	if !changed {
+		logger.Warnw(ctx, "flow-add-no-change", log.Fields{"device-id": agent.logicalDeviceID, "cookie": mod.Cookie})
+	}
 	return nil
 
 }
