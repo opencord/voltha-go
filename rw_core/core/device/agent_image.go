@@ -30,6 +30,7 @@ import (
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -612,6 +613,7 @@ func (agent *Agent) downloadImageToDevice(ctx context.Context, request *voltha.D
 	subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.rpcTimeout)
 	defer cancel()
 	subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
+	subCtx = cloneMetadata(ctx, subCtx)
 
 	agent.requestQueue.RequestComplete()
 	return client.DownloadOnuImage(subCtx, request)
@@ -788,4 +790,14 @@ func (agent *Agent) getOnuImages(ctx context.Context, id *common.ID) (*voltha.On
 
 	agent.requestQueue.RequestComplete()
 	return client.GetOnuImages(ctx, id)
+}
+
+func cloneMetadata(ctx context.Context, subCtx context.Context) context.Context {
+	if md, ok := metadata.FromIncomingContext(ctx); ok && len(md) > 0 {
+		logger.Debug(subCtx, "cloning-incoming-metadata", log.Fields{"metadata": md})
+		return metadata.NewOutgoingContext(subCtx, md)
+	}
+
+	logger.Debug(subCtx, "no metadata found to clone")
+	return subCtx
 }
