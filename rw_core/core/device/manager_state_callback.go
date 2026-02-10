@@ -55,7 +55,7 @@ func (dMgr *Manager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.De
 
 // DeleteLogicalPorts removes the logical ports associated with that deviceId
 func (dMgr *Manager) DeleteLogicalPorts(ctx context.Context, cDevice *voltha.Device) error {
-	logger.Debugw(ctx, "delete-all-logical-ports", log.Fields{"device-id": cDevice.Id})
+	logger.Infow(ctx, "delete-all-logical-ports", log.Fields{"device-id": cDevice.Id})
 	if err := dMgr.logicalDeviceMgr.deleteLogicalPorts(ctx, cDevice.Id); err != nil {
 		// Just log the error.   The logical device or port may already have been deleted before this callback is invoked.
 		logger.Warnw(ctx, "delete-logical-ports-error", log.Fields{"device-id": cDevice.Id, "error": err})
