@@ -252,7 +252,7 @@ func (ldMgr *LogicalManager) load(ctx context.Context, lDeviceID string) error {
 }
 
 func (ldMgr *LogicalManager) deleteLogicalDevice(ctx context.Context, device *voltha.Device) error {
-	logger.Infow(ctx, "deleting-logical-device", log.Fields{"device-id": device.Id})
+	logger.Debugw(ctx, "deleting-logical-device", log.Fields{"device-id": device.Id})
 	// Sanity check
 	if !device.Root {
 		return errors.New("device-not-root")

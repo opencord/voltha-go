@@ -530,7 +530,7 @@ func (aMgr *Manager) SignalOnRxStreamCloseCh(ctx context.Context, endpoint strin
 	ok := false
 	aMgr.rxStreamCloseChLock.RLock()
 	if closeCh, ok = aMgr.rxStreamCloseChMap[endpoint]; !ok {
-		logger.Infow(ctx, "no entry on rxStreamCloseChMap", log.Fields{"endpoint": endpoint})
+		logger.Debugw(ctx, "no entry on rxStreamCloseChMap", log.Fields{"endpoint": endpoint})
 		aMgr.rxStreamCloseChLock.RUnlock()
 		return
 	}
