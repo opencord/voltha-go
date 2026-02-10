@@ -192,7 +192,7 @@ func (dMgr *Manager) listDeviceIdsFromMap() *voltha.IDs {
 // This function is called only in the Core that does not own this device.  In the Core that owns this device then a
 // deletion deletion also includes removal of any reference of this device.
 func (dMgr *Manager) stopManagingDevice(ctx context.Context, id string) {
-	logger.Infow(ctx, "stop-managing-device", log.Fields{"device-id": id})
+	logger.Debugw(ctx, "stop-managing-device", log.Fields{"device-id": id})
 	if dMgr.IsDeviceInCache(id) { // Proceed only if an agent is present for this device
 		if device, err := dMgr.getDeviceReadOnly(ctx, id); err == nil && device.Root {
 			// stop managing the logical device
@@ -768,7 +768,7 @@ func (dMgr *Manager) UpdateDeviceAttribute(ctx context.Context, deviceID string,
 // GetParentDeviceID returns parent device id, either from memory or from the dB, if present
 func (dMgr *Manager) GetParentDeviceID(ctx context.Context, deviceID string) string {
 	if device, _ := dMgr.getDeviceReadOnly(ctx, deviceID); device != nil {
-		logger.Infow(ctx, "get-parent-device-id", log.Fields{"device-id": device.Id, "parent-id": device.ParentId})
+		logger.Debugw(ctx, "get-parent-device-id", log.Fields{"device-id": device.Id, "parent-id": device.ParentId})
 		return device.ParentId
 	}
 	return ""
