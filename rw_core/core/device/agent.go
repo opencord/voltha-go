@@ -662,14 +662,16 @@ func (agent *Agent) rebootDevice(ctx context.Context) error {
 	}
 	subCtx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
 	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
-	_, err = client.RebootDevice(subCtx, device)
-	if err == nil {
-		agent.onSuccess(subCtx, nil, nil, true)
-	} else {
-		agent.onFailure(subCtx, err, nil, nil, true)
-	}
-	cancel()
-	return err
+	go func() {
+		defer cancel()
+		_, err := client.RebootDevice(subCtx, device)
+		if err == nil {
+			agent.onSuccess(subCtx, nil, nil, true)
+		} else {
+			agent.onFailure(subCtx, err, nil, nil, true)
+		}
+	}()
+	return nil
 }
 
 func (agent *Agent) deleteDeviceForce(ctx context.Context) error {
