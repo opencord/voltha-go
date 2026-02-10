@@ -800,7 +800,7 @@ func (agent *Agent) deleteDevice(ctx context.Context) error {
 					"device-type":      agent.deviceType,
 					"adapter-endpoint": device.AdapterEndpoint,
 				})
-			return err
+			return status.Errorf(codes.Internal, "error-getting-grpc-client-for-adapter: %s", err)
 		}
 		// Use the incoming context deadline if it's longer than the configured rpcTimeout,
 		// otherwise use rpcTimeout. This allows clients to specify longer timeouts for

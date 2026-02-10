@@ -141,6 +141,9 @@ func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 				logger.Errorw(ctx, "Unexpected error", log.Fields{"device-id": id.Id, "Error": err})
 				return nil, err
 			}
+		} else {
+			logger.Errorw(ctx, "Failed to delete device due to an unknown error", log.Fields{"device-id": id.Id, "Error": err})
+			return nil, err
 		}
 
 	}
