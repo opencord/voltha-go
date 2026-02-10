@@ -239,6 +239,14 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 	}
 	defer flowHandle.Unlock()
 
+	// Revert meters
+	if changedMeterStats := agent.updateFlowCountOfMeterStats(ctx, mod, addedFlow, true); !changedMeterStats {
+		return fmt.Errorf("Unable-to-revert-meterstats-for-flow-%s", strconv.FormatUint(addedFlow.Id, 10))
+	}
+
+	// Update the devices
+	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, mod)
+
 	if replacedFlow != nil {
 		if err := flowHandle.Update(ctx, replacedFlow); err != nil {
 			return err
@@ -248,14 +256,6 @@ func (agent *LogicalAgent) revertAddedFlows(ctx context.Context, mod *ofp.OfpFlo
 			return err
 		}
 	}
-
-	// Revert meters
-	if changedMeterStats := agent.updateFlowCountOfMeterStats(ctx, mod, addedFlow, true); !changedMeterStats {
-		return fmt.Errorf("Unable-to-revert-meterstats-for-flow-%s", strconv.FormatUint(addedFlow.Id, 10))
-	}
-
-	// Update the devices
-	respChnls := agent.deleteFlowsAndGroupsFromDevices(ctx, deviceRules, mod)
 
 	// Wait for the responses
 
