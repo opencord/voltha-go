@@ -172,7 +172,7 @@ func (dMgr *Manager) getDeviceAgent(ctx context.Context, deviceID string) *Agent
 		return agent.(*Agent)
 	}
 	// TODO: Change the return params to return an error as well
-	logger.Errorw(ctx, "loading-device-failed", log.Fields{"device-id": deviceID, "error": err})
+
 	return nil
 }
 

@@ -184,11 +184,13 @@ func (dr *DeviceRoutes) ComputeRoutes(ctx context.Context, lps map[uint32]*volth
 					childDeviceID := rootDevicePeer.DeviceId
 					childDevicePorts, err := dr.getDeviceWithCacheUpdate(ctx, rootDevicePeer.DeviceId)
 					if err != nil {
-						return err
+						logger.Warnw(ctx, "child-device-ports-not-found", log.Fields{"device-id": rootDevicePeer.DeviceId, "rootDevicePort": rootDevicePort.PortNo, "rootPortPeer": rootDevicePeer.PortNo})
+						continue
 					}
 					childPonPort, err := dr.getChildPonPort(ctx, childDeviceID)
 					if err != nil {
-						return err
+						logger.Warnw(ctx, "child-pon-port-not-found", log.Fields{"device-id": childDeviceID, "rootDevicePort": rootDevicePort.PortNo, "rootPortPeer": rootDevicePeer.PortNo})
+						continue
 					}
 					for _, childDevicePort := range childDevicePorts {
 						if childDevicePort.Type == voltha.Port_ETHERNET_UNI {
@@ -418,7 +420,6 @@ func (dr *DeviceRoutes) GetHalfRoute(nniAsEgress bool, ingress, egress uint32) (
 func (dr *DeviceRoutes) getDeviceWithCacheUpdate(ctx context.Context, deviceID string) (map[uint32]*voltha.Port, error) {
 	devicePorts, err := dr.listDevicePorts(ctx, deviceID)
 	if err != nil {
-		logger.Errorw(ctx, "device-not-found", log.Fields{"device-id": deviceID, "error": err})
 		return nil, err
 	}
 	dr.updateCache(deviceID, devicePorts)
