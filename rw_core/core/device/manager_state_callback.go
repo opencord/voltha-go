@@ -27,15 +27,15 @@ import (
 
 // CreateLogicalDevice creates logical device in core
 func (dMgr *Manager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.Device) error {
-	logger.Info(ctx, "create-logical-device")
+	logger.Infow(ctx, "create-logical-device", log.Fields{"device-id": cDevice.Id, "parent-id": cDevice.ParentId})
 	// Verify whether the logical device has already been created
 	if cDevice.ParentId != "" {
-		logger.Debugw(ctx, "parent-device-already-exist", log.Fields{"device-id": cDevice.Id, "logical-device-id": cDevice.Id})
+		logger.Warnw(ctx, "parent-device-already-exist", log.Fields{"device-id": cDevice.Id, "logical-device-id": cDevice.Id})
 		return nil
 	}
 	var err error
 	if _, err = dMgr.logicalDeviceMgr.createLogicalDevice(ctx, cDevice); err != nil {
-		logger.Warnw(ctx, "create-logical-device-error", log.Fields{"device": cDevice})
+		logger.Errorw(ctx, "create-logical-device-error", log.Fields{"device": cDevice})
 		return err
 	}
 	return nil
@@ -43,7 +43,7 @@ func (dMgr *Manager) CreateLogicalDevice(ctx context.Context, cDevice *voltha.De
 
 // DeleteLogicalDevice deletes logical device from core
 func (dMgr *Manager) DeleteLogicalDevice(ctx context.Context, cDevice *voltha.Device) error {
-	logger.Info(ctx, "delete-logical-device")
+	logger.Infow(ctx, "delete-logical-device", log.Fields{"device-id": cDevice.Id, "parent-id": cDevice.ParentId})
 	if err := dMgr.logicalDeviceMgr.deleteLogicalDevice(ctx, cDevice); err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (dMgr *Manager) DeleteLogicalPorts(ctx context.Context, cDevice *voltha.Dev
 
 // SetupUNILogicalPorts creates UNI ports on the logical device that represents a child UNI interface
 func (dMgr *Manager) SetupUNILogicalPorts(ctx context.Context, cDevice *voltha.Device) error {
-	logger.Info(ctx, "setup-uni-logical-ports")
+	logger.Debugw(ctx, "setup-uni-logical-ports", log.Fields{"device-id": cDevice.Id})
 	cDevicePorts, err := dMgr.listDevicePorts(ctx, cDevice.Id)
 	if err != nil {
 		return err

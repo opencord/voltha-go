@@ -203,7 +203,7 @@ func (agent *Agent) stop(ctx context.Context) error {
 	}
 	defer agent.requestQueue.RequestComplete()
 
-	logger.Infow(ctx, "stopping-device-agent", log.Fields{"device-id": agent.deviceID, "parent-id": agent.parentID})
+	logger.Debugw(ctx, "stopping-device-agent", log.Fields{"device-id": agent.deviceID, "parent-id": agent.parentID})
 	// Remove the device transient loader
 	if err := agent.deleteTransientState(ctx); err != nil {
 		return err
@@ -1637,6 +1637,7 @@ retry:
 
 		if state != core.DeviceTransientState_REBOOT_IN_PROGRESS {
 			var err error
+			logger.Debugw(ctx, "reconciling-state", log.Fields{"deviceID": device.Id, "endpoint": device.AdapterEndpoint})
 			if state != core.DeviceTransientState_RECONCILE_IN_PROGRESS {
 				// set transient state to RECONCILE IN PROGRESS
 				if err = agent.UpdateTransientStateToReconcile(ctx); err != nil {

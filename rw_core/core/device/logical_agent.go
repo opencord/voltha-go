@@ -219,7 +219,7 @@ func (agent *LogicalAgent) start(ctx context.Context, logicalDeviceExist bool, l
 func (agent *LogicalAgent) stop(ctx context.Context) error {
 	var returnErr error
 	agent.stopOnce.Do(func() {
-		logger.Info(ctx, "stopping-logical-device-agent")
+		logger.Debugw(ctx, "stopping-logical-device-agent", log.Fields{"logical-device-id": agent.logicalDeviceID})
 
 		if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 			// This should never happen - an error is returned only if the agent is stopped and an agent is only stopped once.
@@ -253,7 +253,7 @@ func (agent *LogicalAgent) stop(ctx context.Context) error {
 		close(agent.exitChannel)
 		agent.stopped = true
 
-		logger.Info(ctx, "logical-device-agent-stopped")
+		logger.Infow(ctx, "logical-device-agent-stopped", log.Fields{"logical-device-id": agent.logicalDeviceID})
 	})
 	return returnErr
 }

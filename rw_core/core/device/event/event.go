@@ -199,7 +199,7 @@ func (q *Manager) SendFlowChangeEvent(ctx context.Context, deviceID string, res 
 
 // SendDeviceDeletionEvent notifies the ofAgent that the logical device was removed.
 func (q *Manager) SendDeviceDeletionEvent(ctx context.Context, logicalDeviceID string) {
-	logger.Infow(ctx, "send-change-event-for-device-deletion", log.Fields{"logical-device-id": logicalDeviceID})
+	logger.Debugw(ctx, "send-change-event-for-device-deletion", log.Fields{"logical-device-id": logicalDeviceID})
 	q.changeEventQueue <- openflow_13.ChangeEvent{
 		Id: logicalDeviceID,
 		Event: &openflow_13.ChangeEvent_DeviceStatus{

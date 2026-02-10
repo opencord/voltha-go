@@ -487,7 +487,6 @@ func (tMap *TransitionMap) getTransitionHandler(ctx context.Context, cDevice, pD
 
 	deviceType := parent
 	if !cDevice.Root {
-		logger.Info(ctx, "device is child")
 		deviceType = child
 	}
 	logger.Infof(ctx, "deviceType:%d-deviceId:%s-previous:%v-current:%v", deviceType, cDevice.Id, pState, cState)
