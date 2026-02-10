@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "321ae013_38441732",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001023
+      },
+      "writtenOn": "2026-02-10T10:45:01Z",
+      "side": 1,
+      "message": "\u003e Patch Set 1: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_unit-test-tests/3096/ : FAILURE\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_sanity-test/2241/ : SUCCESS\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_licensed/3348/ : SUCCESS\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_unit-test-lint/3094/ : SUCCESS\n\nrecheck",
+      "revId": "774ee840f42307f35b3695eada894d6b3f16f9bc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
