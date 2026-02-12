@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
@@ -31,6 +30,7 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // CreateDevice creates a new parent device in the data model
@@ -40,7 +40,7 @@ func (dMgr *Manager) CreateDevice(ctx context.Context, device *voltha.Device) (*
 		return &voltha.Device{}, errors.New("no-device-info-present; MAC or HOSTIP&PORT")
 	}
 	ctx = utils.WithRPCMetadataContext(ctx, "CreateDevice")
-	logger.Info(ctx, "create-device", log.Fields{"device": *device})
+	logger.Info(ctx, "create-device", log.Fields{"device": device})
 
 	deviceExist, err := dMgr.isParentDeviceExist(ctx, device)
 	if err != nil {
@@ -66,7 +66,7 @@ func (dMgr *Manager) CreateDevice(ctx context.Context, device *voltha.Device) (*
 }
 
 // EnableDevice activates a device by invoking the adopt_device API on the appropriate adapter
-func (dMgr *Manager) EnableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (dMgr *Manager) EnableDevice(ctx context.Context, id *voltha.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "EnableDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
@@ -75,11 +75,11 @@ func (dMgr *Manager) EnableDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return &empty.Empty{}, agent.enableDevice(ctx)
+	return &emptypb.Empty{}, agent.enableDevice(ctx)
 }
 
 // DisableDevice disables a device along with any child device it may have
-func (dMgr *Manager) DisableDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (dMgr *Manager) DisableDevice(ctx context.Context, id *voltha.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "DisableDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
@@ -88,11 +88,11 @@ func (dMgr *Manager) DisableDevice(ctx context.Context, id *voltha.ID) (*empty.E
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return &empty.Empty{}, agent.disableDevice(ctx)
+	return &emptypb.Empty{}, agent.disableDevice(ctx)
 }
 
 // RebootDevice invoked the reboot API to the corresponding adapter
-func (dMgr *Manager) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (dMgr *Manager) RebootDevice(ctx context.Context, id *voltha.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "RebootDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
@@ -112,11 +112,11 @@ func (dMgr *Manager) RebootDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 			return nil, status.Errorf(codes.NotFound, "device agent for parent id %s for child %s", agent.device.ParentId, id.Id)
 		}
 	}
-	return &empty.Empty{}, agent.rebootDevice(ctx)
+	return &emptypb.Empty{}, agent.rebootDevice(ctx)
 }
 
 // DeleteDevice removes a device from the data model
-func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "DeleteDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
@@ -130,7 +130,7 @@ func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 			switch statusErr.Code() {
 			case codes.NotFound:
 				logger.Warnw(ctx, "The device handler/device  entry is not found , further clean up ", log.Fields{"device-id": id.Id, "Error": err})
-				return &empty.Empty{}, nil
+				return &emptypb.Empty{}, nil
 			case codes.Unavailable:
 				logger.Errorw(ctx, "Failed to delete device", log.Fields{"device-id": id.Id, "Error": err})
 				return nil, err
@@ -144,11 +144,11 @@ func (dMgr *Manager) DeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Em
 		}
 
 	}
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // ForceDeleteDevice removes a device from the data model forcefully without successfully waiting for the adapters.
-func (dMgr *Manager) ForceDeleteDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (dMgr *Manager) ForceDeleteDevice(ctx context.Context, id *voltha.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "ForceDeleteDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
@@ -157,11 +157,11 @@ func (dMgr *Manager) ForceDeleteDevice(ctx context.Context, id *voltha.ID) (*emp
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
 	}
-	return &empty.Empty{}, agent.deleteDeviceForce(ctx)
+	return &emptypb.Empty{}, agent.deleteDeviceForce(ctx)
 }
 
 // ListDevices retrieves the latest devices from the data model
-func (dMgr *Manager) ListDevices(ctx context.Context, _ *empty.Empty) (*voltha.Devices, error) {
+func (dMgr *Manager) ListDevices(ctx context.Context, _ *emptypb.Empty) (*voltha.Devices, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "ListDevices")
 
 	logger.Debug(ctx, "list-devices")
@@ -177,7 +177,7 @@ func (dMgr *Manager) ListDevices(ctx context.Context, _ *empty.Empty) (*voltha.D
 }
 
 // ListDeviceIds retrieves the latest device IDs information from the data model (memory data only)
-func (dMgr *Manager) ListDeviceIds(ctx context.Context, _ *empty.Empty) (*voltha.IDs, error) {
+func (dMgr *Manager) ListDeviceIds(ctx context.Context, _ *emptypb.Empty) (*voltha.IDs, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "ListDeviceIds")
 
 	logger.Debug(ctx, "list-device-ids")
@@ -187,7 +187,7 @@ func (dMgr *Manager) ListDeviceIds(ctx context.Context, _ *empty.Empty) (*voltha
 
 // ReconcileDevices is a request to a voltha core to update its list of managed devices.  This will
 // trigger loading the devices along with their children and parent in memory
-func (dMgr *Manager) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*empty.Empty, error) {
+func (dMgr *Manager) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "ReconcileDevices")
 
 	numDevices := 0
@@ -213,7 +213,7 @@ func (dMgr *Manager) ReconcileDevices(ctx context.Context, ids *voltha.IDs) (*em
 	} else {
 		return nil, status.Errorf(codes.InvalidArgument, "empty-list-of-ids")
 	}
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // GetDevice exists primarily to implement the gRPC interface.
@@ -787,7 +787,7 @@ func (dMgr *Manager) ListDevicePmConfigs(ctx context.Context, id *voltha.ID) (*v
 
 // UpdateDevicePmConfigs updates the PM configs.  This is executed when the northbound gRPC API is invoked, typically
 // following a user action
-func (dMgr *Manager) UpdateDevicePmConfigs(ctx context.Context, configs *voltha.PmConfigs) (*empty.Empty, error) {
+func (dMgr *Manager) UpdateDevicePmConfigs(ctx context.Context, configs *voltha.PmConfigs) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "UpdateDevicePmConfigs")
 	log.EnrichSpan(ctx, log.Fields{"device-id": configs.Id})
 
@@ -798,7 +798,7 @@ func (dMgr *Manager) UpdateDevicePmConfigs(ctx context.Context, configs *voltha.
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", configs.Id)
 	}
-	return &empty.Empty{}, agent.updatePmConfigs(ctx, configs)
+	return &emptypb.Empty{}, agent.updatePmConfigs(ctx, configs)
 }
 
 // ListDeviceFlows returns the flow details for a specific device entry
@@ -838,7 +838,7 @@ func (dMgr *Manager) ListDeviceFlowGroups(ctx context.Context, id *voltha.ID) (*
 	return &ofp.FlowGroups{Items: ret}, nil
 }
 
-func (dMgr *Manager) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+func (dMgr *Manager) EnablePort(ctx context.Context, port *voltha.Port) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "EnablePort")
 	log.EnrichSpan(ctx, log.Fields{"device-id": port.DeviceId})
 
@@ -847,10 +847,10 @@ func (dMgr *Manager) EnablePort(ctx context.Context, port *voltha.Port) (*empty.
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", port.DeviceId)
 	}
-	return &empty.Empty{}, agent.enablePort(ctx, port.PortNo)
+	return &emptypb.Empty{}, agent.enablePort(ctx, port.PortNo)
 }
 
-func (dMgr *Manager) DisablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+func (dMgr *Manager) DisablePort(ctx context.Context, port *voltha.Port) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "DisablePort")
 	log.EnrichSpan(ctx, log.Fields{"device-id": port.DeviceId})
 
@@ -859,7 +859,7 @@ func (dMgr *Manager) DisablePort(ctx context.Context, port *voltha.Port) (*empty
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", port.DeviceId)
 	}
-	return &empty.Empty{}, agent.disablePort(ctx, port.PortNo)
+	return &emptypb.Empty{}, agent.disablePort(ctx, port.PortNo)
 }
 
 func (dMgr *Manager) GetExtValue(ctx context.Context, value *extension.ValueSpecifier) (*extension.ReturnValues, error) {
@@ -888,7 +888,7 @@ func (dMgr *Manager) GetExtValue(ctx context.Context, value *extension.ValueSpec
 }
 
 // SetExtValue  set some given configs or value
-func (dMgr *Manager) SetExtValue(ctx context.Context, value *extension.ValueSet) (*empty.Empty, error) {
+func (dMgr *Manager) SetExtValue(ctx context.Context, value *extension.ValueSet) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "SetExtValue")
 	logger.Info(ctx, "set-ext-value", log.Fields{"onu-id": value.Id})
 
@@ -936,23 +936,23 @@ func (dMgr *Manager) SimulateAlarm(ctx context.Context, simulateReq *voltha.Simu
 	return &common.OperationResp{Code: common.OperationResp_OPERATION_SUCCESS}, nil
 }
 
-func (dMgr *Manager) PutVoipUserProfile(ctx context.Context, voipUserProfileRequest *voip_user_profile.VoipUserProfileRequest) (*empty.Empty, error) {
+func (dMgr *Manager) PutVoipUserProfile(ctx context.Context, voipUserProfileRequest *voip_user_profile.VoipUserProfileRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "put-voip-user-profile-not-implemented")
 }
 
-func (dMgr *Manager) DeleteVoipUserProfile(ctx context.Context, key *common.Key) (*empty.Empty, error) {
+func (dMgr *Manager) DeleteVoipUserProfile(ctx context.Context, key *common.Key) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "delete-voip-user-profile-not-implemented")
 }
 
-func (dMgr *Manager) PutVoipSystemProfile(ctx context.Context, voipSystemProfileRequest *voip_system_profile.VoipSystemProfileRequest) (*empty.Empty, error) {
+func (dMgr *Manager) PutVoipSystemProfile(ctx context.Context, voipSystemProfileRequest *voip_system_profile.VoipSystemProfileRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "put-voip-system-profile-not-implemented")
 }
 
-func (dMgr *Manager) DeleteVoipSystemProfile(ctx context.Context, key *common.Key) (*empty.Empty, error) {
+func (dMgr *Manager) DeleteVoipSystemProfile(ctx context.Context, key *common.Key) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "delete-voip-system-profile-not-implemented")
 }
 
-func (dMgr *Manager) DisableOnuDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (dMgr *Manager) DisableOnuDevice(ctx context.Context, id *voltha.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "DisableOnuDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
@@ -967,10 +967,10 @@ func (dMgr *Manager) DisableOnuDevice(ctx context.Context, id *voltha.ID) (*empt
 		return nil, status.Errorf(codes.NotFound, "%s", agent.device.ParentId)
 	}
 	logger.Debugw(ctx, "serial-no to be diabled", log.Fields{"serial-number": agent.device.SerialNumber})
-	return &empty.Empty{}, agent.disableOnuDevice(ctx, oltAgent.adapterEndpoint)
+	return &emptypb.Empty{}, agent.disableOnuDevice(ctx, oltAgent.adapterEndpoint)
 }
 
-func (dMgr *Manager) EnableOnuDevice(ctx context.Context, id *voltha.ID) (*empty.Empty, error) {
+func (dMgr *Manager) EnableOnuDevice(ctx context.Context, id *voltha.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "EnableOnuDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
@@ -985,10 +985,10 @@ func (dMgr *Manager) EnableOnuDevice(ctx context.Context, id *voltha.ID) (*empty
 		return nil, status.Errorf(codes.NotFound, "%s", agent.device.ParentId)
 	}
 	logger.Debugw(ctx, "serial-no to be enabled", log.Fields{"serial-number": agent.device.SerialNumber})
-	return &empty.Empty{}, agent.enableOnuDevice(ctx, oltAgent.adapterEndpoint)
+	return &emptypb.Empty{}, agent.enableOnuDevice(ctx, oltAgent.adapterEndpoint)
 }
 
-func (dMgr *Manager) DisableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon) (*empty.Empty, error) {
+func (dMgr *Manager) DisableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "DisableOnuSerialNumber")
 	log.EnrichSpan(ctx, log.Fields{"device-id": device.OltDeviceId})
 
@@ -1007,10 +1007,10 @@ func (dMgr *Manager) DisableOnuSerialNumber(ctx context.Context, device *voltha.
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", onuDeviceID)
 	}
-	return &empty.Empty{}, agent.disableOnuSerialNumber(ctx, device, oltAgent.adapterEndpoint)
+	return &emptypb.Empty{}, agent.disableOnuSerialNumber(ctx, device, oltAgent.adapterEndpoint)
 }
 
-func (dMgr *Manager) EnableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon) (*empty.Empty, error) {
+func (dMgr *Manager) EnableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "EnableOnuSerialNumber")
 	log.EnrichSpan(ctx, log.Fields{"device-id": device.OltDeviceId})
 
@@ -1030,11 +1030,11 @@ func (dMgr *Manager) EnableOnuSerialNumber(ctx context.Context, device *voltha.O
 		return nil, status.Errorf(codes.NotFound, "%s", onuDeviceID)
 	}
 
-	return &empty.Empty{}, agent.enableOnuSerialNumber(ctx, device, oltAgent.adapterEndpoint)
+	return &emptypb.Empty{}, agent.enableOnuSerialNumber(ctx, device, oltAgent.adapterEndpoint)
 }
 
 // UpdateDevice updates the configuration of a device, such as changing the IP address of an OLT device.
-func (dMgr *Manager) UpdateDevice(ctx context.Context, config *voltha.UpdateDevice) (*empty.Empty, error) {
+func (dMgr *Manager) UpdateDevice(ctx context.Context, config *voltha.UpdateDevice) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "UpdateDevice")
 	log.EnrichSpan(ctx, log.Fields{"device-id": config.Id})
 
@@ -1070,5 +1070,5 @@ func (dMgr *Manager) UpdateDevice(ctx context.Context, config *voltha.UpdateDevi
 		return nil, status.Error(codes.InvalidArgument, "device-update-only-supported-for-olt-devices")
 	}
 
-	return &empty.Empty{}, agent.updateDevice(ctx, config)
+	return &emptypb.Empty{}, agent.updateDevice(ctx, config)
 }

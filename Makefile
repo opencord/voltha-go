@@ -192,6 +192,12 @@ fmt: ## Formats the source code to go best practice style
 	gofmt -s -e -w $(PACKAGES)
 #	@go fmt ${PACKAGES}
 
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
+.PHONY: generate-delegations
+generate-delegations: ## Regenerate API delegation methods after proto changes
+	@echo "Regenerating API delegations..."
+	@cd rw_core/core/api && go run generate_delegations.go
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
@@ -233,6 +239,7 @@ help ::
 	@echo '    LOCAL_FIX_PERMS=1    Hack to fix docker filesystem access problems'
 	@echo '  mod-tidy'
 	@echo '  mod-vendor'
+	@echo '  generate-delegations   Regenerate API delegation methods (auto-runs with mod-update and build)'
 
 ## ---------------------------------------------------------------------------
 # For each makefile target, add ## <description> on the target line and it will be listed by 'make help'

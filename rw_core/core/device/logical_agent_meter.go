@@ -84,7 +84,7 @@ func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterM
 		logger.Errorw(ctx, "failed-meterAdd-meterMod-is-nil", log.Fields{"logical-device-id": agent.logicalDeviceID})
 		return nil
 	}
-	logger.Debugw(ctx, "meterAdd", log.Fields{"metermod": *meterMod, "logical-device-id": agent.logicalDeviceID})
+	logger.Debugw(ctx, "meterAdd", log.Fields{"metermod": meterMod, "logical-device-id": agent.logicalDeviceID})
 
 	meterEntry := fu.MeterEntryFromMeterMod(ctx, meterMod)
 
@@ -97,7 +97,7 @@ func (agent *LogicalAgent) meterAdd(ctx context.Context, meterMod *ofp.OfpMeterM
 	if created {
 		logger.Debugw(ctx, "Meter-added-successfully", log.Fields{"Added-meter": meterEntry, "logical-device-id": agent.logicalDeviceID})
 	} else {
-		logger.Infow(ctx, "Meter-already-exists", log.Fields{"meter": *meterMod, "logical-device-id": agent.logicalDeviceID})
+		logger.Infow(ctx, "Meter-already-exists", log.Fields{"meter": meterMod, "logical-device-id": agent.logicalDeviceID})
 	}
 	return nil
 }
@@ -107,7 +107,7 @@ func (agent *LogicalAgent) meterDelete(ctx context.Context, meterMod *ofp.OfpMet
 		logger.Errorw(ctx, "failed-meterDelete-meterMod-is-nil", log.Fields{"logical-device-id": agent.logicalDeviceID})
 		return nil
 	}
-	logger.Debug(ctx, "meterDelete", log.Fields{"meterMod": *meterMod, "logical-device-id": agent.logicalDeviceID})
+	logger.Debug(ctx, "meterDelete", log.Fields{"meterMod": meterMod, "logical-device-id": agent.logicalDeviceID})
 
 	meterHandle, have := agent.meterLoader.Lock(meterMod.MeterId)
 	if !have {
