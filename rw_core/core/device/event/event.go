@@ -24,7 +24,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	ev "github.com/opencord/voltha-lib-go/v7/pkg/events"
 	"github.com/opencord/voltha-lib-go/v7/pkg/events/eventif"
@@ -34,12 +33,13 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"github.com/opentracing/opentracing-go"
 	jtracing "github.com/uber/jaeger-client-go"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Manager struct {
-	packetInQueue        chan openflow_13.PacketIn
+	packetInQueue        chan *openflow_13.PacketIn
 	packetInQueueDone    chan bool
-	changeEventQueue     chan openflow_13.ChangeEvent
+	changeEventQueue     chan *openflow_13.ChangeEvent
 	changeEventQueueDone chan bool
 	Agent                *Agent
 }
@@ -52,9 +52,9 @@ type Agent struct {
 
 func NewManager(proxyForEvents eventif.EventProxy, instanceID string, stackID string) *Manager {
 	return &Manager{
-		packetInQueue:        make(chan openflow_13.PacketIn, 100),
+		packetInQueue:        make(chan *openflow_13.PacketIn, 100),
 		packetInQueueDone:    make(chan bool, 1),
-		changeEventQueue:     make(chan openflow_13.ChangeEvent, 100),
+		changeEventQueue:     make(chan *openflow_13.ChangeEvent, 100),
 		changeEventQueueDone: make(chan bool, 1),
 		Agent:                NewAgent(proxyForEvents, instanceID, stackID),
 	}
@@ -69,7 +69,7 @@ func NewAgent(proxyForEvents eventif.EventProxy, instanceID string, stackID stri
 }
 func (q *Manager) SendPacketIn(ctx context.Context, deviceID string, packet *openflow_13.OfpPacketIn) {
 	// TODO: Augment the OF PacketIn to include the transactionId
-	packetIn := openflow_13.PacketIn{Id: deviceID, PacketIn: packet}
+	packetIn := &openflow_13.PacketIn{Id: deviceID, PacketIn: packet}
 	logger.Debugw(ctx, "send-packet-in", log.Fields{"packet-in": packetIn})
 	q.packetInQueue <- packetIn
 }
@@ -101,10 +101,10 @@ func (q *Manager) getStreamingTracker(ctx context.Context, method string, done c
 func (q *Manager) flushFailedPackets(ctx context.Context, tracker *callTracker) {
 	if tracker.failedPacket != nil {
 		switch failedPacket := tracker.failedPacket.(type) {
-		case openflow_13.PacketIn:
+		case *openflow_13.PacketIn:
 			logger.Debug(ctx, "enqueueing-last-failed-packet-in")
 			q.packetInQueue <- failedPacket
-		case openflow_13.ChangeEvent:
+		case *openflow_13.ChangeEvent:
 			logger.Debug(ctx, "enqueueing-last-failed-change-event")
 			q.changeEventQueue <- failedPacket
 		}
@@ -112,7 +112,7 @@ func (q *Manager) flushFailedPackets(ctx context.Context, tracker *callTracker) 
 }
 
 // ReceivePacketsIn receives packets from adapter
-func (q *Manager) ReceivePacketsIn(_ *empty.Empty, packetsIn voltha.VolthaService_ReceivePacketsInServer) error {
+func (q *Manager) ReceivePacketsIn(_ *emptypb.Empty, packetsIn voltha.VolthaService_ReceivePacketsInServer) error {
 	ctx := context.Background()
 	ctx = utils.WithRPCMetadataContext(ctx, "ReceivePacketsIn")
 	var streamingTracker = q.getStreamingTracker(ctx, "ReceivePacketsIn", q.packetInQueueDone)
@@ -127,7 +127,7 @@ loop:
 			logger.Debugw(ctx, "sending-packet-in", log.Fields{
 				"packet": hex.EncodeToString(packet.PacketIn.Data),
 			})
-			if err := packetsIn.Send(&packet); err != nil {
+			if err := packetsIn.Send(packet); err != nil {
 				logger.Errorw(ctx, "failed-to-send-packet", log.Fields{"error": err})
 				go q.Agent.GetAndSendRPCEvent(ctx, packet.Id, err.Error(),
 					nil, "RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION,
@@ -150,7 +150,7 @@ loop:
 
 func (q *Manager) SendChangeEvent(ctx context.Context, deviceID string, reason openflow_13.OfpPortReason, desc *openflow_13.OfpPort) {
 	logger.Debugw(ctx, "send-change-event", log.Fields{"device-id": deviceID, "reason": reason, "desc": desc})
-	q.changeEventQueue <- openflow_13.ChangeEvent{
+	q.changeEventQueue <- &openflow_13.ChangeEvent{
 		Id: deviceID,
 		Event: &openflow_13.ChangeEvent_PortStatus{
 			PortStatus: &openflow_13.OfpPortStatus{
@@ -181,7 +181,7 @@ func (q *Manager) SendFlowChangeEvent(ctx context.Context, deviceID string, res 
 	cookie := make([]byte, 52)
 	binary.BigEndian.PutUint64(cookie, flowCookie)
 	bs = append(bs, cookie...)
-	q.changeEventQueue <- openflow_13.ChangeEvent{
+	q.changeEventQueue <- &openflow_13.ChangeEvent{
 		Id: deviceID,
 		Event: &openflow_13.ChangeEvent_Error{
 			Error: &openflow_13.OfpErrorMsg{
@@ -200,7 +200,7 @@ func (q *Manager) SendFlowChangeEvent(ctx context.Context, deviceID string, res 
 // SendDeviceDeletionEvent notifies the ofAgent that the logical device was removed.
 func (q *Manager) SendDeviceDeletionEvent(ctx context.Context, logicalDeviceID string) {
 	logger.Infow(ctx, "send-change-event-for-device-deletion", log.Fields{"logical-device-id": logicalDeviceID})
-	q.changeEventQueue <- openflow_13.ChangeEvent{
+	q.changeEventQueue <- &openflow_13.ChangeEvent{
 		Id: logicalDeviceID,
 		Event: &openflow_13.ChangeEvent_DeviceStatus{
 			DeviceStatus: &openflow_13.OfpDeviceStatus{
@@ -211,7 +211,7 @@ func (q *Manager) SendDeviceDeletionEvent(ctx context.Context, logicalDeviceID s
 }
 
 // ReceiveChangeEvents receives change in events
-func (q *Manager) ReceiveChangeEvents(_ *empty.Empty, changeEvents voltha.VolthaService_ReceiveChangeEventsServer) error {
+func (q *Manager) ReceiveChangeEvents(_ *emptypb.Empty, changeEvents voltha.VolthaService_ReceiveChangeEventsServer) error {
 	ctx := context.Background()
 	ctx = utils.WithRPCMetadataContext(ctx, "ReceiveChangeEvents")
 	var streamingTracker = q.getStreamingTracker(ctx, "ReceiveChangeEvents", q.changeEventQueueDone)
@@ -225,7 +225,7 @@ loop:
 		// Dequeue a change event
 		case event := <-q.changeEventQueue:
 			logger.Debugw(ctx, "sending-change-event", log.Fields{"event": event})
-			if err := changeEvents.Send(&event); err != nil {
+			if err := changeEvents.Send(event); err != nil {
 				logger.Errorw(ctx, "failed-to-send-change-event", log.Fields{"error": err})
 				go q.Agent.GetAndSendRPCEvent(ctx, event.Id, err.Error(),
 					nil, "RPC_ERROR_RAISE_EVENT", voltha.EventCategory_COMMUNICATION, nil,
@@ -245,7 +245,7 @@ loop:
 	return nil
 }
 
-func (q *Manager) GetChangeEventsQueueForTest() <-chan openflow_13.ChangeEvent {
+func (q *Manager) GetChangeEventsQueueForTest() <-chan *openflow_13.ChangeEvent {
 	return q.changeEventQueue
 }
 
@@ -311,7 +311,7 @@ func (q *Agent) SendDeviceStateChangeEvent(ctx context.Context,
 		logger.Errorw(ctx, "error-sending-device-event", log.Fields{"id": device.Id, "err": err})
 		return err
 	}
-	logger.Debugw(ctx, "device-state-change-sent", log.Fields{"event": *de})
+	logger.Debugw(ctx, "device-state-change-sent", log.Fields{"event": de})
 	return nil
 }
 
@@ -335,6 +335,6 @@ func (q *Agent) SendDeviceDeletedEvent(ctx context.Context, device *voltha.Devic
 		logger.Errorw(ctx, "error-sending-device-deleted-event", log.Fields{"id": device.Id, "err": err})
 		return err
 	}
-	logger.Debugw(ctx, "device-deleted-event-sent", log.Fields{"event": *de})
+	logger.Debugw(ctx, "device-deleted-event-sent", log.Fields{"event": de})
 	return nil
 }

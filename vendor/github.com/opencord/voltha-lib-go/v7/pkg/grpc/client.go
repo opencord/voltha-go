@@ -37,7 +37,7 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/onu_inter_adapter_service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
 
@@ -291,7 +291,7 @@ func (c *Client) monitorConnection(ctx context.Context) {
 
 	// Get a new client using reflection. The server can implement any grpc service, but it
 	// needs to also implement the "StartKeepAliveStream" API
-	grpcReflectClient := grpcreflect.NewClient(ctx, rpb.NewServerReflectionClient(conn))
+	grpcReflectClient := grpcreflect.NewClientAuto(ctx, conn)
 	if grpcReflectClient == nil {
 		logger.Errorw(ctx, "grpc-reflect-client-nil", log.Fields{"api-endpoint": c.serverEndPoint, "client": c.clientEndpoint})
 		return
@@ -621,8 +621,8 @@ func (c *Client) connectToEndpoint(ctx context.Context, p *probe.Probe, retry_in
 	if len(retry_interceptor) > 0 {
 		interceptor_opts = append(interceptor_opts, retry_interceptor...)
 	}
-	conn, err := grpc.Dial(c.serverEndPoint,
-		grpc.WithInsecure(),
+	conn, err := grpc.NewClient(c.serverEndPoint,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(grpcRecvMsgSizeLimit*1024*1024)),
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
 			grpc_opentracing.StreamClientInterceptor(grpc_opentracing.WithTracer(log.ActiveTracerProxy{})),

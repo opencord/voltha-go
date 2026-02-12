@@ -24,7 +24,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
@@ -33,6 +32,7 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/core_service"
 	"github.com/opencord/voltha-protos/v5/go/health"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	"github.com/opencord/voltha-protos/v5/go/extension"
@@ -72,6 +72,7 @@ func GetStartingUNIPortNo() int {
 
 // Adapter represents adapter attributes
 type Adapter struct {
+	adapter_service.UnimplementedAdapterServiceServer
 	flows                map[string]map[uint64]*openflow_13.OfpFlowStats
 	devices              map[string]*voltha.Device
 	failFlowAdd          map[string]bool
@@ -183,15 +184,15 @@ func (ta *Adapter) GetHealthStatus(ctx context.Context, clientConn *common.Conne
 
 // Device
 
-func (ta *Adapter) AdoptDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) AdoptDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (ta *Adapter) ReconcileDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) ReconcileDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (ta *Adapter) DeleteDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+func (ta *Adapter) DeleteDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
 	ta.failDeleteDeviceLock.RLock()
 	haveToFail, ok := ta.failDeleteDevice[device.Id]
 	if ok && haveToFail {
@@ -203,27 +204,27 @@ func (ta *Adapter) DeleteDevice(ctx context.Context, device *voltha.Device) (*em
 		ta.RemoveDevice(device.Id)
 	}
 	logger.Debugw(ctx, "device-deleted-in-adapter", log.Fields{"device-id": device.Id})
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (ta *Adapter) DisableDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) DisableDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (ta *Adapter) ReEnableDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) ReEnableDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (ta *Adapter) RebootDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) RebootDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (ta *Adapter) SelfTestDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) SelfTestDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (ta *Adapter) ChildDeviceLost(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) ChildDeviceLost(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 func (ta *Adapter) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) (*ca.SwitchCapability, error) {
@@ -232,20 +233,20 @@ func (ta *Adapter) GetOfpDeviceInfo(ctx context.Context, device *voltha.Device) 
 
 // Ports
 
-func (ta *Adapter) EnablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) EnablePort(ctx context.Context, port *voltha.Port) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (ta *Adapter) DisablePort(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) DisablePort(ctx context.Context, port *voltha.Port) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 // Flows
-func (ta *Adapter) UpdateFlowsBulk(ctx context.Context, flows *ca.BulkFlows) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) UpdateFlowsBulk(ctx context.Context, flows *ca.BulkFlows) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (ta *Adapter) UpdateFlowsIncrementally(ctx context.Context, incrFlows *ca.IncrementalFlows) (*empty.Empty, error) {
+func (ta *Adapter) UpdateFlowsIncrementally(ctx context.Context, incrFlows *ca.IncrementalFlows) (*emptypb.Empty, error) {
 	ta.flowLock.Lock()
 	defer ta.flowLock.Unlock()
 
@@ -275,17 +276,17 @@ func (ta *Adapter) UpdateFlowsIncrementally(ctx context.Context, incrFlows *ca.I
 			delete(ta.flows[incrFlows.Device.Id], f.Id)
 		}
 	}
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // Packets
-func (ta *Adapter) SendPacketOut(ctx context.Context, packet *ca.PacketOut) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) SendPacketOut(ctx context.Context, packet *ca.PacketOut) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 // PM
-func (ta *Adapter) UpdatePmConfig(ctx context.Context, configs *ca.PmConfigsInfo) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) UpdatePmConfig(ctx context.Context, configs *ca.PmConfigsInfo) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 // Image
@@ -340,12 +341,12 @@ func (ta *Adapter) StartOmciTest(ctx context.Context, test *ca.OMCITest) (*omci.
 }
 
 // Events
-func (ta *Adapter) SuppressEvent(ctx context.Context, filter *voltha.EventFilter) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) SuppressEvent(ctx context.Context, filter *voltha.EventFilter) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (ta *Adapter) UnSuppressEvent(ctx context.Context, filter *voltha.EventFilter) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) UnSuppressEvent(ctx context.Context, filter *voltha.EventFilter) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 func (ta *Adapter) SimulateAlarm(context.Context, *ca.SimulateAlarmMessage) (*common.OperationResp, error) {
@@ -356,8 +357,8 @@ func (ta *Adapter) GetExtValue(context.Context, *ca.GetExtValueMessage) (*extens
 	return &extension.ReturnValues{}, nil
 }
 
-func (ta *Adapter) SetExtValue(context.Context, *ca.SetExtValueMessage) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (ta *Adapter) SetExtValue(context.Context, *ca.SetExtValueMessage) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 func (ta *Adapter) GetSingleValue(context.Context, *extension.SingleGetValueRequest) (*extension.SingleGetValueResponse, error) {
