@@ -23,7 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
@@ -39,6 +38,7 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 )
 
 type LDATest struct {

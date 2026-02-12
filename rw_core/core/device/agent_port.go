@@ -23,13 +23,13 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/common"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/core/device/port"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 // listDevicePorts returns device ports
@@ -73,9 +73,9 @@ func (agent *Agent) updatePortsOperState(ctx context.Context, portTypeFilter uin
 		if portHandle, have := agent.portLoader.Lock(portID); have {
 			if oldPort := portHandle.GetReadOnly(); (1<<oldPort.Type)&portTypeFilter == 0 { // only update port types not included in the mask
 				// clone top-level port struct
-				newPort := *oldPort
+				newPort := proto.Clone(oldPort).(*voltha.Port)
 				newPort.OperStatus = operStatus
-				if err := portHandle.Update(ctx, &newPort); err != nil {
+				if err := portHandle.Update(ctx, newPort); err != nil {
 					portHandle.Unlock()
 					return err
 				}
@@ -113,9 +113,9 @@ func (agent *Agent) updatePortState(ctx context.Context, portType voltha.Port_Po
 		return nil
 	}
 
-	newPort := *port // clone top-level port struct
+	newPort := proto.Clone(port).(*voltha.Port) // clone top-level port struct
 	newPort.OperStatus = operStatus
-	return portHandle.Update(ctx, &newPort)
+	return portHandle.Update(ctx, newPort)
 }
 
 func (agent *Agent) deleteAllPorts(ctx context.Context) error {
@@ -177,11 +177,11 @@ func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
 
 	// Creation of OLT PON port is being processed after a default PON port was created.  Just update it.
 	logger.Infow(ctx, "update-pon-port-created-by-default", log.Fields{"default-port": oldPort, "port-to-add": port})
-	newPort := *oldPort // clone top-level port struct
+	newPort := proto.Clone(oldPort).(*voltha.Port) // clone top-level port struct
 	newPort.Label = port.Label
 	newPort.OperStatus = port.OperStatus
 
-	err = portHandle.Update(ctx, &newPort)
+	err = portHandle.Update(ctx, newPort)
 	if err != nil {
 		desc = err.Error()
 		return err
@@ -257,9 +257,9 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 		return err
 	}
 
-	newPort := *oldPort
+	newPort := proto.Clone(oldPort).(*voltha.Port) // clone top-level port struct
 	newPort.AdminState = voltha.AdminState_DISABLED
-	if err = portHandle.Update(ctx, &newPort); err != nil {
+	if err = portHandle.Update(ctx, newPort); err != nil {
 		return err
 	}
 
@@ -287,7 +287,7 @@ func (agent *Agent) disablePort(ctx context.Context, portID uint32) error {
 	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		_, err = client.DisablePort(subCtx, &newPort)
+		_, err = client.DisablePort(subCtx, newPort)
 		if err == nil {
 			agent.onSuccess(subCtx, nil, nil, true)
 		} else {
@@ -319,9 +319,9 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 		return err
 	}
 
-	newPort := *oldPort
+	newPort := proto.Clone(oldPort).(*voltha.Port) // clone top-level port struct
 	newPort.AdminState = voltha.AdminState_ENABLED
-	if err = portHandle.Update(ctx, &newPort); err != nil {
+	if err = portHandle.Update(ctx, newPort); err != nil {
 		return err
 	}
 
@@ -346,7 +346,7 @@ func (agent *Agent) enablePort(ctx context.Context, portID uint32) error {
 	operStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
 	go func() {
 		defer cancel()
-		_, err := client.EnablePort(subCtx, &newPort)
+		_, err := client.EnablePort(subCtx, newPort)
 		if err == nil {
 			agent.onSuccess(subCtx, nil, nil, true)
 		} else {

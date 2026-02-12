@@ -27,9 +27,10 @@ import (
 	"sync"
 
 	"github.com/cevaris/ordered_map"
-	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
+	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -1019,7 +1020,7 @@ func MeterEntryFromMeterMod(ctx context.Context, meterMod *ofp.OfpMeterMod) *ofp
 		bandStats = append(bandStats, band)
 	}
 	meter.Stats.BandStats = bandStats
-	logger.Debugw(ctx, "Allocated meter entry", log.Fields{"meter": *meter})
+	logger.Debugw(ctx, "Allocated meter entry", log.Fields{"meter": meter})
 	return meter
 
 }
@@ -1040,8 +1041,8 @@ func GetMeterIdFromFlow(flow *ofp.OfpFlowStats) uint32 {
 
 func MkOxmFields(matchFields []ofp.OfpOxmField) []*ofp.OfpOxmField {
 	oxmFields := make([]*ofp.OfpOxmField, 0)
-	for _, matchField := range matchFields {
-		oxmField := ofp.OfpOxmField{OxmClass: ofp.OfpOxmClass_OFPXMC_OPENFLOW_BASIC, Field: matchField.Field}
+	for i := range matchFields {
+		oxmField := ofp.OfpOxmField{OxmClass: ofp.OfpOxmClass_OFPXMC_OPENFLOW_BASIC, Field: matchFields[i].Field}
 		oxmFields = append(oxmFields, &oxmField)
 	}
 	return oxmFields
@@ -1278,7 +1279,7 @@ func (fg *FlowsAndGroups) String() string {
 	for kv, ok := iter(); ok; kv, ok = iter() {
 		if protoMsg, isMsg := kv.Value.(*ofp.OfpFlowStats); isMsg {
 			buffer.WriteString("\nFlow:\n")
-			buffer.WriteString(proto.MarshalTextString(protoMsg))
+			buffer.WriteString(prototext.Format(protoMsg))
 			buffer.WriteString("\n")
 		}
 	}
@@ -1286,7 +1287,7 @@ func (fg *FlowsAndGroups) String() string {
 	for kv, ok := iter(); ok; kv, ok = iter() {
 		if protoMsg, isMsg := kv.Value.(*ofp.OfpGroupEntry); isMsg {
 			buffer.WriteString("\nGroup:\n")
-			buffer.WriteString(proto.MarshalTextString(protoMsg))
+			buffer.WriteString(prototext.Format(protoMsg))
 			buffer.WriteString("\n")
 		}
 	}

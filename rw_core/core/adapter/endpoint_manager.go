@@ -23,12 +23,12 @@ import (
 
 	"github.com/buraksezer/consistent"
 	"github.com/cespare/xxhash"
-	"github.com/golang/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v7/pkg/db"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 const (

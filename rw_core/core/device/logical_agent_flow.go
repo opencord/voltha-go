@@ -23,7 +23,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/core/device/flow"
 	"github.com/opencord/voltha-go/rw_core/route"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
@@ -33,6 +32,7 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 // listLogicalDeviceFlows returns logical device flows

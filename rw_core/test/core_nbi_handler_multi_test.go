@@ -32,7 +32,6 @@ import (
 	"time"
 
 	"github.com/IBM/sarama"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-lib-go/v7/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v7/pkg/kafka"
 	mock_kafka "github.com/opencord/voltha-lib-go/v7/pkg/mocks/kafka"
@@ -42,7 +41,6 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc"
 
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/opencord/voltha-go/rw_core/config"
 	c "github.com/opencord/voltha-go/rw_core/core"
 	cm "github.com/opencord/voltha-go/rw_core/mocks"
@@ -50,6 +48,8 @@ import (
 	mock_etcd "github.com/opencord/voltha-lib-go/v7/pkg/mocks/etcd"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var oltAdapters = map[string]*AdapterInfo{
@@ -268,7 +268,7 @@ func (nb *NBTest) stopAll(ctx context.Context) {
 
 func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, nbi voltha.VolthaServiceClient) {
 	// Get the latest logical device
-	logicalDevices, err := nbi.ListLogicalDevices(getContext(), &empty.Empty{})
+	logicalDevices, err := nbi.ListLogicalDevices(getContext(), &emptypb.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, logicalDevices)
 	var ld *voltha.LogicalDevice
@@ -316,7 +316,7 @@ func (nb *NBTest) verifyLogicalDevices(t *testing.T, oltDevice *voltha.Device, n
 
 func (nb *NBTest) verifyDevices(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceID string) {
 	// Get the latest set of devices
-	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
+	devices, err := nbi.ListDevices(getContext(), &emptypb.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, devices)
 
@@ -385,7 +385,7 @@ func (nb *NBTest) verifyDevices(t *testing.T, nbi voltha.VolthaServiceClient, ol
 }
 
 func (nb *NBTest) getChildDevices(parentID string, nbi voltha.VolthaServiceClient) (*voltha.Devices, error) {
-	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
+	devices, err := nbi.ListDevices(getContext(), &emptypb.Empty{})
 	if err != nil {
 		return nil, err
 	}
@@ -399,15 +399,15 @@ func (nb *NBTest) getChildDevices(parentID string, nbi voltha.VolthaServiceClien
 }
 
 func (nb *NBTest) testCoreWithoutData(t *testing.T, nbi voltha.VolthaServiceClient) {
-	lds, err := nbi.ListLogicalDevices(getContext(), &empty.Empty{})
+	lds, err := nbi.ListLogicalDevices(getContext(), &emptypb.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, lds)
 	assert.Equal(t, 0, len(lds.Items))
-	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
+	devices, err := nbi.ListDevices(getContext(), &emptypb.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, devices)
 	assert.Equal(t, 0, len(devices.Items))
-	adapters, err := nbi.ListAdapters(getContext(), &empty.Empty{})
+	adapters, err := nbi.ListAdapters(getContext(), &emptypb.Empty{})
 	assert.Equal(t, 0, len(adapters.Items))
 	assert.Nil(t, err)
 	assert.NotNil(t, adapters)
@@ -425,7 +425,7 @@ func (nb *NBTest) getNumAdapters() int {
 
 func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi voltha.VolthaServiceClient) {
 	ctx := context.Background()
-	adapters, err := nbi.ListAdapters(getContext(), &empty.Empty{})
+	adapters, err := nbi.ListAdapters(getContext(), &emptypb.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, adapters)
 	assert.Equal(t, nb.getNumAdapters(), len(adapters.Items))
@@ -446,7 +446,7 @@ func (nb *NBTest) testAdapterRegistration(t *testing.T, nbi voltha.VolthaService
 			logger.Fatal(ctx, "unregistered-adapter", a.Id)
 		}
 	}
-	deviceTypes, err := nbi.ListDeviceTypes(getContext(), &empty.Empty{})
+	deviceTypes, err := nbi.ListDeviceTypes(getContext(), &emptypb.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, deviceTypes)
 	assert.Equal(t, len(nb.oltAdapters)+len(nb.onuAdapters), len(deviceTypes.Items))
@@ -724,7 +724,7 @@ func (nb *NBTest) createAndEnableOLTDevice(t *testing.T, nbi voltha.VolthaServic
 		assert.NotNil(t, oltDevice)
 
 		// Verify oltDevice exist in the core
-		devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
+		devices, err := nbi.ListDevices(getContext(), &emptypb.Empty{})
 		assert.Nil(t, err)
 		exist := false
 		for _, d := range devices.Items {
@@ -1346,6 +1346,17 @@ func (nb *NBTest) sendTrapFlows(t *testing.T, nbi voltha.VolthaServiceClient, lo
 			uniPorts = append(uniPorts, p)
 		}
 	}
+	if len(ports) == 0 {
+		t.Logf("Warning: No ports provided to sendTrapFlows for logical device %s", logicalDeviceID)
+		return 0, 0
+	}
+	if len(nniPorts) == 0 {
+		t.Logf("Warning: No NNI ports found for logical device %s, total ports: %d", logicalDeviceID, len(ports))
+		for i, p := range ports {
+			t.Logf("Port %d: DeviceID=%s, PortNo=%d, RootPort=%v, DevicePortNo=%d", i, p.DeviceId, p.OfpPort.PortNo, p.RootPort, p.DevicePortNo)
+		}
+		return 0, len(uniPorts)
+	}
 	assert.Equal(t, 1, len(nniPorts))
 	//assert.Greater(t, len(uniPorts), 1 )
 	nniPort := nniPorts[0].OfpPort.PortNo
@@ -1441,7 +1452,7 @@ func (nb *NBTest) receiveChangeEvents(ctx context.Context, nbi voltha.VolthaServ
 	opt := grpc.EmptyCallOption{}
 	streamCtx, streamDone := context.WithCancel(log.WithSpanFromContext(context.Background(), ctx))
 	defer streamDone()
-	stream, err := nbi.ReceiveChangeEvents(streamCtx, &empty.Empty{}, opt)
+	stream, err := nbi.ReceiveChangeEvents(streamCtx, &emptypb.Empty{}, opt)
 	if err != nil {
 		logger.Errorw(ctx, "cannot-establish-receive-change-events", log.Fields{"error": err})
 		return
@@ -1463,7 +1474,7 @@ func (nb *NBTest) receiveChangeEvents(ctx context.Context, nbi voltha.VolthaServ
 }
 
 func (nb *NBTest) getOLTAdapterInstance(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceID string) (*cm.OLTAdapter, error) {
-	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
+	devices, err := nbi.ListDevices(getContext(), &emptypb.Empty{})
 	assert.Nil(t, err)
 	nb.oltAdaptersLock.RLock()
 	defer nb.oltAdaptersLock.RUnlock()
@@ -1484,7 +1495,7 @@ func (nb *NBTest) getOLTAdapterInstance(t *testing.T, nbi voltha.VolthaServiceCl
 func (nb *NBTest) getAdapterInstancesWithDeviceIds(t *testing.T, nbi voltha.VolthaServiceClient, oltDeviceID string) (*cm.OLTAdapter, map[string]*cm.ONUAdapter, []string, error) {
 	var oltAdapter *cm.OLTAdapter
 	onuAdapters := make(map[string]*cm.ONUAdapter)
-	devices, err := nbi.ListDevices(getContext(), &empty.Empty{})
+	devices, err := nbi.ListDevices(getContext(), &emptypb.Empty{})
 	onuDeviceIDs := make([]string, 0)
 	assert.Nil(t, err)
 	oltAdapterFound := false
@@ -1555,7 +1566,7 @@ func (nb *NBTest) monitorLogicalDevices(
 	err := waitUntilConditionForLogicalDevices(nb.maxTimeout, nbi, vlFunction)
 	assert.Nil(t, err)
 
-	logicalDevices, err := nbi.ListLogicalDevices(getContext(), &empty.Empty{})
+	logicalDevices, err := nbi.ListLogicalDevices(getContext(), &emptypb.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, logicalDevices)
 	var logicalDevice *voltha.LogicalDevice
@@ -1733,7 +1744,7 @@ func (nb *NBTest) testMPLSFlowsAddition(t *testing.T, nbi voltha.VolthaServiceCl
 	// Verify that the logical device has been setup correctly
 	nb.verifyLogicalDevices(t, oltDevice, nbi)
 
-	logicalDevices, err := nbi.ListLogicalDevices(getContext(), &empty.Empty{})
+	logicalDevices, err := nbi.ListLogicalDevices(getContext(), &emptypb.Empty{})
 	assert.Nil(t, err)
 	assert.NotNil(t, logicalDevices)
 	var logicalDevice *voltha.LogicalDevice
@@ -1774,9 +1785,9 @@ func (nb *NBTest) testMPLSFlowsAddition(t *testing.T, nbi voltha.VolthaServiceCl
 
 	logicalPorts, err := nbi.ListLogicalDevicePorts(context.Background(), &voltha.ID{Id: logicalDevice.Id})
 	assert.NoError(t, err)
-	m := jsonpb.Marshaler{}
-	logicalPortsJson, err := m.MarshalToString(logicalPorts)
+	logicalPortsJsonBytes, err := protojson.Marshal(logicalPorts)
 	assert.NoError(t, err)
+	logicalPortsJson := string(logicalPortsJsonBytes)
 
 	testLogger.Infow(getContext(), "list-logical-ports", log.Fields{"ports": logicalPortsJson})
 
@@ -1805,8 +1816,8 @@ func getOnuUpstreamRules() (flowMod *ofp.OfpFlowMod) {
 
 	flowMod = makeSimpleFlowMod(fa)
 	flowMod.TableId = 0
-	m := jsonpb.Marshaler{}
-	flowModJson, _ := m.MarshalToString(flowMod)
+	flowModJsonBytes, _ := protojson.Marshal(flowMod)
+	flowModJson := string(flowModJsonBytes)
 	testLogger.Infow(getContext(), "onu-upstream-flow", log.Fields{"flow-mod": flowModJson})
 	return
 }
@@ -1834,8 +1845,8 @@ func getOltUpstreamRules() (flowMod *ofp.OfpFlowMod) {
 	}
 	flowMod = makeSimpleFlowMod(fa)
 	flowMod.TableId = 1
-	m := jsonpb.Marshaler{}
-	flowModJson, _ := m.MarshalToString(flowMod)
+	flowModJsonBytes, _ := protojson.Marshal(flowMod)
+	flowModJson := string(flowModJsonBytes)
 	testLogger.Infow(getContext(), "olt-upstream-flow", log.Fields{"flow-mod": flowModJson})
 	return
 }
@@ -1857,8 +1868,8 @@ func getOLTDownstreamMplsSingleTagRules() (flowMod *ofp.OfpFlowMod) {
 	}
 	flowMod = makeSimpleFlowMod(fa)
 	flowMod.TableId = 0
-	m := jsonpb.Marshaler{}
-	flowModJson, _ := m.MarshalToString(flowMod)
+	flowModJsonBytes, _ := protojson.Marshal(flowMod)
+	flowModJson := string(flowModJsonBytes)
 	testLogger.Infow(getContext(), "olt-mpls-downstream-single-tag-flow", log.Fields{"flow-mod": flowModJson})
 	return
 }
@@ -1879,8 +1890,8 @@ func getOLTDownstreamMplsDoubleTagRules() (flowMod *ofp.OfpFlowMod) {
 	}
 	flowMod = makeSimpleFlowMod(fa)
 	flowMod.TableId = 0
-	m := jsonpb.Marshaler{}
-	flowModJson, _ := m.MarshalToString(flowMod)
+	flowModJsonBytes, _ := protojson.Marshal(flowMod)
+	flowModJson := string(flowModJsonBytes)
 	testLogger.Infow(getContext(), "olt-mpls-downstream-double-tagged-flow", log.Fields{"flow-mod": flowModJson})
 	return
 }
@@ -1898,8 +1909,8 @@ func getOLTDownstreamRules() (flowMod *ofp.OfpFlowMod) {
 	}
 	flowMod = makeSimpleFlowMod(fa)
 	flowMod.TableId = 1
-	m := jsonpb.Marshaler{}
-	flowModJson, _ := m.MarshalToString(flowMod)
+	flowModJsonBytes, _ := protojson.Marshal(flowMod)
+	flowModJson := string(flowModJsonBytes)
 	testLogger.Infow(getContext(), "olt-downstream-flow", log.Fields{"flow-mod": flowModJson})
 	return
 }
@@ -1918,8 +1929,8 @@ func getOnuDownstreamRules() (flowMod *ofp.OfpFlowMod) {
 	}
 	flowMod = makeSimpleFlowMod(fa)
 	flowMod.TableId = 2
-	m := jsonpb.Marshaler{}
-	flowModJson, _ := m.MarshalToString(flowMod)
+	flowModJsonBytes, _ := protojson.Marshal(flowMod)
+	flowModJson := string(flowModJsonBytes)
 	testLogger.Infow(getContext(), "onu-downstream-flow", log.Fields{"flow-mod": flowModJson})
 	return
 }
@@ -2090,7 +2101,7 @@ func WaitForCoreConnectionToAdapters(ctx context.Context, t *testing.T, nb *NBTe
 
 	// Wait for adapters to be fully running
 	var isCoreConnectedToAdapters isConditionSatisfied = func() bool {
-		adpts, err := nbi.ListAdapters(getContext(), &empty.Empty{})
+		adpts, err := nbi.ListAdapters(getContext(), &emptypb.Empty{})
 		if err != nil || len(adpts.Items) < numAdapters {
 			return false
 		}

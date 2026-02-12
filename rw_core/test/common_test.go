@@ -26,8 +26,8 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/common"
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var retryInterval = 50 * time.Millisecond
@@ -191,7 +191,7 @@ func waitUntilConditionForDevices(timeout time.Duration, nbi voltha.VolthaServic
 	done := false
 	go func() {
 		for {
-			devices, _ := nbi.ListDevices(getContext(), &empty.Empty{})
+			devices, _ := nbi.ListDevices(getContext(), &emptypb.Empty{})
 			if verificationFunction(devices) {
 				ch <- 1
 				break
@@ -219,7 +219,7 @@ func waitUntilConditionForLogicalDevices(timeout time.Duration, nbi voltha.Volth
 	done := false
 	go func() {
 		for {
-			lDevices, _ := nbi.ListLogicalDevices(getContext(), &empty.Empty{})
+			lDevices, _ := nbi.ListLogicalDevices(getContext(), &emptypb.Empty{})
 			if verificationFunction(lDevices) {
 				ch <- 1
 				break
@@ -358,7 +358,7 @@ func cleanUpCreatedDevices(timeout time.Duration, nbi voltha.VolthaServiceClient
 			break
 		}
 		for {
-			devices, _ := nbi.ListDevices(getContext(), &empty.Empty{})
+			devices, _ := nbi.ListDevices(getContext(), &emptypb.Empty{})
 			removed := devices == nil || len(devices.Items) == 0
 			if !removed {
 				removed = true
@@ -420,7 +420,7 @@ func cleanUpDevices(timeout time.Duration, nbi voltha.VolthaServiceClient, paren
 				continue
 			}
 			// verifyParentDeletionOnly is False => check children as well
-			devices, _ := nbi.ListDevices(getContext(), &empty.Empty{})
+			devices, _ := nbi.ListDevices(getContext(), &emptypb.Empty{})
 			removed := devices == nil || len(devices.Items) == 0
 			if !removed {
 				removed = true
