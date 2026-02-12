@@ -25,7 +25,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	any "github.com/golang/protobuf/ptypes/any"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	kafka "github.com/opencord/voltha-lib-go/v7/pkg/kafka"
 )
 
@@ -54,7 +54,7 @@ func (m *MockInterContainerProxy) EXPECT() *MockInterContainerProxyMockRecorder 
 
 // DeleteTopic mocks base method.
 func (m *MockInterContainerProxy) DeleteTopic(arg0 context.Context, arg1 kafka.Topic) error {
-	m.ctrl.T.Helper()
+
 	ret := m.ctrl.Call(m, "DeleteTopic", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -62,13 +62,13 @@ func (m *MockInterContainerProxy) DeleteTopic(arg0 context.Context, arg1 kafka.T
 
 // DeleteTopic indicates an expected call of DeleteTopic.
 func (mr *MockInterContainerProxyMockRecorder) DeleteTopic(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
+
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTopic", reflect.TypeOf((*MockInterContainerProxy)(nil).DeleteTopic), arg0, arg1)
 }
 
 // EnableLivenessChannel mocks base method.
 func (m *MockInterContainerProxy) EnableLivenessChannel(arg0 context.Context, arg1 bool) chan bool {
-	m.ctrl.T.Helper()
+
 	ret := m.ctrl.Call(m, "EnableLivenessChannel", arg0, arg1)
 	ret0, _ := ret[0].(chan bool)
 	return ret0
@@ -76,13 +76,13 @@ func (m *MockInterContainerProxy) EnableLivenessChannel(arg0 context.Context, ar
 
 // EnableLivenessChannel indicates an expected call of EnableLivenessChannel.
 func (mr *MockInterContainerProxyMockRecorder) EnableLivenessChannel(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
+
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnableLivenessChannel", reflect.TypeOf((*MockInterContainerProxy)(nil).EnableLivenessChannel), arg0, arg1)
 }
 
 // GetDefaultTopic mocks base method.
 func (m *MockInterContainerProxy) GetDefaultTopic() *kafka.Topic {
-	m.ctrl.T.Helper()
+
 	ret := m.ctrl.Call(m, "GetDefaultTopic")
 	ret0, _ := ret[0].(*kafka.Topic)
 	return ret0
@@ -90,13 +90,13 @@ func (m *MockInterContainerProxy) GetDefaultTopic() *kafka.Topic {
 
 // GetDefaultTopic indicates an expected call of GetDefaultTopic.
 func (mr *MockInterContainerProxyMockRecorder) GetDefaultTopic() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
+
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultTopic", reflect.TypeOf((*MockInterContainerProxy)(nil).GetDefaultTopic))
 }
 
 // InvokeAsyncRPC mocks base method.
 func (m *MockInterContainerProxy) InvokeAsyncRPC(arg0 context.Context, arg1 string, arg2, arg3 *kafka.Topic, arg4 bool, arg5 string, arg6 ...*kafka.KVArg) chan *kafka.RpcResponse {
-	m.ctrl.T.Helper()
+
 	varargs := []interface{}{arg0, arg1, arg2, arg3, arg4, arg5}
 	for _, a := range arg6 {
 		varargs = append(varargs, a)
@@ -108,34 +108,34 @@ func (m *MockInterContainerProxy) InvokeAsyncRPC(arg0 context.Context, arg1 stri
 
 // InvokeAsyncRPC indicates an expected call of InvokeAsyncRPC.
 func (mr *MockInterContainerProxyMockRecorder) InvokeAsyncRPC(arg0, arg1, arg2, arg3, arg4, arg5 interface{}, arg6 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
+
 	varargs := append([]interface{}{arg0, arg1, arg2, arg3, arg4, arg5}, arg6...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvokeAsyncRPC", reflect.TypeOf((*MockInterContainerProxy)(nil).InvokeAsyncRPC), varargs...)
 }
 
 // InvokeRPC mocks base method.
-func (m *MockInterContainerProxy) InvokeRPC(arg0 context.Context, arg1 string, arg2, arg3 *kafka.Topic, arg4 bool, arg5 string, arg6 ...*kafka.KVArg) (bool, *any.Any) {
-	m.ctrl.T.Helper()
+func (m *MockInterContainerProxy) InvokeRPC(arg0 context.Context, arg1 string, arg2, arg3 *kafka.Topic, arg4 bool, arg5 string, arg6 ...*kafka.KVArg) (bool, *anypb.Any) {
+
 	varargs := []interface{}{arg0, arg1, arg2, arg3, arg4, arg5}
 	for _, a := range arg6 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "InvokeRPC", varargs...)
 	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(*any.Any)
+	ret1, _ := ret[1].(*anypb.Any)
 	return ret0, ret1
 }
 
 // InvokeRPC indicates an expected call of InvokeRPC.
 func (mr *MockInterContainerProxyMockRecorder) InvokeRPC(arg0, arg1, arg2, arg3, arg4, arg5 interface{}, arg6 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
+
 	varargs := append([]interface{}{arg0, arg1, arg2, arg3, arg4, arg5}, arg6...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvokeRPC", reflect.TypeOf((*MockInterContainerProxy)(nil).InvokeRPC), varargs...)
 }
 
 // SendLiveness mocks base method.
 func (m *MockInterContainerProxy) SendLiveness(arg0 context.Context) error {
-	m.ctrl.T.Helper()
+
 	ret := m.ctrl.Call(m, "SendLiveness", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -149,7 +149,7 @@ func (mr *MockInterContainerProxyMockRecorder) SendLiveness(arg0 interface{}) *g
 
 // Start mocks base method.
 func (m *MockInterContainerProxy) Start(arg0 context.Context) error {
-	m.ctrl.T.Helper()
+
 	ret := m.ctrl.Call(m, "Start", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -157,25 +157,25 @@ func (m *MockInterContainerProxy) Start(arg0 context.Context) error {
 
 // Start indicates an expected call of Start.
 func (mr *MockInterContainerProxyMockRecorder) Start(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
+
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockInterContainerProxy)(nil).Start), arg0)
 }
 
 // Stop mocks base method.
 func (m *MockInterContainerProxy) Stop(arg0 context.Context) {
-	m.ctrl.T.Helper()
+
 	m.ctrl.Call(m, "Stop", arg0)
 }
 
 // Stop indicates an expected call of Stop.
 func (mr *MockInterContainerProxyMockRecorder) Stop(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
+
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockInterContainerProxy)(nil).Stop), arg0)
 }
 
 // SubscribeWithDefaultRequestHandler mocks base method.
 func (m *MockInterContainerProxy) SubscribeWithDefaultRequestHandler(arg0 context.Context, arg1 kafka.Topic, arg2 int64) error {
-	m.ctrl.T.Helper()
+
 	ret := m.ctrl.Call(m, "SubscribeWithDefaultRequestHandler", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -183,13 +183,13 @@ func (m *MockInterContainerProxy) SubscribeWithDefaultRequestHandler(arg0 contex
 
 // SubscribeWithDefaultRequestHandler indicates an expected call of SubscribeWithDefaultRequestHandler.
 func (mr *MockInterContainerProxyMockRecorder) SubscribeWithDefaultRequestHandler(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
+
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeWithDefaultRequestHandler", reflect.TypeOf((*MockInterContainerProxy)(nil).SubscribeWithDefaultRequestHandler), arg0, arg1, arg2)
 }
 
 // SubscribeWithRequestHandlerInterface mocks base method.
 func (m *MockInterContainerProxy) SubscribeWithRequestHandlerInterface(arg0 context.Context, arg1 kafka.Topic, arg2 interface{}) error {
-	m.ctrl.T.Helper()
+
 	ret := m.ctrl.Call(m, "SubscribeWithRequestHandlerInterface", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -197,13 +197,13 @@ func (m *MockInterContainerProxy) SubscribeWithRequestHandlerInterface(arg0 cont
 
 // SubscribeWithRequestHandlerInterface indicates an expected call of SubscribeWithRequestHandlerInterface.
 func (mr *MockInterContainerProxyMockRecorder) SubscribeWithRequestHandlerInterface(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
+
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeWithRequestHandlerInterface", reflect.TypeOf((*MockInterContainerProxy)(nil).SubscribeWithRequestHandlerInterface), arg0, arg1, arg2)
 }
 
 // UnSubscribeFromRequestHandler mocks base method.
 func (m *MockInterContainerProxy) UnSubscribeFromRequestHandler(arg0 context.Context, arg1 kafka.Topic) error {
-	m.ctrl.T.Helper()
+
 	ret := m.ctrl.Call(m, "UnSubscribeFromRequestHandler", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -211,6 +211,6 @@ func (m *MockInterContainerProxy) UnSubscribeFromRequestHandler(arg0 context.Con
 
 // UnSubscribeFromRequestHandler indicates an expected call of UnSubscribeFromRequestHandler.
 func (mr *MockInterContainerProxyMockRecorder) UnSubscribeFromRequestHandler(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
+
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnSubscribeFromRequestHandler", reflect.TypeOf((*MockInterContainerProxy)(nil).UnSubscribeFromRequestHandler), arg0, arg1)
 }

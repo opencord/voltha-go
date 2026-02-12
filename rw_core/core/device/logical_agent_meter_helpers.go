@@ -23,6 +23,7 @@ import (
 	fu "github.com/opencord/voltha-lib-go/v7/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
+	"google.golang.org/protobuf/proto"
 )
 
 // GetMeterConfig returns meters which which are used by the given flows
@@ -35,7 +36,7 @@ func (agent *LogicalAgent) GetMeterConfig(ctx context.Context, flows []*ofp.OfpF
 				meterHandle, have := agent.meterLoader.Lock(flowMeterID)
 				if !have {
 					logger.Errorw(ctx, "Meter-referred-by-flow-is-not-found-in-logicaldevice",
-						log.Fields{"meterID": flowMeterID, "Available-meters": metersConfig, "flow": *flow})
+						log.Fields{"meterID": flowMeterID, "Available-meters": metersConfig, "flow": flow})
 					return nil, fmt.Errorf("Meter-referred-by-flow-is-not-found-in-logicaldevice.MeterId-%d", flowMeterID)
 				}
 
@@ -57,7 +58,7 @@ func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modC
 	meterID := fu.GetMeterIdFromFlow(flow)
 	logger.Debugw(ctx, "Meter-id-in-flow-mod", log.Fields{"meterId": meterID})
 	if meterID == 0 {
-		logger.Debugw(ctx, "No-meter-present-in-the-flow", log.Fields{"flow": *flow})
+		logger.Debugw(ctx, "No-meter-present-in-the-flow", log.Fields{"flow": flow})
 		return true
 	}
 
@@ -74,7 +75,7 @@ func (agent *LogicalAgent) updateFlowCountOfMeterStats(ctx context.Context, modC
 
 	oldMeter := meterHandle.GetReadOnly()
 	// avoiding using proto.Clone by only copying what have changed (this assumes that the oldMeter will never be modified)
-	newStats := *oldMeter.Stats
+	newStats := proto.Clone(oldMeter.Stats).(*ofp.OfpMeterStats)
 	switch flowCommand {
 	case ofp.OfpFlowModCommand_OFPFC_ADD:
 		if revertUpdate {

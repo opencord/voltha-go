@@ -23,8 +23,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/config"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
@@ -36,6 +34,7 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -832,8 +831,8 @@ func newImageDownloadAdapterResponse(t *testing.T,
 	deviceID string,
 	downloadState voltha.ImageState_ImageDownloadState,
 	imageSate voltha.ImageState_ImageActivationState,
-	reason voltha.ImageState_ImageFailureReason) *any.Any {
-	reply, err := ptypes.MarshalAny(&voltha.DeviceImageResponse{
+	reason voltha.ImageState_ImageFailureReason) *anypb.Any {
+	reply, err := anypb.New(&voltha.DeviceImageResponse{
 		DeviceImageStates: []*voltha.DeviceImageState{{
 			DeviceId: deviceID,
 			ImageState: &voltha.ImageState{
@@ -852,7 +851,7 @@ func newImageStatusAdapterResponse(t *testing.T,
 	agents []*Agent,
 	downloadState voltha.ImageState_ImageDownloadState,
 	imageSate voltha.ImageState_ImageActivationState,
-	reason voltha.ImageState_ImageFailureReason) *any.Any {
+	reason voltha.ImageState_ImageFailureReason) *anypb.Any {
 	imgResponse := &voltha.DeviceImageResponse{}
 	for _, agent := range agents {
 		imgResponse.DeviceImageStates = append(imgResponse.DeviceImageStates, &voltha.DeviceImageState{
@@ -866,12 +865,12 @@ func newImageStatusAdapterResponse(t *testing.T,
 		})
 	}
 
-	reply, err := ptypes.MarshalAny(imgResponse)
+	reply, err := anypb.New(imgResponse)
 	assert.Nil(t, err)
 	return reply
 }
 
-func newOnuImagesResponse(t *testing.T) *any.Any {
+func newOnuImagesResponse(t *testing.T) *anypb.Any {
 	onuImages := &voltha.OnuImages{
 		Items: []*voltha.OnuImage{{
 			Version:    version,
@@ -881,7 +880,7 @@ func newOnuImagesResponse(t *testing.T) *any.Any {
 		}},
 	}
 
-	reply, err := ptypes.MarshalAny(onuImages)
+	reply, err := anypb.New(onuImages)
 	assert.Nil(t, err)
 	return reply
 }
