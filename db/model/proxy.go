@@ -23,9 +23,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v7/pkg/db"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"google.golang.org/protobuf/proto"
 )
 
 // RequestTimestamp attribute used to store a timestamp in the context object

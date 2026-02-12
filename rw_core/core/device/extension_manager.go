@@ -27,6 +27,7 @@ import (
 )
 
 type ExtensionManager struct {
+	extension.UnsafeExtensionServer
 	DeviceManager *Manager
 }
 

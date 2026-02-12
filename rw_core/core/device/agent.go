@@ -31,8 +31,9 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/omci"
 
 	"github.com/cenkalti/backoff/v3"
-	"github.com/gogo/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/opencord/voltha-go/rw_core/config"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -1167,9 +1168,9 @@ func (agent *Agent) ChildDeviceLost(ctx context.Context, device *voltha.Device) 
 				updatedPeers = append(updatedPeers, peerPort)
 			}
 		}
-		newPort := *oldPort
+		newPort := proto.Clone(oldPort).(*voltha.Port)
 		newPort.Peers = updatedPeers
-		if err = portHandle.Update(ctx, &newPort); err != nil {
+		if err = portHandle.Update(ctx, newPort); err != nil {
 			portHandle.Unlock()
 			return nil
 		}
@@ -1290,7 +1291,7 @@ func (agent *Agent) getExtValue(ctx context.Context, pdevice *voltha.Device, cde
 	return retVal, err
 }
 
-func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, value *extension.ValueSet) (*empty.Empty, error) {
+func (agent *Agent) setExtValue(ctx context.Context, device *voltha.Device, value *extension.ValueSet) (*emptypb.Empty, error) {
 	logger.Debugw(ctx, "set-ext-value", log.Fields{"device-id": value.Id})
 
 	var err error

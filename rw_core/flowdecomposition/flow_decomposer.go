@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"github.com/opencord/voltha-go/rw_core/route"
 	fu "github.com/opencord/voltha-lib-go/v7/pkg/flows"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
@@ -534,7 +534,7 @@ func (fd *FlowDecomposer) decomposeFlow(ctx context.Context, agent LogicalDevice
 			logger.Debugw(ctx, "process-multicast-flow", log.Fields{"flows": flow})
 			deviceRules = fd.processMulticastFlow(ctx, path, inPortNo, outPortNo, flow, grpID, groupMap)
 		} else {
-			return deviceRules, status.Errorf(codes.Aborted, "unknown downstream flow %v", *flow)
+			return deviceRules, status.Errorf(codes.Aborted, "unknown downstream flow %v", flow)
 		}
 	}
 	deviceRules, err = fd.updateOutputPortForControllerBoundFlowForParentDevice(ctx, deviceRules)

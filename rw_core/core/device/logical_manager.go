@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-go/rw_core/core/device/event"
 	"github.com/opencord/voltha-go/rw_core/utils"
@@ -116,7 +116,7 @@ func (ldMgr *LogicalManager) GetLogicalDevice(ctx context.Context, id *voltha.ID
 }
 
 // ListLogicalDevices returns the list of all logical devices
-func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *empty.Empty) (*voltha.LogicalDevices, error) {
+func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *emptypb.Empty) (*voltha.LogicalDevices, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "ListLogicalDevices")
 	logger.Debug(ctx, "list-all-logical-devices")
 
@@ -493,25 +493,25 @@ func (ldMgr *LogicalManager) updatePortState(ctx context.Context, deviceID strin
 }
 
 // UpdateLogicalDeviceFlowTable updates logical device flow table
-func (ldMgr *LogicalManager) UpdateLogicalDeviceFlowTable(ctx context.Context, flow *openflow_13.FlowTableUpdate) (*empty.Empty, error) {
+func (ldMgr *LogicalManager) UpdateLogicalDeviceFlowTable(ctx context.Context, flow *openflow_13.FlowTableUpdate) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "UpdateLogicalDeviceFlowTable")
 	logger.Debugw(ctx, "update-logical-device-flow-table", log.Fields{"logical-device-id": flow.Id})
 	agent := ldMgr.getLogicalDeviceAgent(ctx, flow.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", flow.Id)
 	}
-	return &empty.Empty{}, agent.updateFlowTable(ctx, flow)
+	return &emptypb.Empty{}, agent.updateFlowTable(ctx, flow)
 }
 
 // UpdateLogicalDeviceMeterTable - This function sends meter mod request to logical device manager and waits for response
-func (ldMgr *LogicalManager) UpdateLogicalDeviceMeterTable(ctx context.Context, meter *openflow_13.MeterModUpdate) (*empty.Empty, error) {
+func (ldMgr *LogicalManager) UpdateLogicalDeviceMeterTable(ctx context.Context, meter *openflow_13.MeterModUpdate) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "UpdateLogicalDeviceMeterTable")
 	logger.Debugw(ctx, "update-logical-device-meter-table", log.Fields{"logical-device-id": meter.Id})
 	agent := ldMgr.getLogicalDeviceAgent(ctx, meter.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", meter.Id)
 	}
-	return &empty.Empty{}, agent.updateMeterTable(ctx, meter.MeterMod)
+	return &emptypb.Empty{}, agent.updateMeterTable(ctx, meter.MeterMod)
 }
 
 // ListLogicalDeviceMeters returns logical device meters
@@ -532,18 +532,18 @@ func (ldMgr *LogicalManager) ListLogicalDeviceMeters(ctx context.Context, id *vo
 }
 
 // UpdateLogicalDeviceFlowGroupTable updates logical device flow group table
-func (ldMgr *LogicalManager) UpdateLogicalDeviceFlowGroupTable(ctx context.Context, flow *openflow_13.FlowGroupTableUpdate) (*empty.Empty, error) {
+func (ldMgr *LogicalManager) UpdateLogicalDeviceFlowGroupTable(ctx context.Context, flow *openflow_13.FlowGroupTableUpdate) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "UpdateLogicalDeviceFlowGroupTable")
 	logger.Debugw(ctx, "update-group-table", log.Fields{"logical-device-id": flow.Id})
 	agent := ldMgr.getLogicalDeviceAgent(ctx, flow.Id)
 	if agent == nil {
 		return nil, status.Errorf(codes.NotFound, "%s", flow.Id)
 	}
-	return &empty.Empty{}, agent.updateGroupTable(ctx, flow.GroupMod)
+	return &emptypb.Empty{}, agent.updateGroupTable(ctx, flow.GroupMod)
 }
 
 // EnableLogicalDevicePort enables logical device port
-func (ldMgr *LogicalManager) EnableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
+func (ldMgr *LogicalManager) EnableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "EnableLogicalDevicePort")
 	logger.Debugw(ctx, "enable-logical-device-port", log.Fields{"logical-device-id": id})
 	agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id)
@@ -554,11 +554,11 @@ func (ldMgr *LogicalManager) EnableLogicalDevicePort(ctx context.Context, id *vo
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse %s as a number", id.PortId)
 	}
-	return &empty.Empty{}, agent.enableLogicalPort(ctx, uint32(portNo))
+	return &emptypb.Empty{}, agent.enableLogicalPort(ctx, uint32(portNo))
 }
 
 // DisableLogicalDevicePort disables logical device port
-func (ldMgr *LogicalManager) DisableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*empty.Empty, error) {
+func (ldMgr *LogicalManager) DisableLogicalDevicePort(ctx context.Context, id *voltha.LogicalPortId) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "DisableLogicalDevicePort")
 	logger.Debugw(ctx, "disable-logical-device-port", log.Fields{"logical-device-id": id})
 	agent := ldMgr.getLogicalDeviceAgent(ctx, id.Id)
@@ -569,7 +569,7 @@ func (ldMgr *LogicalManager) DisableLogicalDevicePort(ctx context.Context, id *v
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse %s as a number", id.PortId)
 	}
-	return &empty.Empty{}, agent.disableLogicalPort(ctx, uint32(portNo))
+	return &emptypb.Empty{}, agent.disableLogicalPort(ctx, uint32(portNo))
 }
 
 func (ldMgr *LogicalManager) packetIn(ctx context.Context, logicalDeviceID string, port uint32, packet []byte) error {

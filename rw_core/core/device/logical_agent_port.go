@@ -28,6 +28,7 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 // listLogicalDevicePorts returns logical device ports
@@ -164,9 +165,9 @@ func (agent *LogicalAgent) updatePortState(ctx context.Context, portNo uint32, o
 }
 
 func clonePortSetState(oldPort *voltha.LogicalPort, state voltha.OperStatus_Types) *voltha.LogicalPort {
-	newPort := *oldPort // only clone the struct(s) that will be changed
-	newOfpPort := *oldPort.OfpPort
-	newPort.OfpPort = &newOfpPort
+	newPort := proto.Clone(oldPort).(*voltha.LogicalPort) // only clone the struct(s) that will be changed
+	newOfpPort := proto.Clone(oldPort.OfpPort).(*ofp.OfpPort)
+	newPort.OfpPort = newOfpPort
 
 	if state == voltha.OperStatus_ACTIVE {
 		newOfpPort.Config &= ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
@@ -175,7 +176,7 @@ func clonePortSetState(oldPort *voltha.LogicalPort, state voltha.OperStatus_Type
 		newOfpPort.Config |= uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
 		newOfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
 	}
-	return &newPort
+	return newPort
 }
 
 // setupUNILogicalPorts creates a UNI port on the logical device that represents a child UNI interface
@@ -262,12 +263,12 @@ func (agent *LogicalAgent) enableLogicalPort(ctx context.Context, lPortNo uint32
 
 	oldPort := portHandle.GetReadOnly()
 
-	newPort := *oldPort // only clone the struct(s) that will be changed
-	newOfpPort := *oldPort.OfpPort
-	newPort.OfpPort = &newOfpPort
+	newPort := proto.Clone(oldPort).(*voltha.LogicalPort) // only clone the struct(s) that will be changed
+	newOfpPort := proto.Clone(oldPort.OfpPort).(*ofp.OfpPort)
+	newPort.OfpPort = newOfpPort
 
 	newOfpPort.Config &= ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-	if err := portHandle.Update(ctx, &newPort); err != nil {
+	if err := portHandle.Update(ctx, newPort); err != nil {
 		return err
 	}
 	agent.orderedEvents.send(ctx, agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_MODIFY, newPort.OfpPort)
@@ -284,12 +285,12 @@ func (agent *LogicalAgent) disableLogicalPort(ctx context.Context, lPortNo uint3
 
 	oldPort := portHandle.GetReadOnly()
 
-	newPort := *oldPort // only clone the struct(s) that will be changed
-	newOfpPort := *oldPort.OfpPort
-	newPort.OfpPort = &newOfpPort
+	newPort := proto.Clone(oldPort).(*voltha.LogicalPort) // only clone the struct(s) that will be changed
+	newOfpPort := proto.Clone(oldPort.OfpPort).(*ofp.OfpPort)
+	newPort.OfpPort = newOfpPort
 
 	newOfpPort.Config = (newOfpPort.Config & ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)) | uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
-	if err := portHandle.Update(ctx, &newPort); err != nil {
+	if err := portHandle.Update(ctx, newPort); err != nil {
 		return err
 	}
 	agent.orderedEvents.send(ctx, agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_MODIFY, newPort.OfpPort)
@@ -304,7 +305,7 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, deviceID strin
 	logger.Debugw(ctx, "add-nni-logical-port", log.Fields{"logical-device-id": agent.logicalDeviceID, "nni-port": port})
 
 	label := fmt.Sprintf("nni-%d", port.PortNo)
-	ofpPort := *port.OfpPort
+	ofpPort := proto.Clone(port.OfpPort).(*ofp.OfpPort)
 	ofpPort.HwAddr = append([]uint32{}, port.OfpPort.HwAddr...)
 	ofpPort.PortNo = port.PortNo
 	ofpPort.Name = label
@@ -313,7 +314,7 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, deviceID strin
 		DeviceId:     deviceID,
 		Id:           label,
 		DevicePortNo: port.PortNo,
-		OfpPort:      &ofpPort,
+		OfpPort:      ofpPort,
 		OfpPortStats: &ofp.OfpPortStats{},
 	}
 
@@ -356,7 +357,7 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 		logger.Infow(ctx, "device-not-ready", log.Fields{"device-id": deviceID, "admin": deviceAdminState, "oper": deviceOperStatus})
 		return nil
 	}
-	ofpPort := *port.OfpPort
+	ofpPort := proto.Clone(port.OfpPort).(*ofp.OfpPort)
 	ofpPort.HwAddr = append([]uint32{}, port.OfpPort.HwAddr...)
 	ofpPort.PortNo = port.PortNo
 	uniPort := &voltha.LogicalPort{
@@ -364,7 +365,7 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 		DeviceId:     deviceID,
 		Id:           port.Label,
 		DevicePortNo: port.PortNo,
-		OfpPort:      &ofpPort,
+		OfpPort:      ofpPort,
 		OfpPortStats: &ofp.OfpPortStats{},
 	}
 
