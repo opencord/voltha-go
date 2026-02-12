@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/utils"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
@@ -30,9 +29,10 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (dMgr *Manager) PortCreated(ctx context.Context, port *voltha.Port) (*empty.Empty, error) {
+func (dMgr *Manager) PortCreated(ctx context.Context, port *voltha.Port) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "PortCreated")
 
 	logger.Debugw(ctx, "port-created", log.Fields{"port": port})
@@ -48,12 +48,12 @@ func (dMgr *Manager) PortCreated(ctx context.Context, port *voltha.Port) (*empty
 			logger.Errorw(ctx, "unable-to-add-peer-port", log.Fields{"error": err, "device-id": port.DeviceId})
 		}
 
-		return &empty.Empty{}, nil
+		return &emptypb.Empty{}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", port.DeviceId)
 }
 
-func (dMgr *Manager) DeviceUpdate(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+func (dMgr *Manager) DeviceUpdate(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DeviceUpdate")
 	logger.Debugw(ctx, "device-update", log.Fields{"device-id": device.Id, "device": device})
 
@@ -61,12 +61,12 @@ func (dMgr *Manager) DeviceUpdate(ctx context.Context, device *voltha.Device) (*
 		if err := agent.updateDeviceUsingAdapterData(ctx, device); err != nil {
 			return nil, err
 		}
-		return &empty.Empty{}, nil
+		return &emptypb.Empty{}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
 }
 
-func (dMgr *Manager) DeviceStateUpdate(ctx context.Context, ds *ca.DeviceStateFilter) (*empty.Empty, error) {
+func (dMgr *Manager) DeviceStateUpdate(ctx context.Context, ds *ca.DeviceStateFilter) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DeviceStateUpdate")
 	logger.Debugw(ctx, "device-state-update", log.Fields{"device-id": ds.DeviceId, "operStatus": ds.OperStatus, "connStatus": ds.ConnStatus})
 
@@ -74,7 +74,7 @@ func (dMgr *Manager) DeviceStateUpdate(ctx context.Context, ds *ca.DeviceStateFi
 		if err := agent.updateDeviceStatus(ctx, ds.OperStatus, ds.ConnStatus); err != nil {
 			return nil, err
 		}
-		return &empty.Empty{}, nil
+		return &emptypb.Empty{}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", ds.DeviceId)
 }
@@ -230,7 +230,7 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, df *ca.ChildDeviceFilte
 }
 
 // PortsStateUpdate updates the operational status of all ports on the device
-func (dMgr *Manager) PortsStateUpdate(ctx context.Context, ps *ca.PortStateFilter) (*empty.Empty, error) {
+func (dMgr *Manager) PortsStateUpdate(ctx context.Context, ps *ca.PortStateFilter) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "PortsStateUpdate")
 	logger.Debugw(ctx, "ports-state-update", log.Fields{"device-id": ps.DeviceId})
 
@@ -245,12 +245,12 @@ func (dMgr *Manager) PortsStateUpdate(ctx context.Context, ps *ca.PortStateFilte
 		logger.Warnw(ctx, "ports-state-update-failed", log.Fields{"device-id": ps.DeviceId, "error": err})
 		return nil, err
 	}
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // ChildDevicesLost is invoked by an adapter to indicate that a parent device is in a state (Disabled) where it
 // cannot manage the child devices.  This will trigger the Core to disable all the child devices.
-func (dMgr *Manager) ChildDevicesLost(ctx context.Context, parentID *common.ID) (*empty.Empty, error) {
+func (dMgr *Manager) ChildDevicesLost(ctx context.Context, parentID *common.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildDevicesLost")
 	logger.Debugw(ctx, "child-devices-lost", log.Fields{"parent-id": parentID.Id})
 
@@ -262,12 +262,12 @@ func (dMgr *Manager) ChildDevicesLost(ctx context.Context, parentID *common.ID) 
 	if err = dMgr.DisableAllChildDevices(ctx, parentDevice); err != nil {
 		return nil, err
 	}
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // ChildDevicesDetected is invoked by an adapter when child devices are found, typically after after a
 // disable/enable sequence.  This will trigger the Core to Enable all the child devices of that parent.
-func (dMgr *Manager) ChildDevicesDetected(ctx context.Context, parentDeviceID *common.ID) (*empty.Empty, error) {
+func (dMgr *Manager) ChildDevicesDetected(ctx context.Context, parentDeviceID *common.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildDevicesDetected")
 	logger.Debugw(ctx, "child-devices-detected", log.Fields{"parent-device-id": parentDeviceID})
 
@@ -295,7 +295,7 @@ func (dMgr *Manager) ChildDevicesDetected(ctx context.Context, parentDeviceID *c
 	if !allChildEnableRequestSent {
 		return nil, err
 	}
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // GetChildDeviceWithProxyAddress will return a device based on proxy address
@@ -347,7 +347,7 @@ func (dMgr *Manager) GetChildDevices(ctx context.Context, parentDeviceID *common
 	return dMgr.getAllChildDevices(ctx, parentDeviceID.Id)
 }
 
-func (dMgr *Manager) ChildrenStateUpdate(ctx context.Context, ds *ca.DeviceStateFilter) (*empty.Empty, error) {
+func (dMgr *Manager) ChildrenStateUpdate(ctx context.Context, ds *ca.DeviceStateFilter) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ChildrenStateUpdate")
 	logger.Debugw(ctx, "children-state-update", log.Fields{"parent-device-id": ds.ParentDeviceId, "operStatus": ds.OperStatus, "connStatus": ds.ConnStatus})
 
@@ -358,10 +358,10 @@ func (dMgr *Manager) ChildrenStateUpdate(ctx context.Context, ds *ca.DeviceState
 			}
 		}
 	}
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (dMgr *Manager) PortStateUpdate(ctx context.Context, ps *ca.PortState) (*empty.Empty, error) {
+func (dMgr *Manager) PortStateUpdate(ctx context.Context, ps *ca.PortState) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "PortStateUpdate")
 	logger.Debugw(ctx, "port-state-update", log.Fields{"device-id": ps.DeviceId, "portType": ps.PortType, "portNo": ps.PortNo, "operStatus": ps.OperStatus})
 
@@ -386,12 +386,12 @@ func (dMgr *Manager) PortStateUpdate(ctx context.Context, ps *ca.PortState) (*em
 				}
 			}()
 		}
-		return &empty.Empty{}, nil
+		return &emptypb.Empty{}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", ps.DeviceId)
 }
 
-func (dMgr *Manager) DeleteAllPorts(ctx context.Context, deviceID *common.ID) (*empty.Empty, error) {
+func (dMgr *Manager) DeleteAllPorts(ctx context.Context, deviceID *common.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DeleteAllPorts")
 	logger.Debugw(ctx, "delete-all-ports", log.Fields{"device-id": deviceID.Id})
 
@@ -413,7 +413,7 @@ func (dMgr *Manager) DeleteAllPorts(ctx context.Context, deviceID *common.ID) (*
 			logger.Warnw(ctx, "failed-to-retrieve-device", log.Fields{"device-id": deviceID.Id})
 			return nil, err
 		}
-		return &empty.Empty{}, nil
+		return &emptypb.Empty{}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", deviceID.Id)
 }
@@ -431,7 +431,7 @@ func (dMgr *Manager) GetDevicePort(ctx context.Context, pf *ca.PortFilter) (*vol
 }
 
 // DevicePMConfigUpdate updates the pm configs as defined by the adapter.
-func (dMgr *Manager) DevicePMConfigUpdate(ctx context.Context, pc *voltha.PmConfigs) (*empty.Empty, error) {
+func (dMgr *Manager) DevicePMConfigUpdate(ctx context.Context, pc *voltha.PmConfigs) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DevicePMConfigUpdate")
 	logger.Debugw(ctx, "device-pm-config-update", log.Fields{"device-id": pc.Id})
 
@@ -442,13 +442,13 @@ func (dMgr *Manager) DevicePMConfigUpdate(ctx context.Context, pc *voltha.PmConf
 		if err := agent.initPmConfigs(ctx, pc); err != nil {
 			return nil, err
 		}
-		return &empty.Empty{}, nil
+		return &emptypb.Empty{}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", pc.Id)
 }
 
 // SendPacketIn receives packetIn request from adapter
-func (dMgr *Manager) SendPacketIn(ctx context.Context, pi *ca.PacketIn) (*empty.Empty, error) {
+func (dMgr *Manager) SendPacketIn(ctx context.Context, pi *ca.PacketIn) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "SendPacketIn")
 	logger.Debugw(ctx, "packet-in", log.Fields{"device-id": pi.DeviceId, "port": pi.Port})
 
@@ -467,10 +467,10 @@ func (dMgr *Manager) SendPacketIn(ctx context.Context, pi *ca.PacketIn) (*empty.
 	if err := dMgr.logicalDeviceMgr.packetIn(ctx, device.ParentId, pi.Port, pi.Packet); err != nil {
 		return nil, err
 	}
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (dMgr *Manager) DeviceReasonUpdate(ctx context.Context, dr *ca.DeviceReason) (*empty.Empty, error) {
+func (dMgr *Manager) DeviceReasonUpdate(ctx context.Context, dr *ca.DeviceReason) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DeviceReasonUpdate")
 	logger.Debugw(ctx, "update-device-reason", log.Fields{"device-id": dr.DeviceId, "reason": dr.Reason})
 
@@ -478,12 +478,12 @@ func (dMgr *Manager) DeviceReasonUpdate(ctx context.Context, dr *ca.DeviceReason
 		if err := agent.updateDeviceReason(ctx, dr.Reason); err != nil {
 			return nil, err
 		}
-		return &empty.Empty{}, nil
+		return &emptypb.Empty{}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", dr.DeviceId)
 }
 
-func (dMgr *Manager) ReconcileChildDevices(ctx context.Context, parentDeviceID *common.ID) (*empty.Empty, error) {
+func (dMgr *Manager) ReconcileChildDevices(ctx context.Context, parentDeviceID *common.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "ReconcileChildDevices")
 	logger.Debugw(ctx, "reconcile-child-devices", log.Fields{"device-id": parentDeviceID.Id})
 
@@ -497,10 +497,10 @@ func (dMgr *Manager) ReconcileChildDevices(ctx context.Context, parentDeviceID *
 		return true
 	})
 	logger.Debugw(ctx, "reconciling-child-devices-initiated", log.Fields{"parent-device-id": parentDeviceID.Id, "number-of-child-devices-to-reconcile": numberOfDevicesToReconcile})
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (dMgr *Manager) UpdateImageDownload(ctx context.Context, img *voltha.ImageDownload) (*empty.Empty, error) {
+func (dMgr *Manager) UpdateImageDownload(ctx context.Context, img *voltha.ImageDownload) (*emptypb.Empty, error) {
 	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "UpdateImageDownload")
 	log.EnrichSpan(ctx, log.Fields{"device-id": img.Id})
 
@@ -514,7 +514,7 @@ func (dMgr *Manager) UpdateImageDownload(ctx context.Context, img *voltha.ImageD
 	} else {
 		return nil, status.Errorf(codes.NotFound, "%s", img.Id)
 	}
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 func (dMgr *Manager) GetHealthStatus(stream core_service.CoreService_GetHealthStatusServer) error {

@@ -29,14 +29,14 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/core_adapter"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/db/model"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Manager represents adapter manager attributes
@@ -333,7 +333,7 @@ func (aMgr *Manager) loadAdaptersAndDevicetypesInMemory(ctx context.Context) err
 	return nil
 }
 
-func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *core_adapter.AdapterRegistration) (*empty.Empty, error) {
+func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *core_adapter.AdapterRegistration) (*emptypb.Empty, error) {
 	adapter := registration.Adapter
 	deviceTypes := registration.DTypes
 	logger.Infow(ctx, "RegisterAdapter", log.Fields{"adapter": adapter, "deviceTypes": deviceTypes.Items})
@@ -375,7 +375,7 @@ func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *core_ada
 			logger.Errorw(ctx, "unable-to-restart-adapter", log.Fields{"error": err})
 		}
 
-		return &empty.Empty{}, nil
+		return &emptypb.Empty{}, nil
 	}
 	// Save the adapter and the device types
 	if err := aMgr.addAdapter(ctx, adapter, true); err != nil {
@@ -406,7 +406,7 @@ func (aMgr *Manager) RegisterAdapter(ctx context.Context, registration *core_ada
 		logger.Fatalw(ctx, "adapter-absent", log.Fields{"error": err, "adapter": adapter.Id})
 	}
 
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 func (aMgr *Manager) StartAdapterWithEndPoint(ctx context.Context, endpoint string) error {
@@ -452,7 +452,7 @@ func (aMgr *Manager) GetAdapterType(deviceType string) (string, error) {
 }
 
 // ListDeviceTypes returns all the device types known to the system
-func (aMgr *Manager) ListDeviceTypes(ctx context.Context, _ *empty.Empty) (*voltha.DeviceTypes, error) {
+func (aMgr *Manager) ListDeviceTypes(ctx context.Context, _ *emptypb.Empty) (*voltha.DeviceTypes, error) {
 	logger.Debug(ctx, "ListDeviceTypes")
 	aMgr.lockDeviceTypesMap.Lock()
 	defer aMgr.lockDeviceTypesMap.Unlock()
@@ -478,7 +478,7 @@ func (aMgr *Manager) GetDeviceType(ctx context.Context, deviceType *common.ID) (
 }
 
 // ListAdapters returns the contents of all adapters known to the system
-func (aMgr *Manager) ListAdapters(ctx context.Context, _ *empty.Empty) (*voltha.Adapters, error) {
+func (aMgr *Manager) ListAdapters(ctx context.Context, _ *emptypb.Empty) (*voltha.Adapters, error) {
 	logger.Debug(ctx, "Listing adapters")
 	result := &voltha.Adapters{Items: []*voltha.Adapter{}}
 	aMgr.lockAdapterAgentsMap.RLock()

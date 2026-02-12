@@ -192,6 +192,12 @@ fmt: ## Formats the source code to go best practice style
 	gofmt -s -e -w $(PACKAGES)
 #	@go fmt ${PACKAGES}
 
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
+.PHONY: generate-delegations
+generate-delegations: ## Regenerate API delegation methods after proto changes
+	@echo "Regenerating API delegations..."
+	@cd rw_core/core/api && go run generate_delegations.go
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------

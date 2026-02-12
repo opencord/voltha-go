@@ -21,17 +21,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/common"
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	"github.com/opencord/voltha-protos/v5/go/core_service"
 	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // MockCoreServiceHandler implements the methods in the core service
 type MockCoreServiceHandler struct {
+	core_service.UnimplementedCoreServiceServer
 	exitChannel chan struct{}
 }
 
@@ -48,25 +49,25 @@ func (handler *MockCoreServiceHandler) Stop() {
 	close(handler.exitChannel)
 }
 
-func (handler *MockCoreServiceHandler) RegisterAdapter(ctx context.Context, reg *ca.AdapterRegistration) (*empty.Empty, error) {
+func (handler *MockCoreServiceHandler) RegisterAdapter(ctx context.Context, reg *ca.AdapterRegistration) (*emptypb.Empty, error) {
 	//logger.Debugw(ctx, "registration-received", log.Fields{"input": reg})
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) DeviceUpdate(context.Context, *voltha.Device) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) DeviceUpdate(context.Context, *voltha.Device) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) PortCreated(context.Context, *voltha.Port) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) PortCreated(context.Context, *voltha.Port) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) PortsStateUpdate(context.Context, *ca.PortStateFilter) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) PortsStateUpdate(context.Context, *ca.PortStateFilter) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) DeleteAllPorts(context.Context, *common.ID) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) DeleteAllPorts(context.Context, *common.ID) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 func (handler *MockCoreServiceHandler) GetDevicePort(context.Context, *ca.PortFilter) (*voltha.Port, error) {
@@ -77,25 +78,25 @@ func (handler *MockCoreServiceHandler) ListDevicePorts(context.Context, *common.
 	return &voltha.Ports{}, nil
 }
 
-func (handler *MockCoreServiceHandler) DeviceStateUpdate(context.Context, *ca.DeviceStateFilter) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) DeviceStateUpdate(context.Context, *ca.DeviceStateFilter) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) DevicePMConfigUpdate(context.Context, *voltha.PmConfigs) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) DevicePMConfigUpdate(context.Context, *voltha.PmConfigs) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 func (handler *MockCoreServiceHandler) ChildDeviceDetected(context.Context, *ca.DeviceDiscovery) (*voltha.Device, error) {
 	return &voltha.Device{}, nil
 }
 
-func (handler *MockCoreServiceHandler) ChildDevicesLost(context.Context, *common.ID) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) ChildDevicesLost(context.Context, *common.ID) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) ChildDevicesDetected(context.Context, *common.ID) (*empty.Empty, error) {
+func (handler *MockCoreServiceHandler) ChildDevicesDetected(context.Context, *common.ID) (*emptypb.Empty, error) {
 	time.Sleep(50 * time.Millisecond)
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 func (handler *MockCoreServiceHandler) GetDevice(ctx context.Context, id *common.ID) (*voltha.Device, error) {
@@ -116,21 +117,21 @@ func (handler *MockCoreServiceHandler) GetChildDevices(context.Context, *common.
 	return &voltha.Devices{}, nil
 }
 
-func (handler *MockCoreServiceHandler) SendPacketIn(context.Context, *ca.PacketIn) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) SendPacketIn(context.Context, *ca.PacketIn) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) DeviceReasonUpdate(context.Context, *ca.DeviceReason) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) DeviceReasonUpdate(context.Context, *ca.DeviceReason) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) PortStateUpdate(context.Context, *ca.PortState) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) PortStateUpdate(context.Context, *ca.PortState) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 // Additional API found in the Core - unused?
-func (handler *MockCoreServiceHandler) ReconcileChildDevices(context.Context, *common.ID) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) ReconcileChildDevices(context.Context, *common.ID) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 func (handler *MockCoreServiceHandler) GetChildDeviceWithProxyAddress(context.Context, *voltha.Device_ProxyAddress) (*voltha.Device, error) {
@@ -141,12 +142,12 @@ func (handler *MockCoreServiceHandler) GetPorts(context.Context, *ca.PortFilter)
 	return &voltha.Ports{}, nil
 }
 
-func (handler *MockCoreServiceHandler) ChildrenStateUpdate(context.Context, *ca.DeviceStateFilter) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) ChildrenStateUpdate(context.Context, *ca.DeviceStateFilter) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
-func (handler *MockCoreServiceHandler) UpdateImageDownload(context.Context, *voltha.ImageDownload) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func (handler *MockCoreServiceHandler) UpdateImageDownload(context.Context, *voltha.ImageDownload) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
 
 func (handler *MockCoreServiceHandler) GetHealthStatus(stream core_service.CoreService_GetHealthStatusServer) error {
