@@ -21,17 +21,20 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/core/adapter"
 	"github.com/opencord/voltha-go/rw_core/core/device"
 	"github.com/opencord/voltha-lib-go/v7/pkg/version"
 	"github.com/opencord/voltha-protos/v5/go/common"
+	"github.com/opencord/voltha-protos/v5/go/core_service"
 	"github.com/opencord/voltha-protos/v5/go/omci"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // APIHandler combines the partial API implementations in various components into a complete voltha implementation
 type APIHandler struct {
+	voltha.UnsafeVolthaServiceServer
+	core_service.UnsafeCoreServiceServer
 	*device.Manager
 	*device.LogicalManager
 	adapterManager // *adapter.Manager
@@ -50,7 +53,7 @@ func NewAPIHandler(deviceMgr *device.Manager, logicalDeviceMgr *device.LogicalMa
 }
 
 // GetVoltha currently just returns version information
-func (handler *APIHandler) GetVoltha(ctx context.Context, _ *empty.Empty) (*voltha.Voltha, error) {
+func (handler *APIHandler) GetVoltha(ctx context.Context, _ *emptypb.Empty) (*voltha.Voltha, error) {
 	logger.Debug(ctx, "GetVoltha")
 	/*
 	 * For now, encode all the version information into a JSON object and
@@ -68,7 +71,7 @@ func (handler *APIHandler) GetVoltha(ctx context.Context, _ *empty.Empty) (*volt
 
 var errUnimplemented = errors.New("unimplemented")
 
-func (handler *APIHandler) ListCoreInstances(context.Context, *empty.Empty) (*voltha.CoreInstances, error) {
+func (handler *APIHandler) ListCoreInstances(context.Context, *emptypb.Empty) (*voltha.CoreInstances, error) {
 	return nil, errUnimplemented
 }
 func (handler *APIHandler) GetCoreInstance(context.Context, *voltha.ID) (*voltha.CoreInstance, error) {
@@ -80,13 +83,13 @@ func (handler *APIHandler) CreateEventFilter(context.Context, *voltha.EventFilte
 func (handler *APIHandler) UpdateEventFilter(context.Context, *voltha.EventFilter) (*voltha.EventFilter, error) {
 	return nil, errUnimplemented
 }
-func (handler *APIHandler) DeleteEventFilter(context.Context, *voltha.EventFilter) (*empty.Empty, error) {
+func (handler *APIHandler) DeleteEventFilter(context.Context, *voltha.EventFilter) (*emptypb.Empty, error) {
 	return nil, errUnimplemented
 }
 func (handler *APIHandler) GetEventFilter(context.Context, *voltha.ID) (*voltha.EventFilters, error) {
 	return nil, errUnimplemented
 }
-func (handler *APIHandler) ListEventFilters(context.Context, *empty.Empty) (*voltha.EventFilters, error) {
+func (handler *APIHandler) ListEventFilters(context.Context, *emptypb.Empty) (*voltha.EventFilters, error) {
 	return nil, errUnimplemented
 }
 func (handler *APIHandler) SelfTest(context.Context, *voltha.ID) (*voltha.SelfTestResponse, error) {
@@ -96,5 +99,18 @@ func (handler *APIHandler) GetAlarmDeviceData(context.Context, *common.ID) (*omc
 	return nil, errUnimplemented
 }
 func (handler *APIHandler) GetMibDeviceData(context.Context, *common.ID) (*omci.MibDeviceData, error) {
+	return nil, errUnimplemented
+}
+
+func (handler *APIHandler) DisableOnuDevice(ctx context.Context, id *common.ID) (*emptypb.Empty, error) {
+	return nil, errUnimplemented
+}
+func (handler *APIHandler) EnableOnuDevice(ctx context.Context, id *common.ID) (*emptypb.Empty, error) {
+	return nil, errUnimplemented
+}
+func (handler *APIHandler) DisableOnuSerialNumber(ctx context.Context, request *voltha.OnuSerialNumberOnOLTPon) (*emptypb.Empty, error) {
+	return nil, errUnimplemented
+}
+func (handler *APIHandler) EnableOnuSerialNumber(ctx context.Context, request *voltha.OnuSerialNumberOnOLTPon) (*emptypb.Empty, error) {
 	return nil, errUnimplemented
 }

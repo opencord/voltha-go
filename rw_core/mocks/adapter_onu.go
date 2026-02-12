@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	vgrpc "github.com/opencord/voltha-lib-go/v7/pkg/grpc"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-protos/v5/go/adapter_service"
@@ -32,13 +31,14 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/extension"
 	"github.com/opencord/voltha-protos/v5/go/health"
 	"github.com/phayes/freeport"
+	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/gogo/protobuf/proto"
 	com "github.com/opencord/voltha-lib-go/v7/pkg/adapters/common"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-protos/v5/go/omci"
 	of "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
+	"google.golang.org/protobuf/proto"
 )
 
 // ONUAdapter represent ONU adapter attributes
@@ -115,7 +115,7 @@ func (onuA *ONUAdapter) Stop() {
 }
 
 // Adopt_device creates new handler for added device
-func (onuA *ONUAdapter) AdoptDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
+func (onuA *ONUAdapter) AdoptDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
 	logger.Debugw(ctx, "AdoptDevice", log.Fields{"device": device.AdapterEndpoint, "device-type": onuA.DeviceType})
 	go func() {
 		d := proto.Clone(device).(*voltha.Device)
@@ -204,18 +204,18 @@ func (onuA *ONUAdapter) AdoptDevice(ctx context.Context, device *voltha.Device) 
 
 		onuA.updateDevice(d)
 	}()
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // Single_get_value_request retrieves a single value.
 func (onuA *ONUAdapter) Single_get_value_request(ctx context.Context, // nolint
-	request extension.SingleGetValueRequest) (*extension.SingleGetValueResponse, error) {
+	request *extension.SingleGetValueRequest) (*extension.SingleGetValueResponse, error) {
 	logger.Fatalf(ctx, "Single_get_value_request unimplemented")
 	return nil, nil
 }
 
 // Disable_device disables device
-func (onuA *ONUAdapter) DisableDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) { // nolint
+func (onuA *ONUAdapter) DisableDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) { // nolint
 	go func() {
 		if d := onuA.getDevice(device.Id); d == nil {
 			logger.Fatalf(ctx, "device-not-found-%s", device.Id)
@@ -254,10 +254,10 @@ func (onuA *ONUAdapter) DisableDevice(ctx context.Context, device *voltha.Device
 		onuA.updateDevice(cloned)
 
 	}()
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (onuA *ONUAdapter) ReEnableDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) { // nolint
+func (onuA *ONUAdapter) ReEnableDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) { // nolint
 	go func() {
 		if d := onuA.getDevice(device.Id); d == nil {
 			logger.Fatalf(ctx, "device-not-found-%s", device.Id)
@@ -295,7 +295,7 @@ func (onuA *ONUAdapter) ReEnableDevice(ctx context.Context, device *voltha.Devic
 		}
 		onuA.updateDevice(cloned)
 	}()
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 func (onuA *ONUAdapter) StartOmciTest(ctx context.Context, _ *ca.OMCITest) (*omci.TestResponse, error) { // nolint
@@ -339,24 +339,32 @@ loop:
 	return err
 }
 
-func (onuA *ONUAdapter) DisableOnuSerialNumber(ctx context.Context, in *voltha.OnuSerialNumberOnOLTPon) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+// DisableOnuDevice disables an ONU device
+func (onuA *ONUAdapter) DisableOnuDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
+	logger.Debugw(ctx, "DisableOnuDevice", log.Fields{"device-id": device.Id})
+	return &emptypb.Empty{}, nil
 }
 
-func (onuA *ONUAdapter) EnableOnuSerialNumber(ctx context.Context, in *voltha.OnuSerialNumberOnOLTPon) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+// EnableOnuDevice enables an ONU device
+func (onuA *ONUAdapter) EnableOnuDevice(ctx context.Context, device *voltha.Device) (*emptypb.Empty, error) {
+	logger.Debugw(ctx, "EnableOnuDevice", log.Fields{"device-id": device.Id})
+	return &emptypb.Empty{}, nil
 }
 
-func (onuA *ONUAdapter) DisableOnuDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+// DisableOnuSerialNumber disables an ONU by serial number
+func (onuA *ONUAdapter) DisableOnuSerialNumber(ctx context.Context, request *voltha.OnuSerialNumberOnOLTPon) (*emptypb.Empty, error) {
+	logger.Debugw(ctx, "DisableOnuSerialNumber", log.Fields{"serial-number": request.SerialNumber})
+	return &emptypb.Empty{}, nil
 }
 
-func (onuA *ONUAdapter) EnableOnuDevice(ctx context.Context, device *voltha.Device) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+// EnableOnuSerialNumber enables an ONU by serial number
+func (onuA *ONUAdapter) EnableOnuSerialNumber(ctx context.Context, request *voltha.OnuSerialNumberOnOLTPon) (*emptypb.Empty, error) {
+	logger.Debugw(ctx, "EnableOnuSerialNumber", log.Fields{"serial-number": request.SerialNumber})
+	return &emptypb.Empty{}, nil
 }
 
-func (onuA *ONUAdapter) UpdateDevice(ctx context.Context, req *voltha.UpdateDevice) (*empty.Empty, error) {
+func (onuA *ONUAdapter) UpdateDevice(ctx context.Context, req *voltha.UpdateDevice) (*emptypb.Empty, error) {
 	logger.Debugw(ctx, "UpdateDevice called", log.Fields{"device-config": req})
 	// You can add logic here to update the device in your mock if needed.
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
