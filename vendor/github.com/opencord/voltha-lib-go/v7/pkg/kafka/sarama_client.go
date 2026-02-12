@@ -26,9 +26,9 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/eapache/go-resiliency/breaker"
-	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
+	"google.golang.org/protobuf/proto"
 )
 
 // consumerChannels represents one or more consumers listening on a kafka topic.  Once a message is received on that

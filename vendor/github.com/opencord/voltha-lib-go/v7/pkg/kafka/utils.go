@@ -21,9 +21,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -59,10 +59,10 @@ const (
 type RpcResponse struct {
 	MType RpcMType
 	Err   error
-	Reply *any.Any
+	Reply *anypb.Any
 }
 
-func NewResponse(messageType RpcMType, err error, body *any.Any) *RpcResponse {
+func NewResponse(messageType RpcMType, err error, body *anypb.Any) *RpcResponse {
 	return &RpcResponse{
 		MType: messageType,
 		Err:   err,
