@@ -218,7 +218,7 @@ github.com/opencord/voltha-lib-go/v7/pkg/mocks/etcd
 github.com/opencord/voltha-lib-go/v7/pkg/mocks/kafka
 github.com/opencord/voltha-lib-go/v7/pkg/probe
 github.com/opencord/voltha-lib-go/v7/pkg/version
-# github.com/opencord/voltha-protos/v5 v5.7.1
+# github.com/opencord/voltha-protos/v5 v5.7.2
 ## explicit; go 1.25.3
 github.com/opencord/voltha-protos/v5/go/adapter_service
 github.com/opencord/voltha-protos/v5/go/common

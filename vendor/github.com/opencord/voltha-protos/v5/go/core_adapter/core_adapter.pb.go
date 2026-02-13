@@ -82,7 +82,7 @@ type ChildDeviceFilter struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ParentId      string                 `protobuf:"bytes,1,opt,name=parent_id,json=parentId,proto3" json:"parent_id,omitempty"`
 	SerialNumber  string                 `protobuf:"bytes,2,opt,name=serial_number,json=serialNumber,proto3" json:"serial_number,omitempty"`
-	OnuId         uint32                 `protobuf:"varint,3,opt,name=onu_id,json=onuId,proto3" json:"onu_id,omitempty"`
+	OnuId         *uint32                `protobuf:"varint,3,opt,name=onu_id,json=onuId,proto3,oneof" json:"onu_id,omitempty"`
 	ParentPortNo  uint32                 `protobuf:"varint,4,opt,name=parent_port_no,json=parentPortNo,proto3" json:"parent_port_no,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -133,8 +133,8 @@ func (x *ChildDeviceFilter) GetSerialNumber() string {
 }
 
 func (x *ChildDeviceFilter) GetOnuId() uint32 {
-	if x != nil {
-		return x.OnuId
+	if x != nil && x.OnuId != nil {
+		return *x.OnuId
 	}
 	return 0
 }
@@ -1181,12 +1181,13 @@ const file_voltha_protos_core_adapter_proto_rawDesc = "" +
 	" voltha_protos/core_adapter.proto\x12\fcore_adapter\x1a\x1avoltha_protos/common.proto\x1a\x1avoltha_protos/voltha.proto\x1a\x1fvoltha_protos/openflow_13.proto\x1a\x1bvoltha_protos/adapter.proto\x1a\x1avoltha_protos/device.proto\x1a\x1evoltha_protos/extensions.proto\x1a\x1dvoltha_protos/omci_test.proto\"n\n" +
 	"\x13AdapterRegistration\x12*\n" +
 	"\aadapter\x18\x01 \x01(\v2\x10.adapter.AdapterR\aadapter\x12+\n" +
-	"\x06dTypes\x18\x02 \x01(\v2\x13.device.DeviceTypesR\x06dTypes\"\x92\x01\n" +
+	"\x06dTypes\x18\x02 \x01(\v2\x13.device.DeviceTypesR\x06dTypes\"\xa2\x01\n" +
 	"\x11ChildDeviceFilter\x12\x1b\n" +
 	"\tparent_id\x18\x01 \x01(\tR\bparentId\x12#\n" +
-	"\rserial_number\x18\x02 \x01(\tR\fserialNumber\x12\x15\n" +
-	"\x06onu_id\x18\x03 \x01(\rR\x05onuId\x12$\n" +
-	"\x0eparent_port_no\x18\x04 \x01(\rR\fparentPortNo\"q\n" +
+	"\rserial_number\x18\x02 \x01(\tR\fserialNumber\x12\x1a\n" +
+	"\x06onu_id\x18\x03 \x01(\rH\x00R\x05onuId\x88\x01\x01\x12$\n" +
+	"\x0eparent_port_no\x18\x04 \x01(\rR\fparentPortNoB\t\n" +
+	"\a_onu_id\"q\n" +
 	"\n" +
 	"PortFilter\x12\x1b\n" +
 	"\tdevice_id\x18\x01 \x01(\tR\bdeviceId\x12\x12\n" +
@@ -1364,6 +1365,7 @@ func file_voltha_protos_core_adapter_proto_init() {
 	if File_voltha_protos_core_adapter_proto != nil {
 		return
 	}
+	file_voltha_protos_core_adapter_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
