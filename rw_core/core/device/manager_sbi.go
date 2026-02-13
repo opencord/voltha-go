@@ -129,7 +129,7 @@ func (dMgr *Manager) ChildDeviceDetected(ctx context.Context, dd *ca.DeviceDisco
 	if pDevice, err = dMgr.GetChildDevice(ctx, &ca.ChildDeviceFilter{
 		ParentId:     dd.ParentId,
 		SerialNumber: dd.SerialNumber,
-		OnuId:        dd.OnuId,
+		OnuId:        &dd.OnuId,
 		ParentPortNo: dd.ParentPortNo}); err == nil {
 		logger.Warnw(ctx, "child-device-exists", log.Fields{"parent-device-id": dd.ParentId, "serialNumber": dd.SerialNumber})
 		return pDevice, status.Errorf(codes.AlreadyExists, "%s", dd.SerialNumber)
@@ -191,9 +191,9 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, df *ca.ChildDeviceFilte
 		if searchDevice, err := dMgr.getDeviceReadOnly(ctx, childDeviceID); err == nil {
 
 			foundOnuID := false
-			if searchDevice.ProxyAddress.OnuId == uint32(df.OnuId) {
+			if df.OnuId != nil && searchDevice.ProxyAddress.OnuId == uint32(df.OnuId) {
 				if searchDevice.ParentPortNo == uint32(df.ParentPortNo) {
-					logger.Debugw(ctx, "found-child-by-onu-id", log.Fields{"parent-device-id": df.ParentId, "onuId": df.OnuId})
+					logger.Debugw(ctx, "found-child-by-onu-id", log.Fields{"parent-device-id": df.ParentId, "onuId": df.GetOnuId()})
 					foundOnuID = true
 				}
 			}
@@ -206,7 +206,7 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, df *ca.ChildDeviceFilte
 
 			// if both onuId and serialNumber are provided both must be true for the device to be found
 			// otherwise whichever one found a match is good enough
-			if df.OnuId > 0 && df.SerialNumber != "" {
+			if df.OnuId != nil && df.SerialNumber != "" {
 				found = foundOnuID && foundSerialNumber
 			} else {
 				found = foundOnuID || foundSerialNumber
