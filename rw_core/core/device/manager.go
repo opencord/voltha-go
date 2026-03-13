@@ -200,6 +200,15 @@ func (dMgr *Manager) stopManagingDevice(ctx context.Context, id string) {
 		}
 		if agent := dMgr.getDeviceAgent(ctx, id); agent != nil {
 			if err := agent.stop(ctx); err != nil {
+				// If the context expired before stop could process, reset the transient state to NONE
+				// so that subsequent requests for this device can proceed
+				if ctx.Err() != nil {
+					newCtx, cancel := context.WithTimeout(context.Background(), dMgr.rpcTimeout)
+					if err1 := agent.updateTransientState(newCtx, core.DeviceTransientState_NONE); err1 != nil {
+						logger.Errorw(ctx, "failed-to-reset-transient-state-to-none", log.Fields{"device-id": agent.deviceID, "error": err1})
+					}
+					cancel()
+				}
 				logger.Warnw(ctx, "unable-to-stop-device-agent", log.Fields{"device-id": agent.deviceID, "error": err})
 			}
 			dMgr.deleteDeviceAgentFromMap(agent)
