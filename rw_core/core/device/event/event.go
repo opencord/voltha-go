@@ -316,7 +316,7 @@ func (q *Agent) SendDeviceStateChangeEvent(ctx context.Context,
 }
 
 // SendDeviceDeletedEvent sends Device deleted Event to message bus
-func (q *Agent) SendDeviceDeletedEvent(ctx context.Context, device *voltha.Device, raisedTs int64) error {
+func (q *Agent) SendDeviceDeletedEvent(ctx context.Context, device, parentDevice *voltha.Device, raisedTs int64) error {
 
 	var onuId uint32
 	var ponId uint32
@@ -327,8 +327,12 @@ func (q *Agent) SendDeviceDeletedEvent(ctx context.Context, device *voltha.Devic
 		ponId = device.ProxyAddress.ChannelId
 		subCategory = voltha.EventSubCategory_ONU
 	}
+	var parentSerialNumber string
+	if parentDevice != nil {
+		parentSerialNumber = parentDevice.SerialNumber
+	}
 	de := ev.CreateDeviceDeletedEvent(device.SerialNumber, device.Id, device.ParentId,
-		onuId, ponId, device.Root)
+		onuId, ponId, device.Root, parentSerialNumber)
 
 	if err := q.eventProxy.SendDeviceEvent(ctx, de, voltha.EventCategory_EQUIPMENT,
 		subCategory, raisedTs); err != nil {

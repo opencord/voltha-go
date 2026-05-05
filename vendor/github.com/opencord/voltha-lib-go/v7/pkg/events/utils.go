@@ -100,7 +100,7 @@ func CreateDeviceStateChangeEvent(serialNumber string, deviceID string, parentID
 
 // CreateDeviceDeletedEvent forms and returns a new DeviceState Event
 func CreateDeviceDeletedEvent(serialNumber string, deviceID string, parentID string,
-	onuId uint32, parentPonPort uint32, isRoot bool) *voltha.DeviceEvent {
+	onuId uint32, parentPonPort uint32, isRoot bool, parentSerialNumber string) *voltha.DeviceEvent {
 
 	context := make(map[string]string)
 	eventName := string(OltDeviceStateDeleted)
@@ -111,6 +111,7 @@ func CreateDeviceDeletedEvent(serialNumber string, deviceID string, parentID str
 		context[string(ContextPonID)] = strconv.FormatUint(uint64(parentPonPort), 10)
 		context[string(ContextOnuID)] = strconv.FormatUint(uint64(onuId), 10)
 		context[string(ContextParentID)] = parentID
+		context[string(ContextParentSerialNum)] = parentSerialNumber
 		eventName = string(OnuDeviceStateDeleted)
 
 	}

@@ -202,8 +202,8 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 ## explicit
 github.com/munnerz/goautoneg
-# github.com/opencord/voltha-lib-go/v7 v7.8.1
-## explicit; go 1.25.3
+# github.com/opencord/voltha-lib-go/v7 v7.8.4
+## explicit; go 1.25.5
 github.com/opencord/voltha-lib-go/v7/pkg/adapters/common
 github.com/opencord/voltha-lib-go/v7/pkg/config
 github.com/opencord/voltha-lib-go/v7/pkg/db
@@ -218,8 +218,8 @@ github.com/opencord/voltha-lib-go/v7/pkg/mocks/etcd
 github.com/opencord/voltha-lib-go/v7/pkg/mocks/kafka
 github.com/opencord/voltha-lib-go/v7/pkg/probe
 github.com/opencord/voltha-lib-go/v7/pkg/version
-# github.com/opencord/voltha-protos/v5 v5.7.2
-## explicit; go 1.25.3
+# github.com/opencord/voltha-protos/v5 v5.7.3
+## explicit; go 1.25.5
 github.com/opencord/voltha-protos/v5/go/adapter_service
 github.com/opencord/voltha-protos/v5/go/common
 github.com/opencord/voltha-protos/v5/go/core
