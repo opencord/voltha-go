@@ -213,8 +213,17 @@ func (agent *Agent) stop(ctx context.Context) error {
 	if err := agent.dbProxy.Remove(ctx, agent.deviceID); err != nil {
 		return err
 	}
+	var parentDevice *voltha.Device
+	if !agent.device.Root {
+		// Get Parent Serial number for sending event
+		var err error
+		parentDevice, err = agent.deviceMgr.getParentDevice(ctx, agent.device)
+		if err != nil {
+			logger.Errorw(ctx, "getParentDevice deviceMgr map query error", log.Fields{"device-id": agent.deviceID, "parent-id": parentDevice, "error": err})
+		}
+	}
 	// Send the device event to the message bus
-	_ = agent.deviceMgr.Agent.SendDeviceDeletedEvent(ctx, agent.device, time.Now().Unix())
+	_ = agent.deviceMgr.Agent.SendDeviceDeletedEvent(ctx, agent.device, parentDevice, time.Now().Unix())
 
 	close(agent.exitChannel)
 
