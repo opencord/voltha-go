@@ -146,7 +146,7 @@ func (agent *Agent) deleteAllPorts(ctx context.Context) error {
 }
 
 func (agent *Agent) addPort(ctx context.Context, port *voltha.Port) error {
-	logger.Debugw(ctx, "addPort", log.Fields{"device-id": agent.deviceID})
+	logger.Debugw(ctx, "addPort", log.Fields{"device-id": agent.deviceID, "port": port})
 	var desc string
 	var err error
 	operStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
