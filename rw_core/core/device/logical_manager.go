@@ -432,7 +432,7 @@ func (ldMgr *LogicalManager) deleteAllLogicalMetersForLogicalDevice(ctx context.
 }
 
 func (ldMgr *LogicalManager) setupUNILogicalPorts(ctx context.Context, childDevice *voltha.Device, childDevicePorts map[uint32]*voltha.Port) error {
-	logger.Debugw(ctx, "setup-uni-logical-ports", log.Fields{"child-device-id": childDevice.Id, "parent-device-id": childDevice.ParentId, "current-data": childDevice})
+	logger.Debugw(ctx, "setup-uni-logical-ports", log.Fields{"child-device-id": childDevice.Id, "parent-device-id": childDevice.ParentId, "current-data": childDevice, "ports": childDevicePorts})
 	// Sanity check
 	if childDevice.Root {
 		return errors.New("Device-root")
@@ -442,7 +442,7 @@ func (ldMgr *LogicalManager) setupUNILogicalPorts(ctx context.Context, childDevi
 	parentID := childDevice.ParentId
 	logDeviceID := ldMgr.deviceMgr.GetParentDeviceID(ctx, parentID)
 
-	logger.Debugw(ctx, "setup-uni-logical-ports", log.Fields{"logical-device-id": logDeviceID, "parentId": parentID})
+	logger.Debugw(ctx, "setup-uni-logical-ports", log.Fields{"logical-device-id": logDeviceID, "parentId": parentID, "ports": childDevicePorts})
 
 	if parentID == "" || logDeviceID == "" {
 		return errors.New("device-in-invalid-state")
