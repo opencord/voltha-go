@@ -237,6 +237,7 @@ func (agent *LogicalAgent) deleteLogicalPorts(ctx context.Context, deviceID stri
 					portHandle.Unlock()
 					return err
 				}
+				logger.Debugw(ctx, "deleted-logical-port", log.Fields{"logical-device-id": agent.logicalDeviceID, "port": oldPort})
 				// and send event
 				agent.orderedEvents.send(ctx, agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_DELETE, oldPort.OfpPort)
 			}
@@ -352,7 +353,7 @@ func (agent *LogicalAgent) addNNILogicalPort(ctx context.Context, deviceID strin
 // (true, nil).   If the device is not in the correct state it will return (false, nil) as this is a valid
 // scenario. This also applies to the case where the port was already added.
 func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID string, deviceAdminState voltha.AdminState_Types, deviceOperStatus voltha.OperStatus_Types, devicePorts map[uint32]*voltha.Port, port *voltha.Port) error {
-	logger.Debugw(ctx, "add-uni-logical-port", log.Fields{"port": port})
+	logger.Debugw(ctx, "add-uni-logical-port", log.Fields{"port": port, "device-id": deviceID})
 	if deviceAdminState != voltha.AdminState_ENABLED || deviceOperStatus != voltha.OperStatus_ACTIVE {
 		logger.Infow(ctx, "device-not-ready", log.Fields{"device-id": deviceID, "admin": deviceAdminState, "oper": deviceOperStatus})
 		return nil

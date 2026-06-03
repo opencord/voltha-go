@@ -334,8 +334,8 @@ func (q *Agent) SendDeviceDeletedEvent(ctx context.Context, device, parentDevice
 	de := ev.CreateDeviceDeletedEvent(device.SerialNumber, device.Id, device.ParentId,
 		onuId, ponId, device.Root, parentSerialNumber)
 
-	if err := q.eventProxy.SendDeviceEvent(ctx, de, voltha.EventCategory_EQUIPMENT,
-		subCategory, raisedTs); err != nil {
+	if err := q.eventProxy.SendDeviceEventWithKey(ctx, de, voltha.EventCategory_EQUIPMENT,
+		subCategory, raisedTs, device.Id); err != nil {
 		logger.Errorw(ctx, "error-sending-device-deleted-event", log.Fields{"id": device.Id, "err": err})
 		return err
 	}

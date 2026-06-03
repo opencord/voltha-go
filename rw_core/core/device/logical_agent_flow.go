@@ -415,10 +415,10 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 	var have bool
 
 	mod := flowUpdate.FlowMod
-	logger.Debugw(ctx, "flow-delete-strict", log.Fields{"mod": mod})
 	if mod == nil {
 		return nil
 	}
+	logger.Debugw(ctx, "flow-delete-strict", log.Fields{"flow-mod": mod})
 
 	flow, err := fu.FlowStatsEntryFromFlowModMessage(mod)
 	if err != nil {
@@ -434,7 +434,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 	logger.Debugw(ctx, "flow-id-in-flow-delete-strict", log.Fields{"flow-id": flow.Id})
 	flowHandle, have = agent.flowCache.Lock(flow.Id)
 	if !have {
-		logger.Debugw(ctx, "flow-delete-strict-request-no-flow-found-continuing", log.Fields{"flow-mod": mod})
+		logger.Debugw(ctx, "flow-delete-strict-request-no-flow-found-continuing", log.Fields{"flow-mod-cookie": mod.Cookie})
 	}
 
 	groups := make(map[uint32]*ofp.OfpGroupEntry)
@@ -450,6 +450,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 		flowsToDelete = map[uint64]*ofp.OfpFlowStats{flow.Id: flowHandle.GetReadOnly()}
 	}
 
+	logger.Debugw(ctx, "flow-delete-strict-matching-flows-found", log.Fields{"flow-id": flow.Id, "flows-to-delete": flowsToDelete, "cookie": mod.Cookie})
 	var respChnls []coreutils.Response
 	var partialRoute bool
 	deviceRules, err := agent.flowDecomposer.DecomposeRules(ctx, agent, flowsToDelete, groups)
@@ -518,6 +519,7 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 
 	// Update meter count
 	if changedMeter := agent.updateFlowCountOfMeterStats(ctx, mod, flow, false); !changedMeter {
+		logger.Warnw(ctx, "flow-delete-strict-meter-update-failed", log.Fields{"flow-id": flow.Id, "cookie": mod.Cookie})
 		return fmt.Errorf("cannot delete flow - %s. Meter update failed", flow)
 	}
 
@@ -527,7 +529,6 @@ func (agent *LogicalAgent) flowDeleteStrict(ctx context.Context, flowUpdate *ofp
 			return err
 		}
 	}
-
 	return nil
 }
 
