@@ -304,7 +304,7 @@ func (agent *LogicalAgent) addFlowsAndGroupsToDevices(ctx context.Context, devic
 }
 
 func (agent *LogicalAgent) deleteFlowsAndGroupsFromDevices(ctx context.Context, deviceRules *fu.DeviceRules, mod *ofp.OfpFlowMod) []coreutils.Response {
-	logger.Debugw(ctx, "send-delete-flows-to-device-manager", log.Fields{"logical-device-id": agent.logicalDeviceID})
+	logger.Debugw(ctx, "send-delete-flows-to-device-manager", log.Fields{"logical-device-id": agent.logicalDeviceID, "cookie": mod.Cookie})
 
 	responses := make([]coreutils.Response, 0)
 	for deviceID, value := range deviceRules.GetRules() {
@@ -360,7 +360,7 @@ func (agent *LogicalAgent) updateFlowsAndGroupsOfDevice(ctx context.Context, dev
 }
 
 func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flows map[uint64]*ofp.OfpFlowStats, mod *ofp.OfpFlowMod) []coreutils.Response {
-	logger.Debugw(ctx, "deleting-flows-from-parent-device", log.Fields{"logical-device-id": agent.logicalDeviceID, "flows": flows})
+	logger.Debugw(ctx, "deleting-flows-from-parent-device", log.Fields{"logical-device-id": agent.logicalDeviceID, "cookie": mod.Cookie})
 	responses := make([]coreutils.Response, 0)
 	for _, flow := range flows {
 		response := coreutils.NewResponse()
@@ -379,7 +379,7 @@ func (agent *LogicalAgent) deleteFlowsFromParentDevice(ctx context.Context, flow
 			response.Done()
 			continue
 		}
-		logger.Debugw(ctx, "uni-port", log.Fields{"flows": flows, "uni-port": uniPort})
+		logger.Debugw(ctx, "uni-port", log.Fields{"flows": flows, "uni-port": uniPort, "device-id": agent.rootDeviceID})
 		go func(uniPort uint32, metadata *ofp.FlowMetadata) {
 			subCtx, cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.internalTimeout)
 			subCtx = coreutils.WithRPCMetadataFromContext(subCtx, ctx)
