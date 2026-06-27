@@ -1,0 +1,34 @@
+---
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 The Linux Foundation
+name: Sanity Test
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+
+jobs:
+  sanity-test:
+    uses: opencord/shared-workflows/.github/workflows/sanity-test.yaml@main
+    secrets: inherit
+    with:
+      BRANCH: ${{ github.ref_name }}
+      PROJECT: ${{ github.event.repository.name }}
+      REFSPEC: ${{ github.sha }}
+      TEST_TARGETS: |
+        - target: sanity-bbsim-att
+          workflow: att
+          flags: ""
+          teardown: true
+          logging: true
+        - target: sanity-bbsim-dt
+          workflow: dt
+          flags: ""
+          teardown: true
+          logging: true
+        - target: sanity-bbsim-tt
+          workflow: tt
+          flags: ""
+          teardown: true
+          logging: true
+      EXTRA_HELM_FLAGS: "--set global.image_tag=master --set onos-classic.image.tag=master"

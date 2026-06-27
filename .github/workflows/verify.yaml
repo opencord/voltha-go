@@ -1,0 +1,16 @@
+---
+name: Call Verify Workflow(s)
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+
+permissions: read-all
+
+jobs:
+  call-composed-verify:
+    # yamllint disable-line rule:line-length
+    uses: opencord/shared-workflows/.github/workflows/verify-unit-tests.yaml@main
