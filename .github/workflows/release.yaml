@@ -1,0 +1,41 @@
+---
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 The Linux Foundation
+
+name: voltha-go release
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  push:
+    # Only invoked on release tag pushes
+    tags:
+      - v*.*.*
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        # yamllint disable-line rule:line-length
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Build and publish Docker image
+        # yamllint disable-line rule:line-length
+        uses: opencord/shared-workflows/.github/actions/docker-publish-action@main
+        with:
+          # Empty: BBSim's Makefile builds the tag as
+          # ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim, so the registry
+          # prefix is left blank and images are pushed to Docker Hub.
+          docker-registry: ""
+          docker-repository: "voltha/"
+          image-name: "voltha-rw-core"
+          branch-tag: ${{ github.ref_name }}
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
+          extra-environment-vars: "BUILD_PROFILED=true BUILD_RACE=true"
