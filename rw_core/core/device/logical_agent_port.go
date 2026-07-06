@@ -166,6 +166,9 @@ func (agent *LogicalAgent) updatePortState(ctx context.Context, portNo uint32, o
 
 func clonePortSetState(oldPort *voltha.LogicalPort, state voltha.OperStatus_Types) *voltha.LogicalPort {
 	newPort := proto.Clone(oldPort).(*voltha.LogicalPort) // only clone the struct(s) that will be changed
+	if oldPort.OfpPort == nil {
+		return newPort
+	}
 	newOfpPort := proto.Clone(oldPort.OfpPort).(*ofp.OfpPort)
 	newPort.OfpPort = newOfpPort
 
@@ -369,6 +372,8 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 		OfpPortStats: &ofp.OfpPortStats{},
 	}
 
+	// clone top-level port struct
+	uniPort = clonePortSetState(uniPort, port.OperStatus)
 	portHandle, created, err := agent.portLoader.LockOrCreate(ctx, uniPort)
 	if err != nil {
 		return err
@@ -390,10 +395,10 @@ func (agent *LogicalAgent) addUNILogicalPort(ctx context.Context, deviceID strin
 		if err := agent.updateRoutes(subCtx, deviceID, devicePorts, uniPort, agent.listLogicalDevicePorts(ctx)); err != nil {
 			// This is not an error as we may not have enough logical ports to set up routes or some PON ports have not been
 			// created yet.
-			logger.Infow(ctx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": uniPort.OfpPort.PortNo, "error": err})
+			logger.Infow(subCtx, "routes-not-ready", log.Fields{"logical-device-id": agent.logicalDeviceID, "logical-port": uniPort.OfpPort.PortNo, "error": err})
 		}
 		// send event, and allow any queued events to be sent as well
-		queuePosition.send(ctx, agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, uniPort.OfpPort)
+		queuePosition.send(subCtx, agent, agent.logicalDeviceID, ofp.OfpPortReason_OFPPR_ADD, uniPort.OfpPort)
 	}()
 	return nil
 }
