@@ -22,6 +22,7 @@ import (
 
 	"github.com/opencord/voltha-protos/v5/go/adapter_service"
 	"github.com/opencord/voltha-protos/v5/go/common"
+	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 
 	"github.com/opencord/voltha-go/rw_core/core/device/port"
 	coreutils "github.com/opencord/voltha-go/rw_core/utils"
@@ -113,9 +114,24 @@ func (agent *Agent) updatePortState(ctx context.Context, portType voltha.Port_Po
 		return nil
 	}
 
-	newPort := proto.Clone(port).(*voltha.Port) // clone top-level port struct
-	newPort.OperStatus = operStatus
+	// clone top-level port struct
+	newPort := cloneDevicePortSetState(port, operStatus)
 	return portHandle.Update(ctx, newPort)
+}
+
+func cloneDevicePortSetState(oldPort *voltha.Port, state voltha.OperStatus_Types) *voltha.Port {
+	newPort := proto.Clone(oldPort).(*voltha.Port) // only clone the struct(s) that will be changed
+	newOfpPort := proto.Clone(oldPort.OfpPort).(*ofp.OfpPort)
+	newPort.OfpPort = newOfpPort
+	newPort.OperStatus = state
+	if state == voltha.OperStatus_ACTIVE {
+		newOfpPort.Config &= ^uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+		newOfpPort.State = uint32(ofp.OfpPortState_OFPPS_LIVE)
+	} else {
+		newOfpPort.Config |= uint32(ofp.OfpPortConfig_OFPPC_PORT_DOWN)
+		newOfpPort.State = uint32(ofp.OfpPortState_OFPPS_LINK_DOWN)
+	}
+	return newPort
 }
 
 func (agent *Agent) deleteAllPorts(ctx context.Context) error {
