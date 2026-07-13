@@ -16,6 +16,57 @@
       "message": "\u003e Patch Set 3: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_unit-test-tests/3160/ : FAILURE\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_sanity-test/2312/ : SUCCESS\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_licensed/3413/ : SUCCESS\n\u003e \n\u003e https://jenkins.lfbroadband.org/job/verify_voltha-go_unit-test-lint/3158/ : SUCCESS\n\nrecheck",
       "revId": "4dc29db4248151cb416470b02893c4e41d66806a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "47235702_8ec71e9f",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2026-07-13T13:55:12Z",
+      "side": 1,
+      "message": "If possible, please consider adding a unit test case for this specific case.",
+      "revId": "4dc29db4248151cb416470b02893c4e41d66806a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e40644f3_f5136e4b",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2026-07-13T13:55:12Z",
+      "side": 1,
+      "message": "Could you please test if this is interruptible? I suspect that if the code enter this state, we may not even be able to restart/shutdown the voltha-go instance without forcing it!",
+      "revId": "4dc29db4248151cb416470b02893c4e41d66806a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f11458f0_8f24fe13",
+        "filename": "rw_core/core/device/manager_state_callback.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1000404
+      },
+      "writtenOn": "2026-07-13T13:55:12Z",
+      "side": 1,
+      "message": "The code logic should be revised. We should consider sleeping once per pass instead of  per child. The NextBackoff at line 193 accumulates in case of large number of child devices.",
+      "revId": "4dc29db4248151cb416470b02893c4e41d66806a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
