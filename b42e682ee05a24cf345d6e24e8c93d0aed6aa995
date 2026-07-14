@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ef0630be_751feb00",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2026-07-14T17:02:30Z",
+      "side": 1,
+      "message": "Agree with the comment from Serkant for avoiding per child device backoff. Also if we are going to use backoff then I suggest to use a backoff.Retry block instead of a partial custom implementation. Third why don\u0027t we think to give a max try for the operation and keep trying continuously? ",
+      "revId": "b42e682ee05a24cf345d6e24e8c93d0aed6aa995",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
