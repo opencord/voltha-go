@@ -2009,27 +2009,26 @@ func (agent *Agent) enableOnuDevice(ctx context.Context, adapterEndpoint string)
 func (agent *Agent) disableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon, adapterEndpoint string) error {
 	var err error
 	var desc string
-	var prevAdminState, currAdminState common.AdminState_Types
 	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 
 	defer func() {
-		agent.logDeviceUpdate(ctx, &prevAdminState, &currAdminState, requestStatus, err, desc)
+		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
 	}()
 
 	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		desc = "Failed while waiting for green light"
 		return err
 	}
-	logger.Debugw(ctx, "disable-child-serial-number", log.Fields{"device-id": agent.deviceID, "serial-number": agent.device.SerialNumber})
 
-	prevAdminState = agent.device.AdminState
-	cloned, desc, err := agent.checkDisableEligibility()
-	if err != nil {
-		agent.requestQueue.RequestComplete()
+	defer agent.requestQueue.RequestComplete()
+	parentDevice := agent.getDeviceReadOnlyWithoutLock()
+
+	if parentDevice.ConnectStatus != voltha.ConnectStatus_REACHABLE {
+		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device :%s is in operstatus:%s ,connect-status:%s", agent.deviceID, parentDevice.OperStatus, parentDevice.ConnectStatus)
 		return err
 	}
 
-	cloned.AdminState = voltha.AdminState_DISABLED
+	logger.Debugw(ctx, "disable-child-serial-number", log.Fields{"device-id": agent.deviceID, "serial-number": agent.device.SerialNumber})
 
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, adapterEndpoint)
 	if err != nil {
@@ -2042,7 +2041,6 @@ func (agent *Agent) disableOnuSerialNumber(ctx context.Context, device *voltha.O
 			})
 
 		desc = fmt.Sprintf("failed to get adapter client for endpoint %s", adapterEndpoint)
-		agent.requestQueue.RequestComplete()
 		return err
 	}
 
@@ -2055,11 +2053,11 @@ func (agent *Agent) disableOnuSerialNumber(ctx context.Context, device *voltha.O
 	go func() {
 		_, callErr := client.DisableOnuSerialNumber(subCtx, device)
 		if callErr == nil {
-			logger.Infow(subCtx, "disable-child-serial-number-success", log.Fields{"device-id": cloned.Id, "serial-number": device.SerialNumber})
+			logger.Infow(subCtx, "disable-child-serial-number-success", log.Fields{"serial-number": device.SerialNumber})
 			agent.onSuccess(subCtx, nil, nil, true)
 			resultCh <- nil
 		} else {
-			logger.Errorw(subCtx, "disable-child-serial-number-failed", log.Fields{"device-id": cloned.Id, "serial-number": device.SerialNumber, "error": callErr})
+			logger.Errorw(subCtx, "disable-child-serial-number-failed", log.Fields{"serial-number": device.SerialNumber, "error": callErr})
 			agent.onFailure(subCtx, callErr, nil, nil, true)
 			trimmedErr := extractLastRpcError(callErr)
 			desc = fmt.Sprintf("disableOnuSerialNumber call failed: %s", trimmedErr)
@@ -2070,22 +2068,15 @@ func (agent *Agent) disableOnuSerialNumber(ctx context.Context, device *voltha.O
 	select {
 	case resultErr := <-resultCh:
 		if resultErr != nil {
-			agent.requestQueue.RequestComplete()
 			return resultErr
 		}
 
 	case <-ctx.Done():
 		err = fmt.Errorf("operation cancelled or timed out: %w", ctx.Err())
-		agent.requestQueue.RequestComplete()
 		desc = "disable ONU serial number operation cancelled or timed out"
 		return err
 	}
 
-	if updateErr := agent.updateDeviceAndReleaseLock(subCtx, cloned); updateErr != nil {
-		desc = "failed to update device after disabling ONU serial number"
-		return fmt.Errorf("update-device-failed: %w", updateErr)
-	}
-	currAdminState = cloned.AdminState
 	return nil
 
 }
@@ -2093,28 +2084,27 @@ func (agent *Agent) disableOnuSerialNumber(ctx context.Context, device *voltha.O
 func (agent *Agent) enableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon, adapterEndpoint string) error {
 	var err error
 	var desc string
-	var cloned *voltha.Device
-	var prevAdminState, currAdminState common.AdminState_Types
 	requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 
 	defer func() {
-		agent.logDeviceUpdate(ctx, &prevAdminState, &currAdminState, requestStatus, err, desc)
+		agent.logDeviceUpdate(ctx, nil, nil, requestStatus, err, desc)
 	}()
 
 	if err = agent.requestQueue.WaitForGreenLight(ctx); err != nil {
 		desc = "Failed while waiting for green light"
 		return err
 	}
+
+	defer agent.requestQueue.RequestComplete()
+
 	logger.Debugw(ctx, "enable-child-serial-number", log.Fields{"serial-number": device.SerialNumber})
 
-	prevAdminState = agent.device.AdminState
-	cloned, desc, err = agent.checkEnableEligibility()
-	if err != nil {
-		agent.requestQueue.RequestComplete()
+	parentDevice := agent.getDeviceReadOnlyWithoutLock()
+
+	if parentDevice.ConnectStatus != voltha.ConnectStatus_REACHABLE {
+		err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device :%s is in operstatus:%s ,connect-status:%s", agent.deviceID, parentDevice.OperStatus, parentDevice.ConnectStatus)
 		return err
 	}
-
-	cloned.AdminState = voltha.AdminState_ENABLED
 
 	client, err := agent.adapterMgr.GetAdapterClient(ctx, adapterEndpoint)
 	if err != nil {
@@ -2127,7 +2117,6 @@ func (agent *Agent) enableOnuSerialNumber(ctx context.Context, device *voltha.On
 			})
 
 		desc = fmt.Sprintf("failed to get adapter client for endpoint %s", adapterEndpoint)
-		agent.requestQueue.RequestComplete()
 		return err
 	}
 
@@ -2155,22 +2144,15 @@ func (agent *Agent) enableOnuSerialNumber(ctx context.Context, device *voltha.On
 	select {
 	case resultErr := <-resultCh:
 		if resultErr != nil {
-			agent.requestQueue.RequestComplete()
 			return resultErr
 		}
 
 	case <-ctx.Done():
 		err = fmt.Errorf("operation cancelled or timed out: %w", ctx.Err())
-		agent.requestQueue.RequestComplete()
 		desc = "enable ONU serial number operation cancelled or timed out"
 		return err
 	}
 
-	if updateErr := agent.updateDeviceAndReleaseLock(subCtx, cloned); updateErr != nil {
-		desc = "failed to update device after enabling ONU serial number"
-		return fmt.Errorf("update-device-failed: %w", updateErr)
-	}
-	currAdminState = cloned.AdminState
 	return nil
 }
 
