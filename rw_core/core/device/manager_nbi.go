@@ -970,7 +970,7 @@ func (dMgr *Manager) DisableOnuDevice(ctx context.Context, id *voltha.ID) (*empt
 		return nil, status.Errorf(codes.NotFound, "%s", agent.device.ParentId)
 	}
 	logger.Debugw(ctx, "serial-no to be diabled", log.Fields{"serial-number": agent.device.SerialNumber})
-	return &emptypb.Empty{}, agent.disableOnuDevice(ctx, oltAgent.adapterEndpoint)
+	return &emptypb.Empty{}, oltAgent.disableOnuDevice(ctx, agent)
 }
 
 func (dMgr *Manager) EnableOnuDevice(ctx context.Context, id *voltha.ID) (*emptypb.Empty, error) {
@@ -988,7 +988,7 @@ func (dMgr *Manager) EnableOnuDevice(ctx context.Context, id *voltha.ID) (*empty
 		return nil, status.Errorf(codes.NotFound, "%s", agent.device.ParentId)
 	}
 	logger.Debugw(ctx, "serial-no to be enabled", log.Fields{"serial-number": agent.device.SerialNumber})
-	return &emptypb.Empty{}, agent.enableOnuDevice(ctx, oltAgent.adapterEndpoint)
+	return &emptypb.Empty{}, oltAgent.enableOnuDevice(ctx, agent)
 }
 
 func (dMgr *Manager) DisableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon) (*emptypb.Empty, error) {
@@ -1001,16 +1001,7 @@ func (dMgr *Manager) DisableOnuSerialNumber(ctx context.Context, device *voltha.
 		return nil, status.Errorf(codes.NotFound, "%s", device.OltDeviceId)
 	}
 
-	onuDeviceID, err := dMgr.GetOnuDeviceIdBySerial(ctx, device)
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "onu-device-id-not-found-for-serial-number-%s", device.SerialNumber)
-	}
-
-	agent := dMgr.getDeviceAgent(ctx, onuDeviceID)
-	if agent == nil {
-		return nil, status.Errorf(codes.NotFound, "%s", onuDeviceID)
-	}
-	return &emptypb.Empty{}, agent.disableOnuSerialNumber(ctx, device, oltAgent.adapterEndpoint)
+	return &emptypb.Empty{}, oltAgent.disableOnuSerialNumber(ctx, device)
 }
 
 func (dMgr *Manager) EnableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon) (*emptypb.Empty, error) {
@@ -1023,17 +1014,7 @@ func (dMgr *Manager) EnableOnuSerialNumber(ctx context.Context, device *voltha.O
 		return nil, status.Errorf(codes.NotFound, "%s", device.OltDeviceId)
 	}
 
-	onuDeviceID, err := dMgr.GetOnuDeviceIdBySerial(ctx, device)
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "onu-device-id-not-found-for-serial-number-%s", device.SerialNumber)
-	}
-
-	agent := dMgr.getDeviceAgent(ctx, onuDeviceID)
-	if agent == nil {
-		return nil, status.Errorf(codes.NotFound, "%s", onuDeviceID)
-	}
-
-	return &emptypb.Empty{}, agent.enableOnuSerialNumber(ctx, device, oltAgent.adapterEndpoint)
+	return &emptypb.Empty{}, oltAgent.enableOnuSerialNumber(ctx, device)
 }
 
 // UpdateDevice updates the configuration of a device, such as changing the IP address of an OLT device.
