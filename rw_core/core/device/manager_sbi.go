@@ -189,13 +189,13 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, df *ca.ChildDeviceFilte
 	for childDeviceID := range childDeviceIds {
 		var found bool
 		if searchDevice, err := dMgr.getDeviceReadOnly(ctx, childDeviceID); err == nil {
-
+			if searchDevice.ParentPortNo == uint32(df.ParentPortNo) {
+				continue
+			}
 			foundOnuID := false
 			if df.OnuId != nil && searchDevice.ProxyAddress.OnuId == uint32(df.GetOnuId()) {
-				if searchDevice.ParentPortNo == uint32(df.ParentPortNo) {
-					logger.Debugw(ctx, "found-child-by-onu-id", log.Fields{"parent-device-id": df.ParentId, "onuId": df.GetOnuId()})
-					foundOnuID = true
-				}
+				logger.Debugw(ctx, "found-child-by-onu-id", log.Fields{"parent-device-id": df.ParentId, "onuId": df.GetOnuId()})
+				foundOnuID = true
 			}
 
 			foundSerialNumber := false
