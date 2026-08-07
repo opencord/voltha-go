@@ -3159,6 +3159,7 @@ type GemPortStatistics struct {
 	RxBytes       uint64                 `protobuf:"fixed64,4,opt,name=rx_bytes,json=rxBytes,proto3" json:"rx_bytes,omitempty"`
 	TxPackets     uint64                 `protobuf:"fixed64,5,opt,name=tx_packets,json=txPackets,proto3" json:"tx_packets,omitempty"`
 	TxBytes       uint64                 `protobuf:"fixed64,6,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
+	OnuId         uint32                 `protobuf:"fixed32,7,opt,name=onu_id,json=onuId,proto3" json:"onu_id,omitempty"`
 	Timestamp     uint32                 `protobuf:"fixed32,26,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3232,6 +3233,13 @@ func (x *GemPortStatistics) GetTxPackets() uint64 {
 func (x *GemPortStatistics) GetTxBytes() uint64 {
 	if x != nil {
 		return x.TxBytes
+	}
+	return 0
+}
+
+func (x *GemPortStatistics) GetOnuId() uint32 {
+	if x != nil {
+		return x.OnuId
 	}
 	return 0
 }
@@ -5749,7 +5757,7 @@ const file_voltha_protos_openolt_proto_rawDesc = "" +
 	"lcdgErrors\x12\x1d\n" +
 	"\n" +
 	"rdi_errors\x18\x19 \x01(\x06R\trdiErrors\x12\x1c\n" +
-	"\ttimestamp\x18\x1a \x01(\aR\ttimestamp\"\xdd\x01\n" +
+	"\ttimestamp\x18\x1a \x01(\aR\ttimestamp\"\xf4\x01\n" +
 	"\x11GemPortStatistics\x12\x17\n" +
 	"\aintf_id\x18\x01 \x01(\aR\x06intfId\x12\x1d\n" +
 	"\n" +
@@ -5759,7 +5767,8 @@ const file_voltha_protos_openolt_proto_rawDesc = "" +
 	"\brx_bytes\x18\x04 \x01(\x06R\arxBytes\x12\x1d\n" +
 	"\n" +
 	"tx_packets\x18\x05 \x01(\x06R\ttxPackets\x12\x19\n" +
-	"\btx_bytes\x18\x06 \x01(\x06R\atxBytes\x12\x1c\n" +
+	"\btx_bytes\x18\x06 \x01(\x06R\atxBytes\x12\x15\n" +
+	"\x06onu_id\x18\a \x01(\aR\x05onuId\x12\x1c\n" +
 	"\ttimestamp\x18\x1a \x01(\aR\ttimestamp\"\xbb\x01\n" +
 	"\x0eFlowStatistics\x12\x17\n" +
 	"\aflow_id\x18\x01 \x01(\aR\x06flowId\x12\x19\n" +

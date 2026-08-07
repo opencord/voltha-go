@@ -42,7 +42,7 @@ func (e ExtensionManager) GetExtValue(ctx context.Context, request *extension.Si
 	var agent *Agent
 
 	switch request.GetRequest().GetRequest().(type) {
-	case *extension.GetValueRequest_OnuStatsFromOlt:
+	case *extension.GetValueRequest_OnuStatsFromOlt, *extension.GetValueRequest_SubAppsStats:
 		parentId := e.DeviceManager.GetParentDeviceID(ctx, request.TargetId)
 		if parentId == "" {
 			return nil, status.Errorf(codes.NotFound, "target-id %s", request.TargetId)

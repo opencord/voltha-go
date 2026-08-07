@@ -442,6 +442,55 @@ func (GetOffloadedAppsStatisticsRequest_OffloadedApp) EnumDescriptor() ([]byte, 
 	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{45, 0}
 }
 
+type GetSubscriberAppsStatisticsRequest_AppStat int32
+
+const (
+	GetSubscriberAppsStatisticsRequest_UNDEFINED GetSubscriberAppsStatisticsRequest_AppStat = 0
+	GetSubscriberAppsStatisticsRequest_PPPoeIA   GetSubscriberAppsStatisticsRequest_AppStat = 1
+	GetSubscriberAppsStatisticsRequest_DHCP      GetSubscriberAppsStatisticsRequest_AppStat = 2
+)
+
+// Enum value maps for GetSubscriberAppsStatisticsRequest_AppStat.
+var (
+	GetSubscriberAppsStatisticsRequest_AppStat_name = map[int32]string{
+		0: "UNDEFINED",
+		1: "PPPoeIA",
+		2: "DHCP",
+	}
+	GetSubscriberAppsStatisticsRequest_AppStat_value = map[string]int32{
+		"UNDEFINED": 0,
+		"PPPoeIA":   1,
+		"DHCP":      2,
+	}
+)
+
+func (x GetSubscriberAppsStatisticsRequest_AppStat) Enum() *GetSubscriberAppsStatisticsRequest_AppStat {
+	p := new(GetSubscriberAppsStatisticsRequest_AppStat)
+	*p = x
+	return p
+}
+
+func (x GetSubscriberAppsStatisticsRequest_AppStat) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (GetSubscriberAppsStatisticsRequest_AppStat) Descriptor() protoreflect.EnumDescriptor {
+	return file_voltha_protos_extensions_proto_enumTypes[8].Descriptor()
+}
+
+func (GetSubscriberAppsStatisticsRequest_AppStat) Type() protoreflect.EnumType {
+	return &file_voltha_protos_extensions_proto_enumTypes[8]
+}
+
+func (x GetSubscriberAppsStatisticsRequest_AppStat) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use GetSubscriberAppsStatisticsRequest_AppStat.Descriptor instead.
+func (GetSubscriberAppsStatisticsRequest_AppStat) EnumDescriptor() ([]byte, []int) {
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{47, 0}
+}
+
 type GetValueResponse_Status int32
 
 const (
@@ -475,11 +524,11 @@ func (x GetValueResponse_Status) String() string {
 }
 
 func (GetValueResponse_Status) Descriptor() protoreflect.EnumDescriptor {
-	return file_voltha_protos_extensions_proto_enumTypes[8].Descriptor()
+	return file_voltha_protos_extensions_proto_enumTypes[9].Descriptor()
 }
 
 func (GetValueResponse_Status) Type() protoreflect.EnumType {
-	return &file_voltha_protos_extensions_proto_enumTypes[8]
+	return &file_voltha_protos_extensions_proto_enumTypes[9]
 }
 
 func (x GetValueResponse_Status) Number() protoreflect.EnumNumber {
@@ -488,7 +537,7 @@ func (x GetValueResponse_Status) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GetValueResponse_Status.Descriptor instead.
 func (GetValueResponse_Status) EnumDescriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{48, 0}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{50, 0}
 }
 
 type GetValueResponse_ErrorReason int32
@@ -539,11 +588,11 @@ func (x GetValueResponse_ErrorReason) String() string {
 }
 
 func (GetValueResponse_ErrorReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_voltha_protos_extensions_proto_enumTypes[9].Descriptor()
+	return file_voltha_protos_extensions_proto_enumTypes[10].Descriptor()
 }
 
 func (GetValueResponse_ErrorReason) Type() protoreflect.EnumType {
-	return &file_voltha_protos_extensions_proto_enumTypes[9]
+	return &file_voltha_protos_extensions_proto_enumTypes[10]
 }
 
 func (x GetValueResponse_ErrorReason) Number() protoreflect.EnumNumber {
@@ -552,7 +601,7 @@ func (x GetValueResponse_ErrorReason) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GetValueResponse_ErrorReason.Descriptor instead.
 func (GetValueResponse_ErrorReason) EnumDescriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{48, 1}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{50, 1}
 }
 
 type SetValueResponse_Status int32
@@ -588,11 +637,11 @@ func (x SetValueResponse_Status) String() string {
 }
 
 func (SetValueResponse_Status) Descriptor() protoreflect.EnumDescriptor {
-	return file_voltha_protos_extensions_proto_enumTypes[10].Descriptor()
+	return file_voltha_protos_extensions_proto_enumTypes[11].Descriptor()
 }
 
 func (SetValueResponse_Status) Type() protoreflect.EnumType {
-	return &file_voltha_protos_extensions_proto_enumTypes[10]
+	return &file_voltha_protos_extensions_proto_enumTypes[11]
 }
 
 func (x SetValueResponse_Status) Number() protoreflect.EnumNumber {
@@ -601,7 +650,7 @@ func (x SetValueResponse_Status) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use SetValueResponse_Status.Descriptor instead.
 func (SetValueResponse_Status) EnumDescriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{52, 0}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{54, 0}
 }
 
 type SetValueResponse_ErrorReason int32
@@ -643,11 +692,11 @@ func (x SetValueResponse_ErrorReason) String() string {
 }
 
 func (SetValueResponse_ErrorReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_voltha_protos_extensions_proto_enumTypes[11].Descriptor()
+	return file_voltha_protos_extensions_proto_enumTypes[12].Descriptor()
 }
 
 func (SetValueResponse_ErrorReason) Type() protoreflect.EnumType {
-	return &file_voltha_protos_extensions_proto_enumTypes[11]
+	return &file_voltha_protos_extensions_proto_enumTypes[12]
 }
 
 func (x SetValueResponse_ErrorReason) Number() protoreflect.EnumNumber {
@@ -656,7 +705,7 @@ func (x SetValueResponse_ErrorReason) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use SetValueResponse_ErrorReason.Descriptor instead.
 func (SetValueResponse_ErrorReason) EnumDescriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{52, 1}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{54, 1}
 }
 
 type ValueSet struct {
@@ -4602,6 +4651,154 @@ func (*GetOffloadedAppsStatisticsResponse_Dhcpv6RaStats) isGetOffloadedAppsStati
 func (*GetOffloadedAppsStatisticsResponse_PppoeIaStats) isGetOffloadedAppsStatisticsResponse_Stats() {
 }
 
+// Request for pppoe IA stats for a ONU device
+type GetSubscriberAppsStatisticsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The offloaded application whose statistics are requested
+	StatsFor GetSubscriberAppsStatisticsRequest_AppStat `protobuf:"varint,1,opt,name=statsFor,proto3,enum=extension.GetSubscriberAppsStatisticsRequest_AppStat" json:"statsFor,omitempty"`
+	// onu device id
+	OnuDeviceId string `protobuf:"bytes,2,opt,name=onuDeviceId,proto3" json:"onuDeviceId,omitempty"`
+	// service_name is the name of the Techprofile. Basically the request is to get the stats for the service with the TechProfile name.
+	// If empty, get the stats of the configured profile. which will be the case if there is only one service configured for ONT.
+	ServiceName   string `protobuf:"bytes,3,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSubscriberAppsStatisticsRequest) Reset() {
+	*x = GetSubscriberAppsStatisticsRequest{}
+	mi := &file_voltha_protos_extensions_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSubscriberAppsStatisticsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSubscriberAppsStatisticsRequest) ProtoMessage() {}
+
+func (x *GetSubscriberAppsStatisticsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_voltha_protos_extensions_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSubscriberAppsStatisticsRequest.ProtoReflect.Descriptor instead.
+func (*GetSubscriberAppsStatisticsRequest) Descriptor() ([]byte, []int) {
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{47}
+}
+
+func (x *GetSubscriberAppsStatisticsRequest) GetStatsFor() GetSubscriberAppsStatisticsRequest_AppStat {
+	if x != nil {
+		return x.StatsFor
+	}
+	return GetSubscriberAppsStatisticsRequest_UNDEFINED
+}
+
+func (x *GetSubscriberAppsStatisticsRequest) GetOnuDeviceId() string {
+	if x != nil {
+		return x.OnuDeviceId
+	}
+	return ""
+}
+
+func (x *GetSubscriberAppsStatisticsRequest) GetServiceName() string {
+	if x != nil {
+		return x.ServiceName
+	}
+	return ""
+}
+
+type GetSubscriberAppsStatisticsResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Stats:
+	//
+	//	*GetSubscriberAppsStatisticsResponse_PppoeIaStats
+	//	*GetSubscriberAppsStatisticsResponse_DhcpStats
+	Stats         isGetSubscriberAppsStatisticsResponse_Stats `protobuf_oneof:"stats"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSubscriberAppsStatisticsResponse) Reset() {
+	*x = GetSubscriberAppsStatisticsResponse{}
+	mi := &file_voltha_protos_extensions_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSubscriberAppsStatisticsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSubscriberAppsStatisticsResponse) ProtoMessage() {}
+
+func (x *GetSubscriberAppsStatisticsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_voltha_protos_extensions_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSubscriberAppsStatisticsResponse.ProtoReflect.Descriptor instead.
+func (*GetSubscriberAppsStatisticsResponse) Descriptor() ([]byte, []int) {
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *GetSubscriberAppsStatisticsResponse) GetStats() isGetSubscriberAppsStatisticsResponse_Stats {
+	if x != nil {
+		return x.Stats
+	}
+	return nil
+}
+
+func (x *GetSubscriberAppsStatisticsResponse) GetPppoeIaStats() *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats {
+	if x != nil {
+		if x, ok := x.Stats.(*GetSubscriberAppsStatisticsResponse_PppoeIaStats); ok {
+			return x.PppoeIaStats
+		}
+	}
+	return nil
+}
+
+func (x *GetSubscriberAppsStatisticsResponse) GetDhcpStats() *GetSubscriberAppsStatisticsResponse_SubDHCPStats {
+	if x != nil {
+		if x, ok := x.Stats.(*GetSubscriberAppsStatisticsResponse_DhcpStats); ok {
+			return x.DhcpStats
+		}
+	}
+	return nil
+}
+
+type isGetSubscriberAppsStatisticsResponse_Stats interface {
+	isGetSubscriberAppsStatisticsResponse_Stats()
+}
+
+type GetSubscriberAppsStatisticsResponse_PppoeIaStats struct {
+	PppoeIaStats *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats `protobuf:"bytes,1,opt,name=pppoeIaStats,proto3,oneof"`
+}
+
+type GetSubscriberAppsStatisticsResponse_DhcpStats struct {
+	DhcpStats *GetSubscriberAppsStatisticsResponse_SubDHCPStats `protobuf:"bytes,2,opt,name=dhcpStats,proto3,oneof"`
+}
+
+func (*GetSubscriberAppsStatisticsResponse_PppoeIaStats) isGetSubscriberAppsStatisticsResponse_Stats() {
+}
+
+func (*GetSubscriberAppsStatisticsResponse_DhcpStats) isGetSubscriberAppsStatisticsResponse_Stats() {}
+
 type GetValueRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Request:
@@ -4623,6 +4820,7 @@ type GetValueRequest struct {
 	//	*GetValueRequest_OnuStatsFromOlt
 	//	*GetValueRequest_OltPonStats
 	//	*GetValueRequest_OltNniStats
+	//	*GetValueRequest_SubAppsStats
 	Request       isGetValueRequest_Request `protobuf_oneof:"request"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4630,7 +4828,7 @@ type GetValueRequest struct {
 
 func (x *GetValueRequest) Reset() {
 	*x = GetValueRequest{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[47]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4642,7 +4840,7 @@ func (x *GetValueRequest) String() string {
 func (*GetValueRequest) ProtoMessage() {}
 
 func (x *GetValueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[47]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4655,7 +4853,7 @@ func (x *GetValueRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetValueRequest.ProtoReflect.Descriptor instead.
 func (*GetValueRequest) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{47}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *GetValueRequest) GetRequest() isGetValueRequest_Request {
@@ -4818,6 +5016,15 @@ func (x *GetValueRequest) GetOltNniStats() *GetNNIStatsRequest {
 	return nil
 }
 
+func (x *GetValueRequest) GetSubAppsStats() *GetSubscriberAppsStatisticsRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GetValueRequest_SubAppsStats); ok {
+			return x.SubAppsStats
+		}
+	}
+	return nil
+}
+
 type isGetValueRequest_Request interface {
 	isGetValueRequest_Request()
 }
@@ -4894,6 +5101,10 @@ type GetValueRequest_OltNniStats struct {
 	OltNniStats *GetNNIStatsRequest `protobuf:"bytes,17,opt,name=oltNniStats,proto3,oneof"`
 }
 
+type GetValueRequest_SubAppsStats struct {
+	SubAppsStats *GetSubscriberAppsStatisticsRequest `protobuf:"bytes,18,opt,name=subAppsStats,proto3,oneof"`
+}
+
 func (*GetValueRequest_Distance) isGetValueRequest_Request() {}
 
 func (*GetValueRequest_UniInfo) isGetValueRequest_Request() {}
@@ -4928,6 +5139,8 @@ func (*GetValueRequest_OltPonStats) isGetValueRequest_Request() {}
 
 func (*GetValueRequest_OltNniStats) isGetValueRequest_Request() {}
 
+func (*GetValueRequest_SubAppsStats) isGetValueRequest_Request() {}
+
 type GetValueResponse struct {
 	state     protoimpl.MessageState       `protogen:"open.v1"`
 	Status    GetValueResponse_Status      `protobuf:"varint,1,opt,name=status,proto3,enum=extension.GetValueResponse_Status" json:"status,omitempty"`
@@ -4951,6 +5164,7 @@ type GetValueResponse struct {
 	//	*GetValueResponse_OnuStatsFromOltResponse
 	//	*GetValueResponse_OltPonStatsResponse
 	//	*GetValueResponse_OltNniStatsResponse
+	//	*GetValueResponse_SubAppsStatsResponse
 	Response      isGetValueResponse_Response `protobuf_oneof:"response"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4958,7 +5172,7 @@ type GetValueResponse struct {
 
 func (x *GetValueResponse) Reset() {
 	*x = GetValueResponse{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[48]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4970,7 +5184,7 @@ func (x *GetValueResponse) String() string {
 func (*GetValueResponse) ProtoMessage() {}
 
 func (x *GetValueResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[48]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4983,7 +5197,7 @@ func (x *GetValueResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetValueResponse.ProtoReflect.Descriptor instead.
 func (*GetValueResponse) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{48}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *GetValueResponse) GetStatus() GetValueResponse_Status {
@@ -5160,6 +5374,15 @@ func (x *GetValueResponse) GetOltNniStatsResponse() *GetNNIStatsResponse {
 	return nil
 }
 
+func (x *GetValueResponse) GetSubAppsStatsResponse() *GetSubscriberAppsStatisticsResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GetValueResponse_SubAppsStatsResponse); ok {
+			return x.SubAppsStatsResponse
+		}
+	}
+	return nil
+}
+
 type isGetValueResponse_Response interface {
 	isGetValueResponse_Response()
 }
@@ -5232,6 +5455,10 @@ type GetValueResponse_OltNniStatsResponse struct {
 	OltNniStatsResponse *GetNNIStatsResponse `protobuf:"bytes,19,opt,name=oltNniStatsResponse,proto3,oneof"`
 }
 
+type GetValueResponse_SubAppsStatsResponse struct {
+	SubAppsStatsResponse *GetSubscriberAppsStatisticsResponse `protobuf:"bytes,20,opt,name=subAppsStatsResponse,proto3,oneof"`
+}
+
 func (*GetValueResponse_Distance) isGetValueResponse_Response() {}
 
 func (*GetValueResponse_UniInfo) isGetValueResponse_Response() {}
@@ -5266,6 +5493,8 @@ func (*GetValueResponse_OltPonStatsResponse) isGetValueResponse_Response() {}
 
 func (*GetValueResponse_OltNniStatsResponse) isGetValueResponse_Response() {}
 
+func (*GetValueResponse_SubAppsStatsResponse) isGetValueResponse_Response() {}
+
 // AppOffloadConfig is the configuration for offloading applications to the OLT and has OLT wide configuration.
 type AppOffloadConfig struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -5280,7 +5509,7 @@ type AppOffloadConfig struct {
 
 func (x *AppOffloadConfig) Reset() {
 	*x = AppOffloadConfig{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[49]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5292,7 +5521,7 @@ func (x *AppOffloadConfig) String() string {
 func (*AppOffloadConfig) ProtoMessage() {}
 
 func (x *AppOffloadConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[49]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5305,7 +5534,7 @@ func (x *AppOffloadConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppOffloadConfig.ProtoReflect.Descriptor instead.
 func (*AppOffloadConfig) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{49}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *AppOffloadConfig) GetEnableDHCPv4RA() bool {
@@ -5347,7 +5576,7 @@ type AppOffloadOnuConfig struct {
 
 func (x *AppOffloadOnuConfig) Reset() {
 	*x = AppOffloadOnuConfig{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[50]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5359,7 +5588,7 @@ func (x *AppOffloadOnuConfig) String() string {
 func (*AppOffloadOnuConfig) ProtoMessage() {}
 
 func (x *AppOffloadOnuConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[50]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5372,7 +5601,7 @@ func (x *AppOffloadOnuConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppOffloadOnuConfig.ProtoReflect.Descriptor instead.
 func (*AppOffloadOnuConfig) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{50}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *AppOffloadOnuConfig) GetOnuDeviceId() string {
@@ -5403,7 +5632,7 @@ type SetValueRequest struct {
 
 func (x *SetValueRequest) Reset() {
 	*x = SetValueRequest{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[51]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5415,7 +5644,7 @@ func (x *SetValueRequest) String() string {
 func (*SetValueRequest) ProtoMessage() {}
 
 func (x *SetValueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[51]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5428,7 +5657,7 @@ func (x *SetValueRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetValueRequest.ProtoReflect.Descriptor instead.
 func (*SetValueRequest) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{51}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *SetValueRequest) GetRequest() isSetValueRequest_Request {
@@ -5497,7 +5726,7 @@ type SetValueResponse struct {
 
 func (x *SetValueResponse) Reset() {
 	*x = SetValueResponse{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[52]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5509,7 +5738,7 @@ func (x *SetValueResponse) String() string {
 func (*SetValueResponse) ProtoMessage() {}
 
 func (x *SetValueResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[52]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5522,7 +5751,7 @@ func (x *SetValueResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetValueResponse.ProtoReflect.Descriptor instead.
 func (*SetValueResponse) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{52}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *SetValueResponse) GetStatus() SetValueResponse_Status {
@@ -5549,7 +5778,7 @@ type SingleGetValueRequest struct {
 
 func (x *SingleGetValueRequest) Reset() {
 	*x = SingleGetValueRequest{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[53]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5561,7 +5790,7 @@ func (x *SingleGetValueRequest) String() string {
 func (*SingleGetValueRequest) ProtoMessage() {}
 
 func (x *SingleGetValueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[53]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5574,7 +5803,7 @@ func (x *SingleGetValueRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SingleGetValueRequest.ProtoReflect.Descriptor instead.
 func (*SingleGetValueRequest) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{53}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *SingleGetValueRequest) GetTargetId() string {
@@ -5600,7 +5829,7 @@ type SingleGetValueResponse struct {
 
 func (x *SingleGetValueResponse) Reset() {
 	*x = SingleGetValueResponse{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[54]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5612,7 +5841,7 @@ func (x *SingleGetValueResponse) String() string {
 func (*SingleGetValueResponse) ProtoMessage() {}
 
 func (x *SingleGetValueResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[54]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5625,7 +5854,7 @@ func (x *SingleGetValueResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SingleGetValueResponse.ProtoReflect.Descriptor instead.
 func (*SingleGetValueResponse) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{54}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *SingleGetValueResponse) GetResponse() *GetValueResponse {
@@ -5645,7 +5874,7 @@ type SingleSetValueRequest struct {
 
 func (x *SingleSetValueRequest) Reset() {
 	*x = SingleSetValueRequest{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[55]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5657,7 +5886,7 @@ func (x *SingleSetValueRequest) String() string {
 func (*SingleSetValueRequest) ProtoMessage() {}
 
 func (x *SingleSetValueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[55]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5670,7 +5899,7 @@ func (x *SingleSetValueRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SingleSetValueRequest.ProtoReflect.Descriptor instead.
 func (*SingleSetValueRequest) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{55}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *SingleSetValueRequest) GetTargetId() string {
@@ -5696,7 +5925,7 @@ type SingleSetValueResponse struct {
 
 func (x *SingleSetValueResponse) Reset() {
 	*x = SingleSetValueResponse{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[56]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5708,7 +5937,7 @@ func (x *SingleSetValueResponse) String() string {
 func (*SingleSetValueResponse) ProtoMessage() {}
 
 func (x *SingleSetValueResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[56]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5721,7 +5950,7 @@ func (x *SingleSetValueResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SingleSetValueResponse.ProtoReflect.Descriptor instead.
 func (*SingleSetValueResponse) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{56}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *SingleSetValueResponse) GetResponse() *SetValueResponse {
@@ -5751,7 +5980,7 @@ type GetOffloadedAppsStatisticsResponse_DHCPv4RAStats struct {
 
 func (x *GetOffloadedAppsStatisticsResponse_DHCPv4RAStats) Reset() {
 	*x = GetOffloadedAppsStatisticsResponse_DHCPv4RAStats{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[57]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5763,7 +5992,7 @@ func (x *GetOffloadedAppsStatisticsResponse_DHCPv4RAStats) String() string {
 func (*GetOffloadedAppsStatisticsResponse_DHCPv4RAStats) ProtoMessage() {}
 
 func (x *GetOffloadedAppsStatisticsResponse_DHCPv4RAStats) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[57]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5869,7 +6098,7 @@ type GetOffloadedAppsStatisticsResponse_DHCPv6RAStats struct {
 
 func (x *GetOffloadedAppsStatisticsResponse_DHCPv6RAStats) Reset() {
 	*x = GetOffloadedAppsStatisticsResponse_DHCPv6RAStats{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[58]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5881,7 +6110,7 @@ func (x *GetOffloadedAppsStatisticsResponse_DHCPv6RAStats) String() string {
 func (*GetOffloadedAppsStatisticsResponse_DHCPv6RAStats) ProtoMessage() {}
 
 func (x *GetOffloadedAppsStatisticsResponse_DHCPv6RAStats) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[58]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5987,7 +6216,7 @@ type GetOffloadedAppsStatisticsResponse_PPPoeIAStats struct {
 
 func (x *GetOffloadedAppsStatisticsResponse_PPPoeIAStats) Reset() {
 	*x = GetOffloadedAppsStatisticsResponse_PPPoeIAStats{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[59]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5999,7 +6228,7 @@ func (x *GetOffloadedAppsStatisticsResponse_PPPoeIAStats) String() string {
 func (*GetOffloadedAppsStatisticsResponse_PPPoeIAStats) ProtoMessage() {}
 
 func (x *GetOffloadedAppsStatisticsResponse_PPPoeIAStats) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[59]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6085,6 +6314,166 @@ func (x *GetOffloadedAppsStatisticsResponse_PPPoeIAStats) GetAdditionalStats() m
 	return nil
 }
 
+type GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	TotalPppoePackets uint32                 `protobuf:"varint,1,opt,name=total_pppoe_packets,json=totalPppoePackets,proto3" json:"total_pppoe_packets,omitempty"`
+	PadiPackets       uint32                 `protobuf:"varint,2,opt,name=padi_packets,json=padiPackets,proto3" json:"padi_packets,omitempty"`
+	PadoPackets       uint32                 `protobuf:"varint,3,opt,name=pado_packets,json=padoPackets,proto3" json:"pado_packets,omitempty"`
+	PadsPackets       uint32                 `protobuf:"varint,4,opt,name=pads_packets,json=padsPackets,proto3" json:"pads_packets,omitempty"`
+	PadrPackets       uint32                 `protobuf:"varint,5,opt,name=padr_packets,json=padrPackets,proto3" json:"padr_packets,omitempty"`
+	PadtPackets       uint32                 `protobuf:"varint,6,opt,name=padt_packets,json=padtPackets,proto3" json:"padt_packets,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) Reset() {
+	*x = GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats{}
+	mi := &file_voltha_protos_extensions_proto_msgTypes[65]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) ProtoMessage() {}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) ProtoReflect() protoreflect.Message {
+	mi := &file_voltha_protos_extensions_proto_msgTypes[65]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats.ProtoReflect.Descriptor instead.
+func (*GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) Descriptor() ([]byte, []int) {
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{48, 0}
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) GetTotalPppoePackets() uint32 {
+	if x != nil {
+		return x.TotalPppoePackets
+	}
+	return 0
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) GetPadiPackets() uint32 {
+	if x != nil {
+		return x.PadiPackets
+	}
+	return 0
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) GetPadoPackets() uint32 {
+	if x != nil {
+		return x.PadoPackets
+	}
+	return 0
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) GetPadsPackets() uint32 {
+	if x != nil {
+		return x.PadsPackets
+	}
+	return 0
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) GetPadrPackets() uint32 {
+	if x != nil {
+		return x.PadrPackets
+	}
+	return 0
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats) GetPadtPackets() uint32 {
+	if x != nil {
+		return x.PadtPackets
+	}
+	return 0
+}
+
+type GetSubscriberAppsStatisticsResponse_SubDHCPStats struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	TotalDhcpPackets uint32                 `protobuf:"varint,1,opt,name=total_dhcp_packets,json=totalDhcpPackets,proto3" json:"total_dhcp_packets,omitempty"`
+	DiscoverPackets  uint32                 `protobuf:"varint,2,opt,name=discover_packets,json=discoverPackets,proto3" json:"discover_packets,omitempty"`
+	OfferPackets     uint32                 `protobuf:"varint,3,opt,name=offer_packets,json=offerPackets,proto3" json:"offer_packets,omitempty"`
+	RequestPackets   uint32                 `protobuf:"varint,4,opt,name=request_packets,json=requestPackets,proto3" json:"request_packets,omitempty"`
+	AckPackets       uint32                 `protobuf:"varint,5,opt,name=ack_packets,json=ackPackets,proto3" json:"ack_packets,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubDHCPStats) Reset() {
+	*x = GetSubscriberAppsStatisticsResponse_SubDHCPStats{}
+	mi := &file_voltha_protos_extensions_proto_msgTypes[66]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubDHCPStats) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSubscriberAppsStatisticsResponse_SubDHCPStats) ProtoMessage() {}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubDHCPStats) ProtoReflect() protoreflect.Message {
+	mi := &file_voltha_protos_extensions_proto_msgTypes[66]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSubscriberAppsStatisticsResponse_SubDHCPStats.ProtoReflect.Descriptor instead.
+func (*GetSubscriberAppsStatisticsResponse_SubDHCPStats) Descriptor() ([]byte, []int) {
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{48, 1}
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubDHCPStats) GetTotalDhcpPackets() uint32 {
+	if x != nil {
+		return x.TotalDhcpPackets
+	}
+	return 0
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubDHCPStats) GetDiscoverPackets() uint32 {
+	if x != nil {
+		return x.DiscoverPackets
+	}
+	return 0
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubDHCPStats) GetOfferPackets() uint32 {
+	if x != nil {
+		return x.OfferPackets
+	}
+	return 0
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubDHCPStats) GetRequestPackets() uint32 {
+	if x != nil {
+		return x.RequestPackets
+	}
+	return 0
+}
+
+func (x *GetSubscriberAppsStatisticsResponse_SubDHCPStats) GetAckPackets() uint32 {
+	if x != nil {
+		return x.AckPackets
+	}
+	return 0
+}
+
 type AppOffloadOnuConfig_PerUniConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// As per the BBF Agent Remote Id defined in https://github.com/BroadbandForum/yang/blob/master/standard/networking/bbf-pppoe-intermediate-agent-profile-common.yang
@@ -6099,7 +6488,7 @@ type AppOffloadOnuConfig_PerUniConfig struct {
 
 func (x *AppOffloadOnuConfig_PerUniConfig) Reset() {
 	*x = AppOffloadOnuConfig_PerUniConfig{}
-	mi := &file_voltha_protos_extensions_proto_msgTypes[63]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6111,7 +6500,7 @@ func (x *AppOffloadOnuConfig_PerUniConfig) String() string {
 func (*AppOffloadOnuConfig_PerUniConfig) ProtoMessage() {}
 
 func (x *AppOffloadOnuConfig_PerUniConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_voltha_protos_extensions_proto_msgTypes[63]
+	mi := &file_voltha_protos_extensions_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6124,7 +6513,7 @@ func (x *AppOffloadOnuConfig_PerUniConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppOffloadOnuConfig_PerUniConfig.ProtoReflect.Descriptor instead.
 func (*AppOffloadOnuConfig_PerUniConfig) Descriptor() ([]byte, []int) {
-	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{50, 0}
+	return file_voltha_protos_extensions_proto_rawDescGZIP(), []int{52, 0}
 }
 
 func (x *AppOffloadOnuConfig_PerUniConfig) GetAgentRemoteID() string {
@@ -6524,7 +6913,34 @@ const file_voltha_protos_extensions_proto_rawDesc = "" +
 	"\x14AdditionalStatsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\a\n" +
-	"\x05stats\"\xf8\t\n" +
+	"\x05stats\"\xed\x01\n" +
+	"\"GetSubscriberAppsStatisticsRequest\x12Q\n" +
+	"\bstatsFor\x18\x01 \x01(\x0e25.extension.GetSubscriberAppsStatisticsRequest.AppStatR\bstatsFor\x12 \n" +
+	"\vonuDeviceId\x18\x02 \x01(\tR\vonuDeviceId\x12!\n" +
+	"\fservice_name\x18\x03 \x01(\tR\vserviceName\"/\n" +
+	"\aAppStat\x12\r\n" +
+	"\tUNDEFINED\x10\x00\x12\v\n" +
+	"\aPPPoeIA\x10\x01\x12\b\n" +
+	"\x04DHCP\x10\x02\"\xbd\x05\n" +
+	"#GetSubscriberAppsStatisticsResponse\x12d\n" +
+	"\fpppoeIaStats\x18\x01 \x01(\v2>.extension.GetSubscriberAppsStatisticsResponse.SubPPPoeIAStatsH\x00R\fpppoeIaStats\x12[\n" +
+	"\tdhcpStats\x18\x02 \x01(\v2;.extension.GetSubscriberAppsStatisticsResponse.SubDHCPStatsH\x00R\tdhcpStats\x1a\xf0\x01\n" +
+	"\x0fSubPPPoeIAStats\x12.\n" +
+	"\x13total_pppoe_packets\x18\x01 \x01(\rR\x11totalPppoePackets\x12!\n" +
+	"\fpadi_packets\x18\x02 \x01(\rR\vpadiPackets\x12!\n" +
+	"\fpado_packets\x18\x03 \x01(\rR\vpadoPackets\x12!\n" +
+	"\fpads_packets\x18\x04 \x01(\rR\vpadsPackets\x12!\n" +
+	"\fpadr_packets\x18\x05 \x01(\rR\vpadrPackets\x12!\n" +
+	"\fpadt_packets\x18\x06 \x01(\rR\vpadtPackets\x1a\xd6\x01\n" +
+	"\fSubDHCPStats\x12,\n" +
+	"\x12total_dhcp_packets\x18\x01 \x01(\rR\x10totalDhcpPackets\x12)\n" +
+	"\x10discover_packets\x18\x02 \x01(\rR\x0fdiscoverPackets\x12#\n" +
+	"\roffer_packets\x18\x03 \x01(\rR\fofferPackets\x12'\n" +
+	"\x0frequest_packets\x18\x04 \x01(\rR\x0erequestPackets\x12\x1f\n" +
+	"\vack_packets\x18\x05 \x01(\rR\n" +
+	"ackPacketsB\a\n" +
+	"\x05stats\"\xcd\n" +
+	"\n" +
 	"\x0fGetValueRequest\x12;\n" +
 	"\bdistance\x18\x01 \x01(\v2\x1d.extension.GetDistanceRequestH\x00R\bdistance\x12;\n" +
 	"\auniInfo\x18\x02 \x01(\v2\x1f.extension.GetOnuUniInfoRequestH\x00R\auniInfo\x12A\n" +
@@ -6549,8 +6965,9 @@ const file_voltha_protos_extensions_proto_rawDesc = "" +
 	"\x10onuAllocGemStats\x18\x0e \x01(\v2'.extension.GetOnuAllocGemHistoryRequestH\x00R\x10onuAllocGemStats\x12P\n" +
 	"\x0fonuStatsFromOlt\x18\x0f \x01(\v2$.extension.GetOnuStatsFromOltRequestH\x00R\x0fonuStatsFromOlt\x12A\n" +
 	"\voltPonStats\x18\x10 \x01(\v2\x1d.extension.GetPonStatsRequestH\x00R\voltPonStats\x12A\n" +
-	"\voltNniStats\x18\x11 \x01(\v2\x1d.extension.GetNNIStatsRequestH\x00R\voltNniStatsB\t\n" +
-	"\arequest\"\xe7\r\n" +
+	"\voltNniStats\x18\x11 \x01(\v2\x1d.extension.GetNNIStatsRequestH\x00R\voltNniStats\x12S\n" +
+	"\fsubAppsStats\x18\x12 \x01(\v2-.extension.GetSubscriberAppsStatisticsRequestH\x00R\fsubAppsStatsB\t\n" +
+	"\arequest\"\xcd\x0e\n" +
 	"\x10GetValueResponse\x12:\n" +
 	"\x06status\x18\x01 \x01(\x0e2\".extension.GetValueResponse.StatusR\x06status\x12E\n" +
 	"\terrReason\x18\x02 \x01(\x0e2'.extension.GetValueResponse.ErrorReasonR\terrReason\x12<\n" +
@@ -6575,7 +6992,8 @@ const file_voltha_protos_extensions_proto_rawDesc = "" +
 	"\x18onuAllocGemStatsResponse\x18\x10 \x01(\v2(.extension.GetOnuAllocGemHistoryResponseH\x00R\x18onuAllocGemStatsResponse\x12a\n" +
 	"\x17onuStatsFromOltResponse\x18\x11 \x01(\v2%.extension.GetOnuStatsFromOltResponseH\x00R\x17onuStatsFromOltResponse\x12R\n" +
 	"\x13oltPonStatsResponse\x18\x12 \x01(\v2\x1e.extension.GetPonStatsResponseH\x00R\x13oltPonStatsResponse\x12R\n" +
-	"\x13oltNniStatsResponse\x18\x13 \x01(\v2\x1e.extension.GetNNIStatsResponseH\x00R\x13oltNniStatsResponse\"1\n" +
+	"\x13oltNniStatsResponse\x18\x13 \x01(\v2\x1e.extension.GetNNIStatsResponseH\x00R\x13oltNniStatsResponse\x12d\n" +
+	"\x14subAppsStatsResponse\x18\x14 \x01(\v2..extension.GetSubscriberAppsStatisticsResponseH\x00R\x14subAppsStatsResponse\"1\n" +
 	"\x06Status\x12\x14\n" +
 	"\x10STATUS_UNDEFINED\x10\x00\x12\x06\n" +
 	"\x02OK\x10\x01\x12\t\n" +
@@ -6650,8 +7068,8 @@ func file_voltha_protos_extensions_proto_rawDescGZIP() []byte {
 	return file_voltha_protos_extensions_proto_rawDescData
 }
 
-var file_voltha_protos_extensions_proto_enumTypes = make([]protoimpl.EnumInfo, 12)
-var file_voltha_protos_extensions_proto_msgTypes = make([]protoimpl.MessageInfo, 64)
+var file_voltha_protos_extensions_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
+var file_voltha_protos_extensions_proto_msgTypes = make([]protoimpl.MessageInfo, 68)
 var file_voltha_protos_extensions_proto_goTypes = []any{
 	(ValueType_Type)(0),                                      // 0: extension.ValueType.Type
 	(GetOnuUniInfoResponse_ConfigurationInd)(0),              // 1: extension.GetOnuUniInfoResponse.ConfigurationInd
@@ -6661,166 +7079,176 @@ var file_voltha_protos_extensions_proto_goTypes = []any{
 	(GetOnuEthernetBridgePortHistory_Direction)(0),           // 5: extension.GetOnuEthernetBridgePortHistory.Direction
 	(GetOmciEthernetFrameExtendedPmResponse_Format)(0),       // 6: extension.GetOmciEthernetFrameExtendedPmResponse.Format
 	(GetOffloadedAppsStatisticsRequest_OffloadedApp)(0),      // 7: extension.GetOffloadedAppsStatisticsRequest.OffloadedApp
-	(GetValueResponse_Status)(0),                             // 8: extension.GetValueResponse.Status
-	(GetValueResponse_ErrorReason)(0),                        // 9: extension.GetValueResponse.ErrorReason
-	(SetValueResponse_Status)(0),                             // 10: extension.SetValueResponse.Status
-	(SetValueResponse_ErrorReason)(0),                        // 11: extension.SetValueResponse.ErrorReason
-	(*ValueSet)(nil),                                         // 12: extension.ValueSet
-	(*ValueType)(nil),                                        // 13: extension.ValueType
-	(*ValueSpecifier)(nil),                                   // 14: extension.ValueSpecifier
-	(*ReturnValues)(nil),                                     // 15: extension.ReturnValues
-	(*GetDistanceRequest)(nil),                               // 16: extension.GetDistanceRequest
-	(*GetDistanceResponse)(nil),                              // 17: extension.GetDistanceResponse
-	(*GetOnuUniInfoRequest)(nil),                             // 18: extension.GetOnuUniInfoRequest
-	(*GetOnuUniInfoResponse)(nil),                            // 19: extension.GetOnuUniInfoResponse
-	(*GetOltPortCounters)(nil),                               // 20: extension.GetOltPortCounters
-	(*GetOltPortCountersResponse)(nil),                       // 21: extension.GetOltPortCountersResponse
-	(*GetOnuPonOpticalInfo)(nil),                             // 22: extension.GetOnuPonOpticalInfo
-	(*GetOnuPonOpticalInfoResponse)(nil),                     // 23: extension.GetOnuPonOpticalInfoResponse
-	(*GetOnuEthernetBridgePortHistory)(nil),                  // 24: extension.GetOnuEthernetBridgePortHistory
-	(*GetOnuEthernetBridgePortHistoryResponse)(nil),          // 25: extension.GetOnuEthernetBridgePortHistoryResponse
-	(*GetOnuAllocGemHistoryRequest)(nil),                     // 26: extension.GetOnuAllocGemHistoryRequest
-	(*OnuGemPortHistoryData)(nil),                            // 27: extension.OnuGemPortHistoryData
-	(*OnuAllocHistoryData)(nil),                              // 28: extension.OnuAllocHistoryData
-	(*OnuAllocGemHistoryData)(nil),                           // 29: extension.OnuAllocGemHistoryData
-	(*GetOnuAllocGemHistoryResponse)(nil),                    // 30: extension.GetOnuAllocGemHistoryResponse
-	(*GetOnuFecHistory)(nil),                                 // 31: extension.GetOnuFecHistory
-	(*GetOnuFecHistoryResponse)(nil),                         // 32: extension.GetOnuFecHistoryResponse
-	(*GetOnuCountersRequest)(nil),                            // 33: extension.GetOnuCountersRequest
-	(*GetOmciEthernetFrameExtendedPmRequest)(nil),            // 34: extension.GetOmciEthernetFrameExtendedPmRequest
-	(*GetRxPowerRequest)(nil),                                // 35: extension.GetRxPowerRequest
-	(*GetOltRxPowerRequest)(nil),                             // 36: extension.GetOltRxPowerRequest
-	(*GetPonStatsRequest)(nil),                               // 37: extension.GetPonStatsRequest
-	(*GetPonStatsResponse)(nil),                              // 38: extension.GetPonStatsResponse
-	(*GetNNIStatsRequest)(nil),                               // 39: extension.GetNNIStatsRequest
-	(*GetNNIStatsResponse)(nil),                              // 40: extension.GetNNIStatsResponse
-	(*GetOnuStatsFromOltRequest)(nil),                        // 41: extension.GetOnuStatsFromOltRequest
-	(*OnuGemPortInfoFromOlt)(nil),                            // 42: extension.OnuGemPortInfoFromOlt
-	(*OnuAllocIdInfoFromOlt)(nil),                            // 43: extension.OnuAllocIdInfoFromOlt
-	(*OnuAllocGemStatsFromOltResponse)(nil),                  // 44: extension.OnuAllocGemStatsFromOltResponse
-	(*GetOnuStatsFromOltResponse)(nil),                       // 45: extension.GetOnuStatsFromOltResponse
-	(*GetOnuCountersResponse)(nil),                           // 46: extension.GetOnuCountersResponse
-	(*OmciEthernetFrameExtendedPm)(nil),                      // 47: extension.OmciEthernetFrameExtendedPm
-	(*GetOmciEthernetFrameExtendedPmResponse)(nil),           // 48: extension.GetOmciEthernetFrameExtendedPmResponse
-	(*RxPower)(nil),                                          // 49: extension.RxPower
-	(*GetOltRxPowerResponse)(nil),                            // 50: extension.GetOltRxPowerResponse
-	(*GetRxPowerResponse)(nil),                               // 51: extension.GetRxPowerResponse
-	(*GetOnuOmciTxRxStatsRequest)(nil),                       // 52: extension.GetOnuOmciTxRxStatsRequest
-	(*GetOnuOmciTxRxStatsResponse)(nil),                      // 53: extension.GetOnuOmciTxRxStatsResponse
-	(*GetOnuOmciActiveAlarmsRequest)(nil),                    // 54: extension.GetOnuOmciActiveAlarmsRequest
-	(*AlarmData)(nil),                                        // 55: extension.AlarmData
-	(*GetOnuOmciActiveAlarmsResponse)(nil),                   // 56: extension.GetOnuOmciActiveAlarmsResponse
-	(*GetOffloadedAppsStatisticsRequest)(nil),                // 57: extension.GetOffloadedAppsStatisticsRequest
-	(*GetOffloadedAppsStatisticsResponse)(nil),               // 58: extension.GetOffloadedAppsStatisticsResponse
-	(*GetValueRequest)(nil),                                  // 59: extension.GetValueRequest
-	(*GetValueResponse)(nil),                                 // 60: extension.GetValueResponse
-	(*AppOffloadConfig)(nil),                                 // 61: extension.AppOffloadConfig
-	(*AppOffloadOnuConfig)(nil),                              // 62: extension.AppOffloadOnuConfig
-	(*SetValueRequest)(nil),                                  // 63: extension.SetValueRequest
-	(*SetValueResponse)(nil),                                 // 64: extension.SetValueResponse
-	(*SingleGetValueRequest)(nil),                            // 65: extension.SingleGetValueRequest
-	(*SingleGetValueResponse)(nil),                           // 66: extension.SingleGetValueResponse
-	(*SingleSetValueRequest)(nil),                            // 67: extension.SingleSetValueRequest
-	(*SingleSetValueResponse)(nil),                           // 68: extension.SingleSetValueResponse
-	(*GetOffloadedAppsStatisticsResponse_DHCPv4RAStats)(nil), // 69: extension.GetOffloadedAppsStatisticsResponse.DHCPv4RAStats
-	(*GetOffloadedAppsStatisticsResponse_DHCPv6RAStats)(nil), // 70: extension.GetOffloadedAppsStatisticsResponse.DHCPv6RAStats
-	(*GetOffloadedAppsStatisticsResponse_PPPoeIAStats)(nil),  // 71: extension.GetOffloadedAppsStatisticsResponse.PPPoeIAStats
-	nil,                                      // 72: extension.GetOffloadedAppsStatisticsResponse.DHCPv4RAStats.AdditionalStatsEntry
-	nil,                                      // 73: extension.GetOffloadedAppsStatisticsResponse.DHCPv6RAStats.AdditionalStatsEntry
-	nil,                                      // 74: extension.GetOffloadedAppsStatisticsResponse.PPPoeIAStats.AdditionalStatsEntry
-	(*AppOffloadOnuConfig_PerUniConfig)(nil), // 75: extension.AppOffloadOnuConfig.PerUniConfig
-	(*config.AlarmConfig)(nil),               // 76: config.AlarmConfig
-	(*emptypb.Empty)(nil),                    // 77: google.protobuf.Empty
-	(*common.PortStatistics)(nil),            // 78: common.PortStatistics
+	(GetSubscriberAppsStatisticsRequest_AppStat)(0),          // 8: extension.GetSubscriberAppsStatisticsRequest.AppStat
+	(GetValueResponse_Status)(0),                             // 9: extension.GetValueResponse.Status
+	(GetValueResponse_ErrorReason)(0),                        // 10: extension.GetValueResponse.ErrorReason
+	(SetValueResponse_Status)(0),                             // 11: extension.SetValueResponse.Status
+	(SetValueResponse_ErrorReason)(0),                        // 12: extension.SetValueResponse.ErrorReason
+	(*ValueSet)(nil),                                         // 13: extension.ValueSet
+	(*ValueType)(nil),                                        // 14: extension.ValueType
+	(*ValueSpecifier)(nil),                                   // 15: extension.ValueSpecifier
+	(*ReturnValues)(nil),                                     // 16: extension.ReturnValues
+	(*GetDistanceRequest)(nil),                               // 17: extension.GetDistanceRequest
+	(*GetDistanceResponse)(nil),                              // 18: extension.GetDistanceResponse
+	(*GetOnuUniInfoRequest)(nil),                             // 19: extension.GetOnuUniInfoRequest
+	(*GetOnuUniInfoResponse)(nil),                            // 20: extension.GetOnuUniInfoResponse
+	(*GetOltPortCounters)(nil),                               // 21: extension.GetOltPortCounters
+	(*GetOltPortCountersResponse)(nil),                       // 22: extension.GetOltPortCountersResponse
+	(*GetOnuPonOpticalInfo)(nil),                             // 23: extension.GetOnuPonOpticalInfo
+	(*GetOnuPonOpticalInfoResponse)(nil),                     // 24: extension.GetOnuPonOpticalInfoResponse
+	(*GetOnuEthernetBridgePortHistory)(nil),                  // 25: extension.GetOnuEthernetBridgePortHistory
+	(*GetOnuEthernetBridgePortHistoryResponse)(nil),          // 26: extension.GetOnuEthernetBridgePortHistoryResponse
+	(*GetOnuAllocGemHistoryRequest)(nil),                     // 27: extension.GetOnuAllocGemHistoryRequest
+	(*OnuGemPortHistoryData)(nil),                            // 28: extension.OnuGemPortHistoryData
+	(*OnuAllocHistoryData)(nil),                              // 29: extension.OnuAllocHistoryData
+	(*OnuAllocGemHistoryData)(nil),                           // 30: extension.OnuAllocGemHistoryData
+	(*GetOnuAllocGemHistoryResponse)(nil),                    // 31: extension.GetOnuAllocGemHistoryResponse
+	(*GetOnuFecHistory)(nil),                                 // 32: extension.GetOnuFecHistory
+	(*GetOnuFecHistoryResponse)(nil),                         // 33: extension.GetOnuFecHistoryResponse
+	(*GetOnuCountersRequest)(nil),                            // 34: extension.GetOnuCountersRequest
+	(*GetOmciEthernetFrameExtendedPmRequest)(nil),            // 35: extension.GetOmciEthernetFrameExtendedPmRequest
+	(*GetRxPowerRequest)(nil),                                // 36: extension.GetRxPowerRequest
+	(*GetOltRxPowerRequest)(nil),                             // 37: extension.GetOltRxPowerRequest
+	(*GetPonStatsRequest)(nil),                               // 38: extension.GetPonStatsRequest
+	(*GetPonStatsResponse)(nil),                              // 39: extension.GetPonStatsResponse
+	(*GetNNIStatsRequest)(nil),                               // 40: extension.GetNNIStatsRequest
+	(*GetNNIStatsResponse)(nil),                              // 41: extension.GetNNIStatsResponse
+	(*GetOnuStatsFromOltRequest)(nil),                        // 42: extension.GetOnuStatsFromOltRequest
+	(*OnuGemPortInfoFromOlt)(nil),                            // 43: extension.OnuGemPortInfoFromOlt
+	(*OnuAllocIdInfoFromOlt)(nil),                            // 44: extension.OnuAllocIdInfoFromOlt
+	(*OnuAllocGemStatsFromOltResponse)(nil),                  // 45: extension.OnuAllocGemStatsFromOltResponse
+	(*GetOnuStatsFromOltResponse)(nil),                       // 46: extension.GetOnuStatsFromOltResponse
+	(*GetOnuCountersResponse)(nil),                           // 47: extension.GetOnuCountersResponse
+	(*OmciEthernetFrameExtendedPm)(nil),                      // 48: extension.OmciEthernetFrameExtendedPm
+	(*GetOmciEthernetFrameExtendedPmResponse)(nil),           // 49: extension.GetOmciEthernetFrameExtendedPmResponse
+	(*RxPower)(nil),                                          // 50: extension.RxPower
+	(*GetOltRxPowerResponse)(nil),                            // 51: extension.GetOltRxPowerResponse
+	(*GetRxPowerResponse)(nil),                               // 52: extension.GetRxPowerResponse
+	(*GetOnuOmciTxRxStatsRequest)(nil),                       // 53: extension.GetOnuOmciTxRxStatsRequest
+	(*GetOnuOmciTxRxStatsResponse)(nil),                      // 54: extension.GetOnuOmciTxRxStatsResponse
+	(*GetOnuOmciActiveAlarmsRequest)(nil),                    // 55: extension.GetOnuOmciActiveAlarmsRequest
+	(*AlarmData)(nil),                                        // 56: extension.AlarmData
+	(*GetOnuOmciActiveAlarmsResponse)(nil),                   // 57: extension.GetOnuOmciActiveAlarmsResponse
+	(*GetOffloadedAppsStatisticsRequest)(nil),                // 58: extension.GetOffloadedAppsStatisticsRequest
+	(*GetOffloadedAppsStatisticsResponse)(nil),               // 59: extension.GetOffloadedAppsStatisticsResponse
+	(*GetSubscriberAppsStatisticsRequest)(nil),               // 60: extension.GetSubscriberAppsStatisticsRequest
+	(*GetSubscriberAppsStatisticsResponse)(nil),              // 61: extension.GetSubscriberAppsStatisticsResponse
+	(*GetValueRequest)(nil),                                  // 62: extension.GetValueRequest
+	(*GetValueResponse)(nil),                                 // 63: extension.GetValueResponse
+	(*AppOffloadConfig)(nil),                                 // 64: extension.AppOffloadConfig
+	(*AppOffloadOnuConfig)(nil),                              // 65: extension.AppOffloadOnuConfig
+	(*SetValueRequest)(nil),                                  // 66: extension.SetValueRequest
+	(*SetValueResponse)(nil),                                 // 67: extension.SetValueResponse
+	(*SingleGetValueRequest)(nil),                            // 68: extension.SingleGetValueRequest
+	(*SingleGetValueResponse)(nil),                           // 69: extension.SingleGetValueResponse
+	(*SingleSetValueRequest)(nil),                            // 70: extension.SingleSetValueRequest
+	(*SingleSetValueResponse)(nil),                           // 71: extension.SingleSetValueResponse
+	(*GetOffloadedAppsStatisticsResponse_DHCPv4RAStats)(nil), // 72: extension.GetOffloadedAppsStatisticsResponse.DHCPv4RAStats
+	(*GetOffloadedAppsStatisticsResponse_DHCPv6RAStats)(nil), // 73: extension.GetOffloadedAppsStatisticsResponse.DHCPv6RAStats
+	(*GetOffloadedAppsStatisticsResponse_PPPoeIAStats)(nil),  // 74: extension.GetOffloadedAppsStatisticsResponse.PPPoeIAStats
+	nil, // 75: extension.GetOffloadedAppsStatisticsResponse.DHCPv4RAStats.AdditionalStatsEntry
+	nil, // 76: extension.GetOffloadedAppsStatisticsResponse.DHCPv6RAStats.AdditionalStatsEntry
+	nil, // 77: extension.GetOffloadedAppsStatisticsResponse.PPPoeIAStats.AdditionalStatsEntry
+	(*GetSubscriberAppsStatisticsResponse_SubPPPoeIAStats)(nil), // 78: extension.GetSubscriberAppsStatisticsResponse.SubPPPoeIAStats
+	(*GetSubscriberAppsStatisticsResponse_SubDHCPStats)(nil),    // 79: extension.GetSubscriberAppsStatisticsResponse.SubDHCPStats
+	(*AppOffloadOnuConfig_PerUniConfig)(nil),                    // 80: extension.AppOffloadOnuConfig.PerUniConfig
+	(*config.AlarmConfig)(nil),                                  // 81: config.AlarmConfig
+	(*emptypb.Empty)(nil),                                       // 82: google.protobuf.Empty
+	(*common.PortStatistics)(nil),                               // 83: common.PortStatistics
 }
 var file_voltha_protos_extensions_proto_depIdxs = []int32{
-	76, // 0: extension.ValueSet.alarm_config:type_name -> config.AlarmConfig
+	81, // 0: extension.ValueSet.alarm_config:type_name -> config.AlarmConfig
 	0,  // 1: extension.ValueSpecifier.value:type_name -> extension.ValueType.Type
 	2,  // 2: extension.GetOnuUniInfoResponse.admState:type_name -> extension.GetOnuUniInfoResponse.AdministrativeState
 	3,  // 3: extension.GetOnuUniInfoResponse.operState:type_name -> extension.GetOnuUniInfoResponse.OperationalState
 	1,  // 4: extension.GetOnuUniInfoResponse.configInd:type_name -> extension.GetOnuUniInfoResponse.ConfigurationInd
 	4,  // 5: extension.GetOltPortCounters.portType:type_name -> extension.GetOltPortCounters.PortType
-	77, // 6: extension.GetOnuPonOpticalInfo.empty:type_name -> google.protobuf.Empty
+	82, // 6: extension.GetOnuPonOpticalInfo.empty:type_name -> google.protobuf.Empty
 	5,  // 7: extension.GetOnuEthernetBridgePortHistory.direction:type_name -> extension.GetOnuEthernetBridgePortHistory.Direction
-	77, // 8: extension.GetOnuAllocGemHistoryRequest.empty:type_name -> google.protobuf.Empty
-	28, // 9: extension.OnuAllocGemHistoryData.onuAllocIdInfo:type_name -> extension.OnuAllocHistoryData
-	27, // 10: extension.OnuAllocGemHistoryData.gemPortInfo:type_name -> extension.OnuGemPortHistoryData
-	29, // 11: extension.GetOnuAllocGemHistoryResponse.onuAllocGemHistoryData:type_name -> extension.OnuAllocGemHistoryData
-	77, // 12: extension.GetOnuFecHistory.empty:type_name -> google.protobuf.Empty
-	78, // 13: extension.GetPonStatsResponse.portStatistics:type_name -> common.PortStatistics
-	78, // 14: extension.GetNNIStatsResponse.portStatistics:type_name -> common.PortStatistics
-	43, // 15: extension.OnuAllocGemStatsFromOltResponse.allocIdInfo:type_name -> extension.OnuAllocIdInfoFromOlt
-	42, // 16: extension.OnuAllocGemStatsFromOltResponse.gemPortInfo:type_name -> extension.OnuGemPortInfoFromOlt
-	44, // 17: extension.GetOnuStatsFromOltResponse.allocGemStatsInfo:type_name -> extension.OnuAllocGemStatsFromOltResponse
-	47, // 18: extension.GetOmciEthernetFrameExtendedPmResponse.upstream:type_name -> extension.OmciEthernetFrameExtendedPm
-	47, // 19: extension.GetOmciEthernetFrameExtendedPmResponse.downstream:type_name -> extension.OmciEthernetFrameExtendedPm
+	82, // 8: extension.GetOnuAllocGemHistoryRequest.empty:type_name -> google.protobuf.Empty
+	29, // 9: extension.OnuAllocGemHistoryData.onuAllocIdInfo:type_name -> extension.OnuAllocHistoryData
+	28, // 10: extension.OnuAllocGemHistoryData.gemPortInfo:type_name -> extension.OnuGemPortHistoryData
+	30, // 11: extension.GetOnuAllocGemHistoryResponse.onuAllocGemHistoryData:type_name -> extension.OnuAllocGemHistoryData
+	82, // 12: extension.GetOnuFecHistory.empty:type_name -> google.protobuf.Empty
+	83, // 13: extension.GetPonStatsResponse.portStatistics:type_name -> common.PortStatistics
+	83, // 14: extension.GetNNIStatsResponse.portStatistics:type_name -> common.PortStatistics
+	44, // 15: extension.OnuAllocGemStatsFromOltResponse.allocIdInfo:type_name -> extension.OnuAllocIdInfoFromOlt
+	43, // 16: extension.OnuAllocGemStatsFromOltResponse.gemPortInfo:type_name -> extension.OnuGemPortInfoFromOlt
+	45, // 17: extension.GetOnuStatsFromOltResponse.allocGemStatsInfo:type_name -> extension.OnuAllocGemStatsFromOltResponse
+	48, // 18: extension.GetOmciEthernetFrameExtendedPmResponse.upstream:type_name -> extension.OmciEthernetFrameExtendedPm
+	48, // 19: extension.GetOmciEthernetFrameExtendedPmResponse.downstream:type_name -> extension.OmciEthernetFrameExtendedPm
 	6,  // 20: extension.GetOmciEthernetFrameExtendedPmResponse.omci_ethernet_frame_extended_pm_format:type_name -> extension.GetOmciEthernetFrameExtendedPmResponse.Format
-	49, // 21: extension.GetOltRxPowerResponse.rx_power:type_name -> extension.RxPower
-	77, // 22: extension.GetOnuOmciTxRxStatsRequest.empty:type_name -> google.protobuf.Empty
-	77, // 23: extension.GetOnuOmciActiveAlarmsRequest.empty:type_name -> google.protobuf.Empty
-	55, // 24: extension.GetOnuOmciActiveAlarmsResponse.active_alarms:type_name -> extension.AlarmData
+	50, // 21: extension.GetOltRxPowerResponse.rx_power:type_name -> extension.RxPower
+	82, // 22: extension.GetOnuOmciTxRxStatsRequest.empty:type_name -> google.protobuf.Empty
+	82, // 23: extension.GetOnuOmciActiveAlarmsRequest.empty:type_name -> google.protobuf.Empty
+	56, // 24: extension.GetOnuOmciActiveAlarmsResponse.active_alarms:type_name -> extension.AlarmData
 	7,  // 25: extension.GetOffloadedAppsStatisticsRequest.statsFor:type_name -> extension.GetOffloadedAppsStatisticsRequest.OffloadedApp
-	69, // 26: extension.GetOffloadedAppsStatisticsResponse.dhcpv4RaStats:type_name -> extension.GetOffloadedAppsStatisticsResponse.DHCPv4RAStats
-	70, // 27: extension.GetOffloadedAppsStatisticsResponse.dhcpv6RaStats:type_name -> extension.GetOffloadedAppsStatisticsResponse.DHCPv6RAStats
-	71, // 28: extension.GetOffloadedAppsStatisticsResponse.pppoeIaStats:type_name -> extension.GetOffloadedAppsStatisticsResponse.PPPoeIAStats
-	16, // 29: extension.GetValueRequest.distance:type_name -> extension.GetDistanceRequest
-	18, // 30: extension.GetValueRequest.uniInfo:type_name -> extension.GetOnuUniInfoRequest
-	20, // 31: extension.GetValueRequest.oltPortInfo:type_name -> extension.GetOltPortCounters
-	22, // 32: extension.GetValueRequest.onuOpticalInfo:type_name -> extension.GetOnuPonOpticalInfo
-	24, // 33: extension.GetValueRequest.ethBridgePort:type_name -> extension.GetOnuEthernetBridgePortHistory
-	31, // 34: extension.GetValueRequest.fecHistory:type_name -> extension.GetOnuFecHistory
-	33, // 35: extension.GetValueRequest.onuPonInfo:type_name -> extension.GetOnuCountersRequest
-	34, // 36: extension.GetValueRequest.onuInfo:type_name -> extension.GetOmciEthernetFrameExtendedPmRequest
-	35, // 37: extension.GetValueRequest.rxPower:type_name -> extension.GetRxPowerRequest
-	52, // 38: extension.GetValueRequest.onuOmciStats:type_name -> extension.GetOnuOmciTxRxStatsRequest
-	36, // 39: extension.GetValueRequest.oltRxPower:type_name -> extension.GetOltRxPowerRequest
-	54, // 40: extension.GetValueRequest.onuActiveAlarms:type_name -> extension.GetOnuOmciActiveAlarmsRequest
-	57, // 41: extension.GetValueRequest.offloadedAppsStats:type_name -> extension.GetOffloadedAppsStatisticsRequest
-	26, // 42: extension.GetValueRequest.onuAllocGemStats:type_name -> extension.GetOnuAllocGemHistoryRequest
-	41, // 43: extension.GetValueRequest.onuStatsFromOlt:type_name -> extension.GetOnuStatsFromOltRequest
-	37, // 44: extension.GetValueRequest.oltPonStats:type_name -> extension.GetPonStatsRequest
-	39, // 45: extension.GetValueRequest.oltNniStats:type_name -> extension.GetNNIStatsRequest
-	8,  // 46: extension.GetValueResponse.status:type_name -> extension.GetValueResponse.Status
-	9,  // 47: extension.GetValueResponse.errReason:type_name -> extension.GetValueResponse.ErrorReason
-	17, // 48: extension.GetValueResponse.distance:type_name -> extension.GetDistanceResponse
-	19, // 49: extension.GetValueResponse.uniInfo:type_name -> extension.GetOnuUniInfoResponse
-	21, // 50: extension.GetValueResponse.portCoutners:type_name -> extension.GetOltPortCountersResponse
-	23, // 51: extension.GetValueResponse.onuOpticalInfo:type_name -> extension.GetOnuPonOpticalInfoResponse
-	25, // 52: extension.GetValueResponse.ethBridgePortInfo:type_name -> extension.GetOnuEthernetBridgePortHistoryResponse
-	32, // 53: extension.GetValueResponse.fecHistory:type_name -> extension.GetOnuFecHistoryResponse
-	46, // 54: extension.GetValueResponse.onuPonCounters:type_name -> extension.GetOnuCountersResponse
-	48, // 55: extension.GetValueResponse.onuCounters:type_name -> extension.GetOmciEthernetFrameExtendedPmResponse
-	51, // 56: extension.GetValueResponse.rxPower:type_name -> extension.GetRxPowerResponse
-	53, // 57: extension.GetValueResponse.onuOmciStats:type_name -> extension.GetOnuOmciTxRxStatsResponse
-	50, // 58: extension.GetValueResponse.oltRxPower:type_name -> extension.GetOltRxPowerResponse
-	56, // 59: extension.GetValueResponse.onuActiveAlarms:type_name -> extension.GetOnuOmciActiveAlarmsResponse
-	58, // 60: extension.GetValueResponse.offloadedAppsStats:type_name -> extension.GetOffloadedAppsStatisticsResponse
-	30, // 61: extension.GetValueResponse.onuAllocGemStatsResponse:type_name -> extension.GetOnuAllocGemHistoryResponse
-	45, // 62: extension.GetValueResponse.onuStatsFromOltResponse:type_name -> extension.GetOnuStatsFromOltResponse
-	38, // 63: extension.GetValueResponse.oltPonStatsResponse:type_name -> extension.GetPonStatsResponse
-	40, // 64: extension.GetValueResponse.oltNniStatsResponse:type_name -> extension.GetNNIStatsResponse
-	75, // 65: extension.AppOffloadOnuConfig.perUniInfo:type_name -> extension.AppOffloadOnuConfig.PerUniConfig
-	76, // 66: extension.SetValueRequest.alarm_config:type_name -> config.AlarmConfig
-	61, // 67: extension.SetValueRequest.app_offload_config:type_name -> extension.AppOffloadConfig
-	62, // 68: extension.SetValueRequest.app_offload_onu_config:type_name -> extension.AppOffloadOnuConfig
-	10, // 69: extension.SetValueResponse.status:type_name -> extension.SetValueResponse.Status
-	11, // 70: extension.SetValueResponse.errReason:type_name -> extension.SetValueResponse.ErrorReason
-	59, // 71: extension.SingleGetValueRequest.request:type_name -> extension.GetValueRequest
-	60, // 72: extension.SingleGetValueResponse.response:type_name -> extension.GetValueResponse
-	63, // 73: extension.SingleSetValueRequest.request:type_name -> extension.SetValueRequest
-	64, // 74: extension.SingleSetValueResponse.response:type_name -> extension.SetValueResponse
-	72, // 75: extension.GetOffloadedAppsStatisticsResponse.DHCPv4RAStats.additional_stats:type_name -> extension.GetOffloadedAppsStatisticsResponse.DHCPv4RAStats.AdditionalStatsEntry
-	73, // 76: extension.GetOffloadedAppsStatisticsResponse.DHCPv6RAStats.additional_stats:type_name -> extension.GetOffloadedAppsStatisticsResponse.DHCPv6RAStats.AdditionalStatsEntry
-	74, // 77: extension.GetOffloadedAppsStatisticsResponse.PPPoeIAStats.additional_stats:type_name -> extension.GetOffloadedAppsStatisticsResponse.PPPoeIAStats.AdditionalStatsEntry
-	65, // 78: extension.Extension.GetExtValue:input_type -> extension.SingleGetValueRequest
-	67, // 79: extension.Extension.SetExtValue:input_type -> extension.SingleSetValueRequest
-	66, // 80: extension.Extension.GetExtValue:output_type -> extension.SingleGetValueResponse
-	68, // 81: extension.Extension.SetExtValue:output_type -> extension.SingleSetValueResponse
-	80, // [80:82] is the sub-list for method output_type
-	78, // [78:80] is the sub-list for method input_type
-	78, // [78:78] is the sub-list for extension type_name
-	78, // [78:78] is the sub-list for extension extendee
-	0,  // [0:78] is the sub-list for field type_name
+	72, // 26: extension.GetOffloadedAppsStatisticsResponse.dhcpv4RaStats:type_name -> extension.GetOffloadedAppsStatisticsResponse.DHCPv4RAStats
+	73, // 27: extension.GetOffloadedAppsStatisticsResponse.dhcpv6RaStats:type_name -> extension.GetOffloadedAppsStatisticsResponse.DHCPv6RAStats
+	74, // 28: extension.GetOffloadedAppsStatisticsResponse.pppoeIaStats:type_name -> extension.GetOffloadedAppsStatisticsResponse.PPPoeIAStats
+	8,  // 29: extension.GetSubscriberAppsStatisticsRequest.statsFor:type_name -> extension.GetSubscriberAppsStatisticsRequest.AppStat
+	78, // 30: extension.GetSubscriberAppsStatisticsResponse.pppoeIaStats:type_name -> extension.GetSubscriberAppsStatisticsResponse.SubPPPoeIAStats
+	79, // 31: extension.GetSubscriberAppsStatisticsResponse.dhcpStats:type_name -> extension.GetSubscriberAppsStatisticsResponse.SubDHCPStats
+	17, // 32: extension.GetValueRequest.distance:type_name -> extension.GetDistanceRequest
+	19, // 33: extension.GetValueRequest.uniInfo:type_name -> extension.GetOnuUniInfoRequest
+	21, // 34: extension.GetValueRequest.oltPortInfo:type_name -> extension.GetOltPortCounters
+	23, // 35: extension.GetValueRequest.onuOpticalInfo:type_name -> extension.GetOnuPonOpticalInfo
+	25, // 36: extension.GetValueRequest.ethBridgePort:type_name -> extension.GetOnuEthernetBridgePortHistory
+	32, // 37: extension.GetValueRequest.fecHistory:type_name -> extension.GetOnuFecHistory
+	34, // 38: extension.GetValueRequest.onuPonInfo:type_name -> extension.GetOnuCountersRequest
+	35, // 39: extension.GetValueRequest.onuInfo:type_name -> extension.GetOmciEthernetFrameExtendedPmRequest
+	36, // 40: extension.GetValueRequest.rxPower:type_name -> extension.GetRxPowerRequest
+	53, // 41: extension.GetValueRequest.onuOmciStats:type_name -> extension.GetOnuOmciTxRxStatsRequest
+	37, // 42: extension.GetValueRequest.oltRxPower:type_name -> extension.GetOltRxPowerRequest
+	55, // 43: extension.GetValueRequest.onuActiveAlarms:type_name -> extension.GetOnuOmciActiveAlarmsRequest
+	58, // 44: extension.GetValueRequest.offloadedAppsStats:type_name -> extension.GetOffloadedAppsStatisticsRequest
+	27, // 45: extension.GetValueRequest.onuAllocGemStats:type_name -> extension.GetOnuAllocGemHistoryRequest
+	42, // 46: extension.GetValueRequest.onuStatsFromOlt:type_name -> extension.GetOnuStatsFromOltRequest
+	38, // 47: extension.GetValueRequest.oltPonStats:type_name -> extension.GetPonStatsRequest
+	40, // 48: extension.GetValueRequest.oltNniStats:type_name -> extension.GetNNIStatsRequest
+	60, // 49: extension.GetValueRequest.subAppsStats:type_name -> extension.GetSubscriberAppsStatisticsRequest
+	9,  // 50: extension.GetValueResponse.status:type_name -> extension.GetValueResponse.Status
+	10, // 51: extension.GetValueResponse.errReason:type_name -> extension.GetValueResponse.ErrorReason
+	18, // 52: extension.GetValueResponse.distance:type_name -> extension.GetDistanceResponse
+	20, // 53: extension.GetValueResponse.uniInfo:type_name -> extension.GetOnuUniInfoResponse
+	22, // 54: extension.GetValueResponse.portCoutners:type_name -> extension.GetOltPortCountersResponse
+	24, // 55: extension.GetValueResponse.onuOpticalInfo:type_name -> extension.GetOnuPonOpticalInfoResponse
+	26, // 56: extension.GetValueResponse.ethBridgePortInfo:type_name -> extension.GetOnuEthernetBridgePortHistoryResponse
+	33, // 57: extension.GetValueResponse.fecHistory:type_name -> extension.GetOnuFecHistoryResponse
+	47, // 58: extension.GetValueResponse.onuPonCounters:type_name -> extension.GetOnuCountersResponse
+	49, // 59: extension.GetValueResponse.onuCounters:type_name -> extension.GetOmciEthernetFrameExtendedPmResponse
+	52, // 60: extension.GetValueResponse.rxPower:type_name -> extension.GetRxPowerResponse
+	54, // 61: extension.GetValueResponse.onuOmciStats:type_name -> extension.GetOnuOmciTxRxStatsResponse
+	51, // 62: extension.GetValueResponse.oltRxPower:type_name -> extension.GetOltRxPowerResponse
+	57, // 63: extension.GetValueResponse.onuActiveAlarms:type_name -> extension.GetOnuOmciActiveAlarmsResponse
+	59, // 64: extension.GetValueResponse.offloadedAppsStats:type_name -> extension.GetOffloadedAppsStatisticsResponse
+	31, // 65: extension.GetValueResponse.onuAllocGemStatsResponse:type_name -> extension.GetOnuAllocGemHistoryResponse
+	46, // 66: extension.GetValueResponse.onuStatsFromOltResponse:type_name -> extension.GetOnuStatsFromOltResponse
+	39, // 67: extension.GetValueResponse.oltPonStatsResponse:type_name -> extension.GetPonStatsResponse
+	41, // 68: extension.GetValueResponse.oltNniStatsResponse:type_name -> extension.GetNNIStatsResponse
+	61, // 69: extension.GetValueResponse.subAppsStatsResponse:type_name -> extension.GetSubscriberAppsStatisticsResponse
+	80, // 70: extension.AppOffloadOnuConfig.perUniInfo:type_name -> extension.AppOffloadOnuConfig.PerUniConfig
+	81, // 71: extension.SetValueRequest.alarm_config:type_name -> config.AlarmConfig
+	64, // 72: extension.SetValueRequest.app_offload_config:type_name -> extension.AppOffloadConfig
+	65, // 73: extension.SetValueRequest.app_offload_onu_config:type_name -> extension.AppOffloadOnuConfig
+	11, // 74: extension.SetValueResponse.status:type_name -> extension.SetValueResponse.Status
+	12, // 75: extension.SetValueResponse.errReason:type_name -> extension.SetValueResponse.ErrorReason
+	62, // 76: extension.SingleGetValueRequest.request:type_name -> extension.GetValueRequest
+	63, // 77: extension.SingleGetValueResponse.response:type_name -> extension.GetValueResponse
+	66, // 78: extension.SingleSetValueRequest.request:type_name -> extension.SetValueRequest
+	67, // 79: extension.SingleSetValueResponse.response:type_name -> extension.SetValueResponse
+	75, // 80: extension.GetOffloadedAppsStatisticsResponse.DHCPv4RAStats.additional_stats:type_name -> extension.GetOffloadedAppsStatisticsResponse.DHCPv4RAStats.AdditionalStatsEntry
+	76, // 81: extension.GetOffloadedAppsStatisticsResponse.DHCPv6RAStats.additional_stats:type_name -> extension.GetOffloadedAppsStatisticsResponse.DHCPv6RAStats.AdditionalStatsEntry
+	77, // 82: extension.GetOffloadedAppsStatisticsResponse.PPPoeIAStats.additional_stats:type_name -> extension.GetOffloadedAppsStatisticsResponse.PPPoeIAStats.AdditionalStatsEntry
+	68, // 83: extension.Extension.GetExtValue:input_type -> extension.SingleGetValueRequest
+	70, // 84: extension.Extension.SetExtValue:input_type -> extension.SingleSetValueRequest
+	69, // 85: extension.Extension.GetExtValue:output_type -> extension.SingleGetValueResponse
+	71, // 86: extension.Extension.SetExtValue:output_type -> extension.SingleSetValueResponse
+	85, // [85:87] is the sub-list for method output_type
+	83, // [83:85] is the sub-list for method input_type
+	83, // [83:83] is the sub-list for extension type_name
+	83, // [83:83] is the sub-list for extension extendee
+	0,  // [0:83] is the sub-list for field type_name
 }
 
 func init() { file_voltha_protos_extensions_proto_init() }
@@ -6877,7 +7305,11 @@ func file_voltha_protos_extensions_proto_init() {
 		(*GetOffloadedAppsStatisticsResponse_Dhcpv6RaStats)(nil),
 		(*GetOffloadedAppsStatisticsResponse_PppoeIaStats)(nil),
 	}
-	file_voltha_protos_extensions_proto_msgTypes[47].OneofWrappers = []any{
+	file_voltha_protos_extensions_proto_msgTypes[48].OneofWrappers = []any{
+		(*GetSubscriberAppsStatisticsResponse_PppoeIaStats)(nil),
+		(*GetSubscriberAppsStatisticsResponse_DhcpStats)(nil),
+	}
+	file_voltha_protos_extensions_proto_msgTypes[49].OneofWrappers = []any{
 		(*GetValueRequest_Distance)(nil),
 		(*GetValueRequest_UniInfo)(nil),
 		(*GetValueRequest_OltPortInfo)(nil),
@@ -6895,8 +7327,9 @@ func file_voltha_protos_extensions_proto_init() {
 		(*GetValueRequest_OnuStatsFromOlt)(nil),
 		(*GetValueRequest_OltPonStats)(nil),
 		(*GetValueRequest_OltNniStats)(nil),
+		(*GetValueRequest_SubAppsStats)(nil),
 	}
-	file_voltha_protos_extensions_proto_msgTypes[48].OneofWrappers = []any{
+	file_voltha_protos_extensions_proto_msgTypes[50].OneofWrappers = []any{
 		(*GetValueResponse_Distance)(nil),
 		(*GetValueResponse_UniInfo)(nil),
 		(*GetValueResponse_PortCoutners)(nil),
@@ -6914,8 +7347,9 @@ func file_voltha_protos_extensions_proto_init() {
 		(*GetValueResponse_OnuStatsFromOltResponse)(nil),
 		(*GetValueResponse_OltPonStatsResponse)(nil),
 		(*GetValueResponse_OltNniStatsResponse)(nil),
+		(*GetValueResponse_SubAppsStatsResponse)(nil),
 	}
-	file_voltha_protos_extensions_proto_msgTypes[51].OneofWrappers = []any{
+	file_voltha_protos_extensions_proto_msgTypes[53].OneofWrappers = []any{
 		(*SetValueRequest_AlarmConfig)(nil),
 		(*SetValueRequest_AppOffloadConfig)(nil),
 		(*SetValueRequest_AppOffloadOnuConfig)(nil),
@@ -6925,8 +7359,8 @@ func file_voltha_protos_extensions_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_voltha_protos_extensions_proto_rawDesc), len(file_voltha_protos_extensions_proto_rawDesc)),
-			NumEnums:      12,
-			NumMessages:   64,
+			NumEnums:      13,
+			NumMessages:   68,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
