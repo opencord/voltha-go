@@ -189,7 +189,7 @@ func (dMgr *Manager) GetChildDevice(ctx context.Context, df *ca.ChildDeviceFilte
 	for childDeviceID := range childDeviceIds {
 		var found bool
 		if searchDevice, err := dMgr.getDeviceReadOnly(ctx, childDeviceID); err == nil {
-			if searchDevice.ParentPortNo == uint32(df.ParentPortNo) {
+			if searchDevice.ParentPortNo != uint32(df.ParentPortNo) {
 				continue
 			}
 			foundOnuID := false
