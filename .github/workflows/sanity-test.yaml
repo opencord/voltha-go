@@ -6,15 +6,42 @@ name: Sanity Test
 # yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: >-
+          PR number to test. Works for PRs from forks. Takes precedence over
+          test_ref. Leave blank to test a branch/tag/SHA instead.
+        required: false
+        type: string
+        default: ""
+      test_ref:
+        description: >-
+          Branch, tag, or full commit SHA of voltha-go to test. Defaults to the
+          ref this workflow run was launched from.
+        required: false
+        type: string
+        default: ""
+      voltha_branch:
+        description: >-
+          VOLTHA release train used to check out voltha-system-tests and
+          voltha-helm-charts (master, voltha-2.15, ...).
+        required: false
+        type: string
+        default: "master"
 
 jobs:
   sanity-test:
     uses: opencord/shared-workflows/.github/workflows/sanity-test.yaml@main
     secrets: inherit
     with:
-      BRANCH: ${{ github.ref_name }}
-      PROJECT: ${{ github.event.repository.name }}
-      REFSPEC: ${{ github.sha }}
+      # Release train for the test suite and charts, NOT the code under test.
+      BRANCH: ${{ inputs.voltha_branch }}
+      # The code under test. A PR number resolves to refs/pull/<N>/head, which
+      # exists in this repo even when the PR originates from a fork.
+      REFSPEC: >-
+        ${{ inputs.pr_number != ''
+            && format('refs/pull/{0}/head', inputs.pr_number)
+            || (inputs.test_ref != '' && inputs.test_ref || github.sha) }}
       TEST_TARGETS: |
         - target: sanity-bbsim-att
           workflow: att
