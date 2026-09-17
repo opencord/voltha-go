@@ -957,6 +957,10 @@ func (dMgr *Manager) DeleteVoipSystemProfile(ctx context.Context, key *common.Ke
 
 func (dMgr *Manager) DisableOnuDevice(ctx context.Context, id *voltha.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "DisableOnuDevice")
+	// Validate input
+	if id == nil || id.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "missing child device id")
+	}
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
 	logger.Info(ctx, "disable-child-device", log.Fields{"device-id": id.Id})
@@ -975,6 +979,10 @@ func (dMgr *Manager) DisableOnuDevice(ctx context.Context, id *voltha.ID) (*empt
 
 func (dMgr *Manager) EnableOnuDevice(ctx context.Context, id *voltha.ID) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "EnableOnuDevice")
+	// Validate input
+	if id == nil || id.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "missing child device id")
+	}
 	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
 	logger.Info(ctx, "enable-child-device", log.Fields{"device-id": id.Id})
@@ -993,12 +1001,22 @@ func (dMgr *Manager) EnableOnuDevice(ctx context.Context, id *voltha.ID) (*empty
 
 func (dMgr *Manager) DisableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "DisableOnuSerialNumber")
-	log.EnrichSpan(ctx, log.Fields{"device-id": device.OltDeviceId})
+	// Validate input
+	if device == nil || device.OltDeviceId == nil || device.OltDeviceId.GetId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "missing OLT device id")
+	}
+	if device.SerialNumber == "" {
+		return nil, status.Error(codes.InvalidArgument, "missing ONU serial number")
+	}
+	if device.Port == nil || device.Port.GetPortNo() == uint32(0) {
+		return nil, status.Error(codes.InvalidArgument, "missing PON port")
+	}
+	log.EnrichSpan(ctx, log.Fields{"parent-device-id": device.OltDeviceId.GetId()})
 
-	logger.Infow(ctx, "disable-child serial number", log.Fields{"device-id": device.OltDeviceId, "serial-number": device.SerialNumber, "pon-port": device.Port})
+	logger.Infow(ctx, "disable-child serial number", log.Fields{"parent-device-id": device.OltDeviceId.GetId(), "serial-number": device.SerialNumber, "pon-port": device.Port.GetPortNo()})
 	oltAgent := dMgr.getDeviceAgent(ctx, device.OltDeviceId.GetId())
 	if oltAgent == nil {
-		return nil, status.Errorf(codes.NotFound, "%s", device.OltDeviceId)
+		return nil, status.Errorf(codes.NotFound, "%s", device.OltDeviceId.GetId())
 	}
 
 	return &emptypb.Empty{}, oltAgent.disableOnuSerialNumber(ctx, device)
@@ -1006,12 +1024,23 @@ func (dMgr *Manager) DisableOnuSerialNumber(ctx context.Context, device *voltha.
 
 func (dMgr *Manager) EnableOnuSerialNumber(ctx context.Context, device *voltha.OnuSerialNumberOnOLTPon) (*emptypb.Empty, error) {
 	ctx = utils.WithRPCMetadataContext(ctx, "EnableOnuSerialNumber")
-	log.EnrichSpan(ctx, log.Fields{"device-id": device.OltDeviceId})
+	// Validate input
+	if device == nil || device.OltDeviceId == nil || device.OltDeviceId.GetId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "missing OLT device id")
+	}
+	if device.SerialNumber == "" {
+		return nil, status.Error(codes.InvalidArgument, "missing ONU serial number")
+	}
+	if device.Port == nil || device.Port.GetPortNo() == uint32(0) {
+		return nil, status.Error(codes.InvalidArgument, "missing PON port")
+	}
 
-	logger.Info(ctx, "enable-child serial number", log.Fields{"device-id": device.OltDeviceId, "serial-number": device.SerialNumber, "pon-port": device.Port})
+	log.EnrichSpan(ctx, log.Fields{"parent-device-id": device.OltDeviceId.GetId()})
+
+	logger.Infow(ctx, "enable-child serial number", log.Fields{"parent-device-id": device.OltDeviceId.GetId(), "serial-number": device.SerialNumber, "pon-port": device.Port.GetPortNo()})
 	oltAgent := dMgr.getDeviceAgent(ctx, device.OltDeviceId.GetId())
 	if oltAgent == nil {
-		return nil, status.Errorf(codes.NotFound, "%s", device.OltDeviceId)
+		return nil, status.Errorf(codes.NotFound, "%s", device.OltDeviceId.GetId())
 	}
 
 	return &emptypb.Empty{}, oltAgent.enableOnuSerialNumber(ctx, device)
