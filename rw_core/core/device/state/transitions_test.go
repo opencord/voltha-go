@@ -193,8 +193,9 @@ func TestValidTransitions(t *testing.T) {
 	device = getDevice(false, voltha.AdminState_PREPROVISIONED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_UNKNOWN)
 	handlers = transitionMap.getTransitionHandler(ctx, device, previousDevice, core.DeviceTransientState_FORCE_DELETING,
 		core.DeviceTransientState_ANY)
-	assert.Equal(t, 1, len(handlers))
-	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
+	assert.Equal(t, 2, len(handlers))
+	assert.True(t, reflect.ValueOf(tdm.RunPostDeviceDelete).Pointer() == reflect.ValueOf(handlers[1]).Pointer())
+	assert.True(t, reflect.ValueOf(tdm.ChildDeviceLost).Pointer() == reflect.ValueOf(handlers[0]).Pointer())
 
 	previousDevice = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_ACTIVE)
 	device = getDevice(false, voltha.AdminState_ENABLED, voltha.ConnectStatus_UNKNOWN, voltha.OperStatus_FAILED)

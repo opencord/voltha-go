@@ -150,7 +150,7 @@ func (agent *LogicalAgent) setupNNILogicalPorts(ctx context.Context, deviceID st
 // updatePortState updates the port state of the device
 func (agent *LogicalAgent) updatePortState(ctx context.Context, portNo uint32, operStatus voltha.OperStatus_Types, deviceID string) error {
 	var err error
-	logger.Infow(ctx, "update-port-state-start", log.Fields{"logical-device-id": agent.logicalDeviceID, "port-no": portNo, "state": operStatus})
+	logger.Infow(ctx, "update-port-state-start", log.Fields{"logical-device-id": agent.logicalDeviceID, "port-no": portNo, "state": operStatus, "dev": deviceID})
 
 	portHandle, have := agent.portLoader.Lock(portNo)
 	if !have {
