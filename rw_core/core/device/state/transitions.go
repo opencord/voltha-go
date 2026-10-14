@@ -145,16 +145,28 @@ func NewTransitionMap(dMgr DeviceManager) *TransitionMap {
 			handlers:      []transitionHandler{dMgr.SetupUNILogicalPorts}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{ // DELETE PRE PROVISIONED State device forcefully
-			deviceType:    any,
+			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_FORCE_DELETING},
 			handlers:      []transitionHandler{dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{ // DELETE PRE PROVISIONED State device no force option set
-			deviceType:    any,
+			deviceType:    parent,
 			previousState: deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
 			currentState:  deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE},
 			handlers:      []transitionHandler{dMgr.RunPostDeviceDelete}})
+	transitionMap.transitions = append(transitionMap.transitions,
+		transition{ // DELETE PRE PROVISIONED State device forcefully
+			deviceType:    child,
+			previousState: deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
+			currentState:  deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_FORCE_DELETING},
+			handlers:      []transitionHandler{dMgr.ChildDeviceLost, dMgr.RunPostDeviceDelete}})
+	transitionMap.transitions = append(transitionMap.transitions,
+		transition{ // DELETE PRE PROVISIONED State device no force option set
+			deviceType:    child,
+			previousState: deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_ANY},
+			currentState:  deviceState{Admin: voltha.AdminState_PREPROVISIONED, Connection: voltha.ConnectStatus_UNKNOWN, Operational: voltha.OperStatus_UNKNOWN, Transient: core.DeviceTransientState_DELETING_POST_ADAPTER_RESPONSE},
+			handlers:      []transitionHandler{dMgr.ChildDeviceLost, dMgr.RunPostDeviceDelete}})
 	transitionMap.transitions = append(transitionMap.transitions,
 		transition{ // DELETE device forcefully
 			deviceType:    parent,
