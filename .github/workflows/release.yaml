@@ -8,15 +8,37 @@ name: voltha-go release
 on:
   workflow_dispatch:
   push:
-    # Only invoked on release tag pushes
-    tags:
-      - v*.*.*
+    # Runs on every merge to the default branch. The tag job creates the
+    # release tag from the VERSION file (unless it is a -dev version) and
+    # the release job only runs when a release tag is present on HEAD.
+    branches:
+      - master
+      - main
 
 permissions:
   contents: write
 
 jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.tag.outputs.release }}
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Checkout repository
+        # yamllint disable-line rule:line-length
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Create release tag from VERSION file
+        id: tag
+        # yamllint disable-line rule:line-length
+        uses: opencord/shared-workflows/.github/actions/tag-release-action@main
+
   release:
+    needs: tag
+    if: needs.tag.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
