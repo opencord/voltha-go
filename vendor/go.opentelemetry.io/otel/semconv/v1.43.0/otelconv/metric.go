@@ -3,22 +3,17 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Package httpconv provides types and functionality for OpenTelemetry semantic
+// Package otelconv provides types and functionality for OpenTelemetry semantic
 // conventions in the "otel" namespace.
 package otelconv
 
 import (
 	"context"
-	"sync"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/noop"
-)
-
-var (
-	addOptPool = &sync.Pool{New: func() any { return &[]metric.AddOption{} }}
-	recOptPool = &sync.Pool{New: func() any { return &[]metric.RecordOption{} }}
+	"go.opentelemetry.io/otel/semconv/internal/metricpool"
 )
 
 // ErrorTypeAttr is an attribute conforming to the error.type semantic
@@ -122,54 +117,17 @@ var (
 	SpanSamplingResultRecordAndSample SpanSamplingResultAttr = "RECORD_AND_SAMPLE"
 )
 
-// RPCGRPCStatusCodeAttr is an attribute conforming to the rpc.grpc.status_code
-// semantic conventions. It represents the gRPC status code of the last gRPC
-// requests performed in scope of this export call.
-type RPCGRPCStatusCodeAttr int64
-
-var (
-	// RPCGRPCStatusCodeOk is the OK.
-	RPCGRPCStatusCodeOk RPCGRPCStatusCodeAttr = 0
-	// RPCGRPCStatusCodeCancelled is the CANCELLED.
-	RPCGRPCStatusCodeCancelled RPCGRPCStatusCodeAttr = 1
-	// RPCGRPCStatusCodeUnknown is the UNKNOWN.
-	RPCGRPCStatusCodeUnknown RPCGRPCStatusCodeAttr = 2
-	// RPCGRPCStatusCodeInvalidArgument is the INVALID_ARGUMENT.
-	RPCGRPCStatusCodeInvalidArgument RPCGRPCStatusCodeAttr = 3
-	// RPCGRPCStatusCodeDeadlineExceeded is the DEADLINE_EXCEEDED.
-	RPCGRPCStatusCodeDeadlineExceeded RPCGRPCStatusCodeAttr = 4
-	// RPCGRPCStatusCodeNotFound is the NOT_FOUND.
-	RPCGRPCStatusCodeNotFound RPCGRPCStatusCodeAttr = 5
-	// RPCGRPCStatusCodeAlreadyExists is the ALREADY_EXISTS.
-	RPCGRPCStatusCodeAlreadyExists RPCGRPCStatusCodeAttr = 6
-	// RPCGRPCStatusCodePermissionDenied is the PERMISSION_DENIED.
-	RPCGRPCStatusCodePermissionDenied RPCGRPCStatusCodeAttr = 7
-	// RPCGRPCStatusCodeResourceExhausted is the RESOURCE_EXHAUSTED.
-	RPCGRPCStatusCodeResourceExhausted RPCGRPCStatusCodeAttr = 8
-	// RPCGRPCStatusCodeFailedPrecondition is the FAILED_PRECONDITION.
-	RPCGRPCStatusCodeFailedPrecondition RPCGRPCStatusCodeAttr = 9
-	// RPCGRPCStatusCodeAborted is the ABORTED.
-	RPCGRPCStatusCodeAborted RPCGRPCStatusCodeAttr = 10
-	// RPCGRPCStatusCodeOutOfRange is the OUT_OF_RANGE.
-	RPCGRPCStatusCodeOutOfRange RPCGRPCStatusCodeAttr = 11
-	// RPCGRPCStatusCodeUnimplemented is the UNIMPLEMENTED.
-	RPCGRPCStatusCodeUnimplemented RPCGRPCStatusCodeAttr = 12
-	// RPCGRPCStatusCodeInternal is the INTERNAL.
-	RPCGRPCStatusCodeInternal RPCGRPCStatusCodeAttr = 13
-	// RPCGRPCStatusCodeUnavailable is the UNAVAILABLE.
-	RPCGRPCStatusCodeUnavailable RPCGRPCStatusCodeAttr = 14
-	// RPCGRPCStatusCodeDataLoss is the DATA_LOSS.
-	RPCGRPCStatusCodeDataLoss RPCGRPCStatusCodeAttr = 15
-	// RPCGRPCStatusCodeUnauthenticated is the UNAUTHENTICATED.
-	RPCGRPCStatusCodeUnauthenticated RPCGRPCStatusCodeAttr = 16
-)
-
 // SDKExporterLogExported is an instrument used to record metric values
 // conforming to the "otel.sdk.exporter.log.exported" semantic conventions. It
 // represents the number of log records for which the export has finished, either
 // successful or failed.
 type SDKExporterLogExported struct {
 	metric.Int64Counter
+}
+
+var newSDKExporterLogExportedOpts = []metric.Int64CounterOption{
+	metric.WithDescription("The number of log records for which the export has finished, either successful or failed."),
+	metric.WithUnit("{log_record}"),
 }
 
 // NewSDKExporterLogExported returns a new SDKExporterLogExported instrument.
@@ -182,15 +140,18 @@ func NewSDKExporterLogExported(
 		return SDKExporterLogExported{noop.Int64Counter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKExporterLogExportedOpts
+	} else {
+		opt = append(opt, newSDKExporterLogExportedOpts...)
+	}
+
 	i, err := m.Int64Counter(
 		"otel.sdk.exporter.log.exported",
-		append([]metric.Int64CounterOption{
-			metric.WithDescription("The number of log records for which the export has finished, either successful or failed."),
-			metric.WithUnit("{log_record}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKExporterLogExported{noop.Int64Counter{}}, err
+		return SDKExporterLogExported{noop.Int64Counter{}}, err
 	}
 	return SDKExporterLogExported{i}, nil
 }
@@ -226,21 +187,27 @@ func (SDKExporterLogExported) Description() string {
 // non-rejected log records count as success.
 // If no rejection reason is available, `rejected` SHOULD be used as value for
 // `error.type`.
+// If the exporter retries failed export attempts, the export operation is
+// considered finished only after the final attempt has concluded.
+// Each log record MUST be counted exactly once per export operation:
+// intermediate failed attempts that are followed by a retry MUST NOT increment
+// the counter,
+// and `error.type` reflects the cause of the final attempt.
 func (m SDKExporterLogExported) Add(
 	ctx context.Context,
 	incr int64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(
 		*o,
@@ -261,17 +228,23 @@ func (m SDKExporterLogExported) Add(
 // non-rejected log records count as success.
 // If no rejection reason is available, `rejected` SHOULD be used as value for
 // `error.type`.
+// If the exporter retries failed export attempts, the export operation is
+// considered finished only after the final attempt has concluded.
+// Each log record MUST be counted exactly once per export operation:
+// intermediate failed attempts that are followed by a retry MUST NOT increment
+// the counter,
+// and `error.type` reflects the cause of the final attempt.
 func (m SDKExporterLogExported) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64Counter.Add(ctx, incr, *o...)
@@ -311,12 +284,111 @@ func (SDKExporterLogExported) AttrServerPort(val int) attribute.KeyValue {
 	return attribute.Int("server.port", val)
 }
 
+// SDKExporterLogExportedObservable is an instrument used to record metric values
+// conforming to the "otel.sdk.exporter.log.exported" semantic conventions. It
+// represents the number of log records for which the export has finished, either
+// successful or failed.
+type SDKExporterLogExportedObservable struct {
+	metric.Int64ObservableCounter
+}
+
+var newSDKExporterLogExportedObservableOpts = []metric.Int64ObservableCounterOption{
+	metric.WithDescription("The number of log records for which the export has finished, either successful or failed."),
+	metric.WithUnit("{log_record}"),
+}
+
+// NewSDKExporterLogExportedObservable returns a new
+// SDKExporterLogExportedObservable instrument.
+func NewSDKExporterLogExportedObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableCounterOption,
+) (SDKExporterLogExportedObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKExporterLogExportedObservable{noop.Int64ObservableCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKExporterLogExportedObservableOpts
+	} else {
+		opt = append(opt, newSDKExporterLogExportedObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableCounter(
+		"otel.sdk.exporter.log.exported",
+		opt...,
+	)
+	if err != nil {
+		return SDKExporterLogExportedObservable{noop.Int64ObservableCounter{}}, err
+	}
+	return SDKExporterLogExportedObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKExporterLogExportedObservable) Inst() metric.Int64ObservableCounter {
+	return m.Int64ObservableCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKExporterLogExportedObservable) Name() string {
+	return "otel.sdk.exporter.log.exported"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKExporterLogExportedObservable) Unit() string {
+	return "{log_record}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKExporterLogExportedObservable) Description() string {
+	return "The number of log records for which the export has finished, either successful or failed."
+}
+
+// AttrErrorType returns an optional attribute for the "error.type" semantic
+// convention. It represents the describes a class of error the operation ended
+// with.
+func (SDKExporterLogExportedObservable) AttrErrorType(val ErrorTypeAttr) attribute.KeyValue {
+	return attribute.String("error.type", string(val))
+}
+
+// AttrComponentName returns an optional attribute for the "otel.component.name"
+// semantic convention. It represents a name uniquely identifying the instance of
+// the OpenTelemetry component within its containing SDK instance.
+func (SDKExporterLogExportedObservable) AttrComponentName(val string) attribute.KeyValue {
+	return attribute.String("otel.component.name", val)
+}
+
+// AttrComponentType returns an optional attribute for the "otel.component.type"
+// semantic convention. It represents a name identifying the type of the
+// OpenTelemetry component.
+func (SDKExporterLogExportedObservable) AttrComponentType(val ComponentTypeAttr) attribute.KeyValue {
+	return attribute.String("otel.component.type", string(val))
+}
+
+// AttrServerAddress returns an optional attribute for the "server.address"
+// semantic convention. It represents the server domain name if available without
+// reverse DNS lookup; otherwise, IP address or Unix domain socket name.
+func (SDKExporterLogExportedObservable) AttrServerAddress(val string) attribute.KeyValue {
+	return attribute.String("server.address", val)
+}
+
+// AttrServerPort returns an optional attribute for the "server.port" semantic
+// convention. It represents the server port number.
+func (SDKExporterLogExportedObservable) AttrServerPort(val int) attribute.KeyValue {
+	return attribute.Int("server.port", val)
+}
+
 // SDKExporterLogInflight is an instrument used to record metric values
 // conforming to the "otel.sdk.exporter.log.inflight" semantic conventions. It
 // represents the number of log records which were passed to the exporter, but
 // that have not been exported yet (neither successful, nor failed).
 type SDKExporterLogInflight struct {
 	metric.Int64UpDownCounter
+}
+
+var newSDKExporterLogInflightOpts = []metric.Int64UpDownCounterOption{
+	metric.WithDescription("The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."),
+	metric.WithUnit("{log_record}"),
 }
 
 // NewSDKExporterLogInflight returns a new SDKExporterLogInflight instrument.
@@ -329,15 +401,18 @@ func NewSDKExporterLogInflight(
 		return SDKExporterLogInflight{noop.Int64UpDownCounter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKExporterLogInflightOpts
+	} else {
+		opt = append(opt, newSDKExporterLogInflightOpts...)
+	}
+
 	i, err := m.Int64UpDownCounter(
 		"otel.sdk.exporter.log.inflight",
-		append([]metric.Int64UpDownCounterOption{
-			metric.WithDescription("The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."),
-			metric.WithUnit("{log_record}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKExporterLogInflight{noop.Int64UpDownCounter{}}, err
+		return SDKExporterLogInflight{noop.Int64UpDownCounter{}}, err
 	}
 	return SDKExporterLogInflight{i}, nil
 }
@@ -366,23 +441,25 @@ func (SDKExporterLogInflight) Description() string {
 //
 // All additional attrs passed are included in the recorded value.
 //
-// For successful exports, `error.type` MUST NOT be set. For failed exports,
-// `error.type` MUST contain the failure cause.
+// Log records are counted as inflight from when they are passed to the exporter
+// until the export operation has concluded.
+// If the exporter retries failed export attempts, log records remain inflight
+// across all retry attempts and any backoff between them.
 func (m SDKExporterLogInflight) Add(
 	ctx context.Context,
 	incr int64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Int64UpDownCounter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64UpDownCounter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(
 		*o,
@@ -396,19 +473,21 @@ func (m SDKExporterLogInflight) Add(
 
 // AddSet adds incr to the existing count for set.
 //
-// For successful exports, `error.type` MUST NOT be set. For failed exports,
-// `error.type` MUST contain the failure cause.
+// Log records are counted as inflight from when they are passed to the exporter
+// until the export operation has concluded.
+// If the exporter retries failed export attempts, log records remain inflight
+// across all retry attempts and any backoff between them.
 func (m SDKExporterLogInflight) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64UpDownCounter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64UpDownCounter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64UpDownCounter.Add(ctx, incr, *o...)
@@ -441,12 +520,104 @@ func (SDKExporterLogInflight) AttrServerPort(val int) attribute.KeyValue {
 	return attribute.Int("server.port", val)
 }
 
+// SDKExporterLogInflightObservable is an instrument used to record metric values
+// conforming to the "otel.sdk.exporter.log.inflight" semantic conventions. It
+// represents the number of log records which were passed to the exporter, but
+// that have not been exported yet (neither successful, nor failed).
+type SDKExporterLogInflightObservable struct {
+	metric.Int64ObservableUpDownCounter
+}
+
+var newSDKExporterLogInflightObservableOpts = []metric.Int64ObservableUpDownCounterOption{
+	metric.WithDescription("The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."),
+	metric.WithUnit("{log_record}"),
+}
+
+// NewSDKExporterLogInflightObservable returns a new
+// SDKExporterLogInflightObservable instrument.
+func NewSDKExporterLogInflightObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableUpDownCounterOption,
+) (SDKExporterLogInflightObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKExporterLogInflightObservable{noop.Int64ObservableUpDownCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKExporterLogInflightObservableOpts
+	} else {
+		opt = append(opt, newSDKExporterLogInflightObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableUpDownCounter(
+		"otel.sdk.exporter.log.inflight",
+		opt...,
+	)
+	if err != nil {
+		return SDKExporterLogInflightObservable{noop.Int64ObservableUpDownCounter{}}, err
+	}
+	return SDKExporterLogInflightObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKExporterLogInflightObservable) Inst() metric.Int64ObservableUpDownCounter {
+	return m.Int64ObservableUpDownCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKExporterLogInflightObservable) Name() string {
+	return "otel.sdk.exporter.log.inflight"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKExporterLogInflightObservable) Unit() string {
+	return "{log_record}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKExporterLogInflightObservable) Description() string {
+	return "The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."
+}
+
+// AttrComponentName returns an optional attribute for the "otel.component.name"
+// semantic convention. It represents a name uniquely identifying the instance of
+// the OpenTelemetry component within its containing SDK instance.
+func (SDKExporterLogInflightObservable) AttrComponentName(val string) attribute.KeyValue {
+	return attribute.String("otel.component.name", val)
+}
+
+// AttrComponentType returns an optional attribute for the "otel.component.type"
+// semantic convention. It represents a name identifying the type of the
+// OpenTelemetry component.
+func (SDKExporterLogInflightObservable) AttrComponentType(val ComponentTypeAttr) attribute.KeyValue {
+	return attribute.String("otel.component.type", string(val))
+}
+
+// AttrServerAddress returns an optional attribute for the "server.address"
+// semantic convention. It represents the server domain name if available without
+// reverse DNS lookup; otherwise, IP address or Unix domain socket name.
+func (SDKExporterLogInflightObservable) AttrServerAddress(val string) attribute.KeyValue {
+	return attribute.String("server.address", val)
+}
+
+// AttrServerPort returns an optional attribute for the "server.port" semantic
+// convention. It represents the server port number.
+func (SDKExporterLogInflightObservable) AttrServerPort(val int) attribute.KeyValue {
+	return attribute.Int("server.port", val)
+}
+
 // SDKExporterMetricDataPointExported is an instrument used to record metric
 // values conforming to the "otel.sdk.exporter.metric_data_point.exported"
 // semantic conventions. It represents the number of metric data points for which
 // the export has finished, either successful or failed.
 type SDKExporterMetricDataPointExported struct {
 	metric.Int64Counter
+}
+
+var newSDKExporterMetricDataPointExportedOpts = []metric.Int64CounterOption{
+	metric.WithDescription("The number of metric data points for which the export has finished, either successful or failed."),
+	metric.WithUnit("{data_point}"),
 }
 
 // NewSDKExporterMetricDataPointExported returns a new
@@ -460,15 +631,18 @@ func NewSDKExporterMetricDataPointExported(
 		return SDKExporterMetricDataPointExported{noop.Int64Counter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKExporterMetricDataPointExportedOpts
+	} else {
+		opt = append(opt, newSDKExporterMetricDataPointExportedOpts...)
+	}
+
 	i, err := m.Int64Counter(
 		"otel.sdk.exporter.metric_data_point.exported",
-		append([]metric.Int64CounterOption{
-			metric.WithDescription("The number of metric data points for which the export has finished, either successful or failed."),
-			metric.WithUnit("{data_point}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKExporterMetricDataPointExported{noop.Int64Counter{}}, err
+		return SDKExporterMetricDataPointExported{noop.Int64Counter{}}, err
 	}
 	return SDKExporterMetricDataPointExported{i}, nil
 }
@@ -504,21 +678,27 @@ func (SDKExporterMetricDataPointExported) Description() string {
 // non-rejected data points count as success.
 // If no rejection reason is available, `rejected` SHOULD be used as value for
 // `error.type`.
+// If the exporter retries failed export attempts, the export operation is
+// considered finished only after the final attempt has concluded.
+// Each metric data point MUST be counted exactly once per export operation:
+// intermediate failed attempts that are followed by a retry MUST NOT increment
+// the counter,
+// and `error.type` reflects the cause of the final attempt.
 func (m SDKExporterMetricDataPointExported) Add(
 	ctx context.Context,
 	incr int64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(
 		*o,
@@ -539,17 +719,23 @@ func (m SDKExporterMetricDataPointExported) Add(
 // non-rejected data points count as success.
 // If no rejection reason is available, `rejected` SHOULD be used as value for
 // `error.type`.
+// If the exporter retries failed export attempts, the export operation is
+// considered finished only after the final attempt has concluded.
+// Each metric data point MUST be counted exactly once per export operation:
+// intermediate failed attempts that are followed by a retry MUST NOT increment
+// the counter,
+// and `error.type` reflects the cause of the final attempt.
 func (m SDKExporterMetricDataPointExported) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64Counter.Add(ctx, incr, *o...)
@@ -589,6 +775,100 @@ func (SDKExporterMetricDataPointExported) AttrServerPort(val int) attribute.KeyV
 	return attribute.Int("server.port", val)
 }
 
+// SDKExporterMetricDataPointExportedObservable is an instrument used to record
+// metric values conforming to the "otel.sdk.exporter.metric_data_point.exported"
+// semantic conventions. It represents the number of metric data points for which
+// the export has finished, either successful or failed.
+type SDKExporterMetricDataPointExportedObservable struct {
+	metric.Int64ObservableCounter
+}
+
+var newSDKExporterMetricDataPointExportedObservableOpts = []metric.Int64ObservableCounterOption{
+	metric.WithDescription("The number of metric data points for which the export has finished, either successful or failed."),
+	metric.WithUnit("{data_point}"),
+}
+
+// NewSDKExporterMetricDataPointExportedObservable returns a new
+// SDKExporterMetricDataPointExportedObservable instrument.
+func NewSDKExporterMetricDataPointExportedObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableCounterOption,
+) (SDKExporterMetricDataPointExportedObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKExporterMetricDataPointExportedObservable{noop.Int64ObservableCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKExporterMetricDataPointExportedObservableOpts
+	} else {
+		opt = append(opt, newSDKExporterMetricDataPointExportedObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableCounter(
+		"otel.sdk.exporter.metric_data_point.exported",
+		opt...,
+	)
+	if err != nil {
+		return SDKExporterMetricDataPointExportedObservable{noop.Int64ObservableCounter{}}, err
+	}
+	return SDKExporterMetricDataPointExportedObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKExporterMetricDataPointExportedObservable) Inst() metric.Int64ObservableCounter {
+	return m.Int64ObservableCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKExporterMetricDataPointExportedObservable) Name() string {
+	return "otel.sdk.exporter.metric_data_point.exported"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKExporterMetricDataPointExportedObservable) Unit() string {
+	return "{data_point}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKExporterMetricDataPointExportedObservable) Description() string {
+	return "The number of metric data points for which the export has finished, either successful or failed."
+}
+
+// AttrErrorType returns an optional attribute for the "error.type" semantic
+// convention. It represents the describes a class of error the operation ended
+// with.
+func (SDKExporterMetricDataPointExportedObservable) AttrErrorType(val ErrorTypeAttr) attribute.KeyValue {
+	return attribute.String("error.type", string(val))
+}
+
+// AttrComponentName returns an optional attribute for the "otel.component.name"
+// semantic convention. It represents a name uniquely identifying the instance of
+// the OpenTelemetry component within its containing SDK instance.
+func (SDKExporterMetricDataPointExportedObservable) AttrComponentName(val string) attribute.KeyValue {
+	return attribute.String("otel.component.name", val)
+}
+
+// AttrComponentType returns an optional attribute for the "otel.component.type"
+// semantic convention. It represents a name identifying the type of the
+// OpenTelemetry component.
+func (SDKExporterMetricDataPointExportedObservable) AttrComponentType(val ComponentTypeAttr) attribute.KeyValue {
+	return attribute.String("otel.component.type", string(val))
+}
+
+// AttrServerAddress returns an optional attribute for the "server.address"
+// semantic convention. It represents the server domain name if available without
+// reverse DNS lookup; otherwise, IP address or Unix domain socket name.
+func (SDKExporterMetricDataPointExportedObservable) AttrServerAddress(val string) attribute.KeyValue {
+	return attribute.String("server.address", val)
+}
+
+// AttrServerPort returns an optional attribute for the "server.port" semantic
+// convention. It represents the server port number.
+func (SDKExporterMetricDataPointExportedObservable) AttrServerPort(val int) attribute.KeyValue {
+	return attribute.Int("server.port", val)
+}
+
 // SDKExporterMetricDataPointInflight is an instrument used to record metric
 // values conforming to the "otel.sdk.exporter.metric_data_point.inflight"
 // semantic conventions. It represents the number of metric data points which
@@ -596,6 +876,11 @@ func (SDKExporterMetricDataPointExported) AttrServerPort(val int) attribute.KeyV
 // successful, nor failed).
 type SDKExporterMetricDataPointInflight struct {
 	metric.Int64UpDownCounter
+}
+
+var newSDKExporterMetricDataPointInflightOpts = []metric.Int64UpDownCounterOption{
+	metric.WithDescription("The number of metric data points which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."),
+	metric.WithUnit("{data_point}"),
 }
 
 // NewSDKExporterMetricDataPointInflight returns a new
@@ -609,15 +894,18 @@ func NewSDKExporterMetricDataPointInflight(
 		return SDKExporterMetricDataPointInflight{noop.Int64UpDownCounter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKExporterMetricDataPointInflightOpts
+	} else {
+		opt = append(opt, newSDKExporterMetricDataPointInflightOpts...)
+	}
+
 	i, err := m.Int64UpDownCounter(
 		"otel.sdk.exporter.metric_data_point.inflight",
-		append([]metric.Int64UpDownCounterOption{
-			metric.WithDescription("The number of metric data points which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."),
-			metric.WithUnit("{data_point}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKExporterMetricDataPointInflight{noop.Int64UpDownCounter{}}, err
+		return SDKExporterMetricDataPointInflight{noop.Int64UpDownCounter{}}, err
 	}
 	return SDKExporterMetricDataPointInflight{i}, nil
 }
@@ -646,23 +934,25 @@ func (SDKExporterMetricDataPointInflight) Description() string {
 //
 // All additional attrs passed are included in the recorded value.
 //
-// For successful exports, `error.type` MUST NOT be set. For failed exports,
-// `error.type` MUST contain the failure cause.
+// Metric data points are counted as inflight from when they are passed to the
+// exporter until the export operation has concluded.
+// If the exporter retries failed export attempts, metric data points remain
+// inflight across all retry attempts and any backoff between them.
 func (m SDKExporterMetricDataPointInflight) Add(
 	ctx context.Context,
 	incr int64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Int64UpDownCounter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64UpDownCounter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(
 		*o,
@@ -676,19 +966,21 @@ func (m SDKExporterMetricDataPointInflight) Add(
 
 // AddSet adds incr to the existing count for set.
 //
-// For successful exports, `error.type` MUST NOT be set. For failed exports,
-// `error.type` MUST contain the failure cause.
+// Metric data points are counted as inflight from when they are passed to the
+// exporter until the export operation has concluded.
+// If the exporter retries failed export attempts, metric data points remain
+// inflight across all retry attempts and any backoff between them.
 func (m SDKExporterMetricDataPointInflight) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64UpDownCounter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64UpDownCounter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64UpDownCounter.Add(ctx, incr, *o...)
@@ -721,11 +1013,104 @@ func (SDKExporterMetricDataPointInflight) AttrServerPort(val int) attribute.KeyV
 	return attribute.Int("server.port", val)
 }
 
+// SDKExporterMetricDataPointInflightObservable is an instrument used to record
+// metric values conforming to the "otel.sdk.exporter.metric_data_point.inflight"
+// semantic conventions. It represents the number of metric data points which
+// were passed to the exporter, but that have not been exported yet (neither
+// successful, nor failed).
+type SDKExporterMetricDataPointInflightObservable struct {
+	metric.Int64ObservableUpDownCounter
+}
+
+var newSDKExporterMetricDataPointInflightObservableOpts = []metric.Int64ObservableUpDownCounterOption{
+	metric.WithDescription("The number of metric data points which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."),
+	metric.WithUnit("{data_point}"),
+}
+
+// NewSDKExporterMetricDataPointInflightObservable returns a new
+// SDKExporterMetricDataPointInflightObservable instrument.
+func NewSDKExporterMetricDataPointInflightObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableUpDownCounterOption,
+) (SDKExporterMetricDataPointInflightObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKExporterMetricDataPointInflightObservable{noop.Int64ObservableUpDownCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKExporterMetricDataPointInflightObservableOpts
+	} else {
+		opt = append(opt, newSDKExporterMetricDataPointInflightObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableUpDownCounter(
+		"otel.sdk.exporter.metric_data_point.inflight",
+		opt...,
+	)
+	if err != nil {
+		return SDKExporterMetricDataPointInflightObservable{noop.Int64ObservableUpDownCounter{}}, err
+	}
+	return SDKExporterMetricDataPointInflightObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKExporterMetricDataPointInflightObservable) Inst() metric.Int64ObservableUpDownCounter {
+	return m.Int64ObservableUpDownCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKExporterMetricDataPointInflightObservable) Name() string {
+	return "otel.sdk.exporter.metric_data_point.inflight"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKExporterMetricDataPointInflightObservable) Unit() string {
+	return "{data_point}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKExporterMetricDataPointInflightObservable) Description() string {
+	return "The number of metric data points which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."
+}
+
+// AttrComponentName returns an optional attribute for the "otel.component.name"
+// semantic convention. It represents a name uniquely identifying the instance of
+// the OpenTelemetry component within its containing SDK instance.
+func (SDKExporterMetricDataPointInflightObservable) AttrComponentName(val string) attribute.KeyValue {
+	return attribute.String("otel.component.name", val)
+}
+
+// AttrComponentType returns an optional attribute for the "otel.component.type"
+// semantic convention. It represents a name identifying the type of the
+// OpenTelemetry component.
+func (SDKExporterMetricDataPointInflightObservable) AttrComponentType(val ComponentTypeAttr) attribute.KeyValue {
+	return attribute.String("otel.component.type", string(val))
+}
+
+// AttrServerAddress returns an optional attribute for the "server.address"
+// semantic convention. It represents the server domain name if available without
+// reverse DNS lookup; otherwise, IP address or Unix domain socket name.
+func (SDKExporterMetricDataPointInflightObservable) AttrServerAddress(val string) attribute.KeyValue {
+	return attribute.String("server.address", val)
+}
+
+// AttrServerPort returns an optional attribute for the "server.port" semantic
+// convention. It represents the server port number.
+func (SDKExporterMetricDataPointInflightObservable) AttrServerPort(val int) attribute.KeyValue {
+	return attribute.Int("server.port", val)
+}
+
 // SDKExporterOperationDuration is an instrument used to record metric values
 // conforming to the "otel.sdk.exporter.operation.duration" semantic conventions.
 // It represents the duration of exporting a batch of telemetry records.
 type SDKExporterOperationDuration struct {
 	metric.Float64Histogram
+}
+
+var newSDKExporterOperationDurationOpts = []metric.Float64HistogramOption{
+	metric.WithDescription("The duration of exporting a batch of telemetry records."),
+	metric.WithUnit("s"),
 }
 
 // NewSDKExporterOperationDuration returns a new SDKExporterOperationDuration
@@ -739,15 +1124,18 @@ func NewSDKExporterOperationDuration(
 		return SDKExporterOperationDuration{noop.Float64Histogram{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKExporterOperationDurationOpts
+	} else {
+		opt = append(opt, newSDKExporterOperationDurationOpts...)
+	}
+
 	i, err := m.Float64Histogram(
 		"otel.sdk.exporter.operation.duration",
-		append([]metric.Float64HistogramOption{
-			metric.WithDescription("The duration of exporting a batch of telemetry records."),
-			metric.WithUnit("s"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKExporterOperationDuration{noop.Float64Histogram{}}, err
+		return SDKExporterOperationDuration{noop.Float64Histogram{}}, err
 	}
 	return SDKExporterOperationDuration{i}, nil
 }
@@ -782,6 +1170,11 @@ func (SDKExporterOperationDuration) Description() string {
 // successful
 // operations, `error.type` MUST NOT be set. For unsuccessful export operations,
 // `error.type` MUST contain a relevant failure cause.
+// If the exporter retries failed export attempts, exactly one observation MUST
+// be recorded per export operation,
+// covering the wall-clock duration from the start of the first attempt through
+// the conclusion of the final attempt (including any backoff between attempts).
+// `error.type` reflects the cause of the final attempt.
 //
 // [http]: https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/docs/specification.md#full-success-1
 // [grpc]: https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/docs/specification.md#full-success
@@ -790,16 +1183,16 @@ func (m SDKExporterOperationDuration) Record(
 	val float64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Float64Histogram.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Float64Histogram.Record(ctx, val)
 		return
 	}
 
-	o := recOptPool.Get().(*[]metric.RecordOption)
-	defer func() {
-		*o = (*o)[:0]
-		recOptPool.Put(o)
-	}()
+	o := metricpool.RecordOptions()
+	defer metricpool.PutRecordOptions(o)
 
 	*o = append(
 		*o,
@@ -819,19 +1212,25 @@ func (m SDKExporterOperationDuration) Record(
 // successful
 // operations, `error.type` MUST NOT be set. For unsuccessful export operations,
 // `error.type` MUST contain a relevant failure cause.
+// If the exporter retries failed export attempts, exactly one observation MUST
+// be recorded per export operation,
+// covering the wall-clock duration from the start of the first attempt through
+// the conclusion of the final attempt (including any backoff between attempts).
+// `error.type` reflects the cause of the final attempt.
 //
 // [http]: https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/docs/specification.md#full-success-1
 // [grpc]: https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/docs/specification.md#full-success
 func (m SDKExporterOperationDuration) RecordSet(ctx context.Context, val float64, set attribute.Set) {
+	if !m.Float64Histogram.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Float64Histogram.Record(ctx, val)
+		return
 	}
 
-	o := recOptPool.Get().(*[]metric.RecordOption)
-	defer func() {
-		*o = (*o)[:0]
-		recOptPool.Put(o)
-	}()
+	o := metricpool.RecordOptions()
+	defer metricpool.PutRecordOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Float64Histogram.Record(ctx, val, *o...)
@@ -865,11 +1264,11 @@ func (SDKExporterOperationDuration) AttrComponentType(val ComponentTypeAttr) att
 	return attribute.String("otel.component.type", string(val))
 }
 
-// AttrRPCGRPCStatusCode returns an optional attribute for the
-// "rpc.grpc.status_code" semantic convention. It represents the gRPC status code
-// of the last gRPC requests performed in scope of this export call.
-func (SDKExporterOperationDuration) AttrRPCGRPCStatusCode(val RPCGRPCStatusCodeAttr) attribute.KeyValue {
-	return attribute.Int64("rpc.grpc.status_code", int64(val))
+// AttrRPCResponseStatusCode returns an optional attribute for the
+// "rpc.response.status_code" semantic convention. It represents the gRPC status
+// code of the last gRPC request performed in scope of this export call.
+func (SDKExporterOperationDuration) AttrRPCResponseStatusCode(val string) attribute.KeyValue {
+	return attribute.String("rpc.response.status_code", val)
 }
 
 // AttrServerAddress returns an optional attribute for the "server.address"
@@ -893,6 +1292,11 @@ type SDKExporterSpanExported struct {
 	metric.Int64Counter
 }
 
+var newSDKExporterSpanExportedOpts = []metric.Int64CounterOption{
+	metric.WithDescription("The number of spans for which the export has finished, either successful or failed."),
+	metric.WithUnit("{span}"),
+}
+
 // NewSDKExporterSpanExported returns a new SDKExporterSpanExported instrument.
 func NewSDKExporterSpanExported(
 	m metric.Meter,
@@ -903,15 +1307,18 @@ func NewSDKExporterSpanExported(
 		return SDKExporterSpanExported{noop.Int64Counter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKExporterSpanExportedOpts
+	} else {
+		opt = append(opt, newSDKExporterSpanExportedOpts...)
+	}
+
 	i, err := m.Int64Counter(
 		"otel.sdk.exporter.span.exported",
-		append([]metric.Int64CounterOption{
-			metric.WithDescription("The number of spans for which the export has finished, either successful or failed."),
-			metric.WithUnit("{span}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKExporterSpanExported{noop.Int64Counter{}}, err
+		return SDKExporterSpanExported{noop.Int64Counter{}}, err
 	}
 	return SDKExporterSpanExported{i}, nil
 }
@@ -947,21 +1354,26 @@ func (SDKExporterSpanExported) Description() string {
 // success.
 // If no rejection reason is available, `rejected` SHOULD be used as value for
 // `error.type`.
+// If the exporter retries failed export attempts, the export operation is
+// considered finished only after the final attempt has concluded.
+// Each span MUST be counted exactly once per export operation: intermediate
+// failed attempts that are followed by a retry MUST NOT increment the counter,
+// and `error.type` reflects the cause of the final attempt.
 func (m SDKExporterSpanExported) Add(
 	ctx context.Context,
 	incr int64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(
 		*o,
@@ -982,17 +1394,22 @@ func (m SDKExporterSpanExported) Add(
 // success.
 // If no rejection reason is available, `rejected` SHOULD be used as value for
 // `error.type`.
+// If the exporter retries failed export attempts, the export operation is
+// considered finished only after the final attempt has concluded.
+// Each span MUST be counted exactly once per export operation: intermediate
+// failed attempts that are followed by a retry MUST NOT increment the counter,
+// and `error.type` reflects the cause of the final attempt.
 func (m SDKExporterSpanExported) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64Counter.Add(ctx, incr, *o...)
@@ -1032,12 +1449,111 @@ func (SDKExporterSpanExported) AttrServerPort(val int) attribute.KeyValue {
 	return attribute.Int("server.port", val)
 }
 
+// SDKExporterSpanExportedObservable is an instrument used to record metric
+// values conforming to the "otel.sdk.exporter.span.exported" semantic
+// conventions. It represents the number of spans for which the export has
+// finished, either successful or failed.
+type SDKExporterSpanExportedObservable struct {
+	metric.Int64ObservableCounter
+}
+
+var newSDKExporterSpanExportedObservableOpts = []metric.Int64ObservableCounterOption{
+	metric.WithDescription("The number of spans for which the export has finished, either successful or failed."),
+	metric.WithUnit("{span}"),
+}
+
+// NewSDKExporterSpanExportedObservable returns a new
+// SDKExporterSpanExportedObservable instrument.
+func NewSDKExporterSpanExportedObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableCounterOption,
+) (SDKExporterSpanExportedObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKExporterSpanExportedObservable{noop.Int64ObservableCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKExporterSpanExportedObservableOpts
+	} else {
+		opt = append(opt, newSDKExporterSpanExportedObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableCounter(
+		"otel.sdk.exporter.span.exported",
+		opt...,
+	)
+	if err != nil {
+		return SDKExporterSpanExportedObservable{noop.Int64ObservableCounter{}}, err
+	}
+	return SDKExporterSpanExportedObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKExporterSpanExportedObservable) Inst() metric.Int64ObservableCounter {
+	return m.Int64ObservableCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKExporterSpanExportedObservable) Name() string {
+	return "otel.sdk.exporter.span.exported"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKExporterSpanExportedObservable) Unit() string {
+	return "{span}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKExporterSpanExportedObservable) Description() string {
+	return "The number of spans for which the export has finished, either successful or failed."
+}
+
+// AttrErrorType returns an optional attribute for the "error.type" semantic
+// convention. It represents the describes a class of error the operation ended
+// with.
+func (SDKExporterSpanExportedObservable) AttrErrorType(val ErrorTypeAttr) attribute.KeyValue {
+	return attribute.String("error.type", string(val))
+}
+
+// AttrComponentName returns an optional attribute for the "otel.component.name"
+// semantic convention. It represents a name uniquely identifying the instance of
+// the OpenTelemetry component within its containing SDK instance.
+func (SDKExporterSpanExportedObservable) AttrComponentName(val string) attribute.KeyValue {
+	return attribute.String("otel.component.name", val)
+}
+
+// AttrComponentType returns an optional attribute for the "otel.component.type"
+// semantic convention. It represents a name identifying the type of the
+// OpenTelemetry component.
+func (SDKExporterSpanExportedObservable) AttrComponentType(val ComponentTypeAttr) attribute.KeyValue {
+	return attribute.String("otel.component.type", string(val))
+}
+
+// AttrServerAddress returns an optional attribute for the "server.address"
+// semantic convention. It represents the server domain name if available without
+// reverse DNS lookup; otherwise, IP address or Unix domain socket name.
+func (SDKExporterSpanExportedObservable) AttrServerAddress(val string) attribute.KeyValue {
+	return attribute.String("server.address", val)
+}
+
+// AttrServerPort returns an optional attribute for the "server.port" semantic
+// convention. It represents the server port number.
+func (SDKExporterSpanExportedObservable) AttrServerPort(val int) attribute.KeyValue {
+	return attribute.Int("server.port", val)
+}
+
 // SDKExporterSpanInflight is an instrument used to record metric values
 // conforming to the "otel.sdk.exporter.span.inflight" semantic conventions. It
 // represents the number of spans which were passed to the exporter, but that
 // have not been exported yet (neither successful, nor failed).
 type SDKExporterSpanInflight struct {
 	metric.Int64UpDownCounter
+}
+
+var newSDKExporterSpanInflightOpts = []metric.Int64UpDownCounterOption{
+	metric.WithDescription("The number of spans which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."),
+	metric.WithUnit("{span}"),
 }
 
 // NewSDKExporterSpanInflight returns a new SDKExporterSpanInflight instrument.
@@ -1050,15 +1566,18 @@ func NewSDKExporterSpanInflight(
 		return SDKExporterSpanInflight{noop.Int64UpDownCounter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKExporterSpanInflightOpts
+	} else {
+		opt = append(opt, newSDKExporterSpanInflightOpts...)
+	}
+
 	i, err := m.Int64UpDownCounter(
 		"otel.sdk.exporter.span.inflight",
-		append([]metric.Int64UpDownCounterOption{
-			metric.WithDescription("The number of spans which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."),
-			metric.WithUnit("{span}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKExporterSpanInflight{noop.Int64UpDownCounter{}}, err
+		return SDKExporterSpanInflight{noop.Int64UpDownCounter{}}, err
 	}
 	return SDKExporterSpanInflight{i}, nil
 }
@@ -1087,23 +1606,25 @@ func (SDKExporterSpanInflight) Description() string {
 //
 // All additional attrs passed are included in the recorded value.
 //
-// For successful exports, `error.type` MUST NOT be set. For failed exports,
-// `error.type` MUST contain the failure cause.
+// Spans are counted as inflight from when they are passed to the exporter until
+// the export operation has concluded.
+// If the exporter retries failed export attempts, spans remain inflight across
+// all retry attempts and any backoff between them.
 func (m SDKExporterSpanInflight) Add(
 	ctx context.Context,
 	incr int64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Int64UpDownCounter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64UpDownCounter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(
 		*o,
@@ -1117,19 +1638,21 @@ func (m SDKExporterSpanInflight) Add(
 
 // AddSet adds incr to the existing count for set.
 //
-// For successful exports, `error.type` MUST NOT be set. For failed exports,
-// `error.type` MUST contain the failure cause.
+// Spans are counted as inflight from when they are passed to the exporter until
+// the export operation has concluded.
+// If the exporter retries failed export attempts, spans remain inflight across
+// all retry attempts and any backoff between them.
 func (m SDKExporterSpanInflight) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64UpDownCounter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64UpDownCounter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64UpDownCounter.Add(ctx, incr, *o...)
@@ -1162,11 +1685,104 @@ func (SDKExporterSpanInflight) AttrServerPort(val int) attribute.KeyValue {
 	return attribute.Int("server.port", val)
 }
 
+// SDKExporterSpanInflightObservable is an instrument used to record metric
+// values conforming to the "otel.sdk.exporter.span.inflight" semantic
+// conventions. It represents the number of spans which were passed to the
+// exporter, but that have not been exported yet (neither successful, nor
+// failed).
+type SDKExporterSpanInflightObservable struct {
+	metric.Int64ObservableUpDownCounter
+}
+
+var newSDKExporterSpanInflightObservableOpts = []metric.Int64ObservableUpDownCounterOption{
+	metric.WithDescription("The number of spans which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."),
+	metric.WithUnit("{span}"),
+}
+
+// NewSDKExporterSpanInflightObservable returns a new
+// SDKExporterSpanInflightObservable instrument.
+func NewSDKExporterSpanInflightObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableUpDownCounterOption,
+) (SDKExporterSpanInflightObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKExporterSpanInflightObservable{noop.Int64ObservableUpDownCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKExporterSpanInflightObservableOpts
+	} else {
+		opt = append(opt, newSDKExporterSpanInflightObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableUpDownCounter(
+		"otel.sdk.exporter.span.inflight",
+		opt...,
+	)
+	if err != nil {
+		return SDKExporterSpanInflightObservable{noop.Int64ObservableUpDownCounter{}}, err
+	}
+	return SDKExporterSpanInflightObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKExporterSpanInflightObservable) Inst() metric.Int64ObservableUpDownCounter {
+	return m.Int64ObservableUpDownCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKExporterSpanInflightObservable) Name() string {
+	return "otel.sdk.exporter.span.inflight"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKExporterSpanInflightObservable) Unit() string {
+	return "{span}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKExporterSpanInflightObservable) Description() string {
+	return "The number of spans which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)."
+}
+
+// AttrComponentName returns an optional attribute for the "otel.component.name"
+// semantic convention. It represents a name uniquely identifying the instance of
+// the OpenTelemetry component within its containing SDK instance.
+func (SDKExporterSpanInflightObservable) AttrComponentName(val string) attribute.KeyValue {
+	return attribute.String("otel.component.name", val)
+}
+
+// AttrComponentType returns an optional attribute for the "otel.component.type"
+// semantic convention. It represents a name identifying the type of the
+// OpenTelemetry component.
+func (SDKExporterSpanInflightObservable) AttrComponentType(val ComponentTypeAttr) attribute.KeyValue {
+	return attribute.String("otel.component.type", string(val))
+}
+
+// AttrServerAddress returns an optional attribute for the "server.address"
+// semantic convention. It represents the server domain name if available without
+// reverse DNS lookup; otherwise, IP address or Unix domain socket name.
+func (SDKExporterSpanInflightObservable) AttrServerAddress(val string) attribute.KeyValue {
+	return attribute.String("server.address", val)
+}
+
+// AttrServerPort returns an optional attribute for the "server.port" semantic
+// convention. It represents the server port number.
+func (SDKExporterSpanInflightObservable) AttrServerPort(val int) attribute.KeyValue {
+	return attribute.Int("server.port", val)
+}
+
 // SDKLogCreated is an instrument used to record metric values conforming to the
 // "otel.sdk.log.created" semantic conventions. It represents the number of logs
 // submitted to enabled SDK Loggers.
 type SDKLogCreated struct {
 	metric.Int64Counter
+}
+
+var newSDKLogCreatedOpts = []metric.Int64CounterOption{
+	metric.WithDescription("The number of logs submitted to enabled SDK Loggers."),
+	metric.WithUnit("{log_record}"),
 }
 
 // NewSDKLogCreated returns a new SDKLogCreated instrument.
@@ -1179,15 +1795,18 @@ func NewSDKLogCreated(
 		return SDKLogCreated{noop.Int64Counter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKLogCreatedOpts
+	} else {
+		opt = append(opt, newSDKLogCreatedOpts...)
+	}
+
 	i, err := m.Int64Counter(
 		"otel.sdk.log.created",
-		append([]metric.Int64CounterOption{
-			metric.WithDescription("The number of logs submitted to enabled SDK Loggers."),
-			metric.WithUnit("{log_record}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKLogCreated{noop.Int64Counter{}}, err
+		return SDKLogCreated{noop.Int64Counter{}}, err
 	}
 	return SDKLogCreated{i}, nil
 }
@@ -1214,16 +1833,16 @@ func (SDKLogCreated) Description() string {
 
 // Add adds incr to the existing count for attrs.
 func (m SDKLogCreated) Add(ctx context.Context, incr int64, attrs ...attribute.KeyValue) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributes(attrs...))
 	m.Int64Counter.Add(ctx, incr, *o...)
@@ -1231,19 +1850,77 @@ func (m SDKLogCreated) Add(ctx context.Context, incr int64, attrs ...attribute.K
 
 // AddSet adds incr to the existing count for set.
 func (m SDKLogCreated) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64Counter.Add(ctx, incr, *o...)
+}
+
+// SDKLogCreatedObservable is an instrument used to record metric values
+// conforming to the "otel.sdk.log.created" semantic conventions. It represents
+// the number of logs submitted to enabled SDK Loggers.
+type SDKLogCreatedObservable struct {
+	metric.Int64ObservableCounter
+}
+
+var newSDKLogCreatedObservableOpts = []metric.Int64ObservableCounterOption{
+	metric.WithDescription("The number of logs submitted to enabled SDK Loggers."),
+	metric.WithUnit("{log_record}"),
+}
+
+// NewSDKLogCreatedObservable returns a new SDKLogCreatedObservable instrument.
+func NewSDKLogCreatedObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableCounterOption,
+) (SDKLogCreatedObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKLogCreatedObservable{noop.Int64ObservableCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKLogCreatedObservableOpts
+	} else {
+		opt = append(opt, newSDKLogCreatedObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableCounter(
+		"otel.sdk.log.created",
+		opt...,
+	)
+	if err != nil {
+		return SDKLogCreatedObservable{noop.Int64ObservableCounter{}}, err
+	}
+	return SDKLogCreatedObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKLogCreatedObservable) Inst() metric.Int64ObservableCounter {
+	return m.Int64ObservableCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKLogCreatedObservable) Name() string {
+	return "otel.sdk.log.created"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKLogCreatedObservable) Unit() string {
+	return "{log_record}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKLogCreatedObservable) Description() string {
+	return "The number of logs submitted to enabled SDK Loggers."
 }
 
 // SDKMetricReaderCollectionDuration is an instrument used to record metric
@@ -1252,6 +1929,11 @@ func (m SDKLogCreated) AddSet(ctx context.Context, incr int64, set attribute.Set
 // reader.
 type SDKMetricReaderCollectionDuration struct {
 	metric.Float64Histogram
+}
+
+var newSDKMetricReaderCollectionDurationOpts = []metric.Float64HistogramOption{
+	metric.WithDescription("The duration of the collect operation of the metric reader."),
+	metric.WithUnit("s"),
 }
 
 // NewSDKMetricReaderCollectionDuration returns a new
@@ -1265,15 +1947,18 @@ func NewSDKMetricReaderCollectionDuration(
 		return SDKMetricReaderCollectionDuration{noop.Float64Histogram{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKMetricReaderCollectionDurationOpts
+	} else {
+		opt = append(opt, newSDKMetricReaderCollectionDurationOpts...)
+	}
+
 	i, err := m.Float64Histogram(
 		"otel.sdk.metric_reader.collection.duration",
-		append([]metric.Float64HistogramOption{
-			metric.WithDescription("The duration of the collect operation of the metric reader."),
-			metric.WithUnit("s"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKMetricReaderCollectionDuration{noop.Float64Histogram{}}, err
+		return SDKMetricReaderCollectionDuration{noop.Float64Histogram{}}, err
 	}
 	return SDKMetricReaderCollectionDuration{i}, nil
 }
@@ -1312,16 +1997,16 @@ func (m SDKMetricReaderCollectionDuration) Record(
 	val float64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Float64Histogram.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Float64Histogram.Record(ctx, val)
 		return
 	}
 
-	o := recOptPool.Get().(*[]metric.RecordOption)
-	defer func() {
-		*o = (*o)[:0]
-		recOptPool.Put(o)
-	}()
+	o := metricpool.RecordOptions()
+	defer metricpool.PutRecordOptions(o)
 
 	*o = append(
 		*o,
@@ -1341,15 +2026,16 @@ func (m SDKMetricReaderCollectionDuration) Record(
 // while others fail. In that case `error.type` SHOULD be set to any of the
 // failure causes.
 func (m SDKMetricReaderCollectionDuration) RecordSet(ctx context.Context, val float64, set attribute.Set) {
+	if !m.Float64Histogram.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Float64Histogram.Record(ctx, val)
+		return
 	}
 
-	o := recOptPool.Get().(*[]metric.RecordOption)
-	defer func() {
-		*o = (*o)[:0]
-		recOptPool.Put(o)
-	}()
+	o := metricpool.RecordOptions()
+	defer metricpool.PutRecordOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Float64Histogram.Record(ctx, val, *o...)
@@ -1384,6 +2070,11 @@ type SDKProcessorLogProcessed struct {
 	metric.Int64Counter
 }
 
+var newSDKProcessorLogProcessedOpts = []metric.Int64CounterOption{
+	metric.WithDescription("The number of log records for which the processing has finished, either successful or failed."),
+	metric.WithUnit("{log_record}"),
+}
+
 // NewSDKProcessorLogProcessed returns a new SDKProcessorLogProcessed instrument.
 func NewSDKProcessorLogProcessed(
 	m metric.Meter,
@@ -1394,15 +2085,18 @@ func NewSDKProcessorLogProcessed(
 		return SDKProcessorLogProcessed{noop.Int64Counter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKProcessorLogProcessedOpts
+	} else {
+		opt = append(opt, newSDKProcessorLogProcessedOpts...)
+	}
+
 	i, err := m.Int64Counter(
 		"otel.sdk.processor.log.processed",
-		append([]metric.Int64CounterOption{
-			metric.WithDescription("The number of log records for which the processing has finished, either successful or failed."),
-			metric.WithUnit("{log_record}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKProcessorLogProcessed{noop.Int64Counter{}}, err
+		return SDKProcessorLogProcessed{noop.Int64Counter{}}, err
 	}
 	return SDKProcessorLogProcessed{i}, nil
 }
@@ -1433,6 +2127,11 @@ func (SDKProcessorLogProcessed) Description() string {
 //
 // For successful processing, `error.type` MUST NOT be set. For failed
 // processing, `error.type` MUST contain the failure cause.
+// SDK Batching Log Record Processors MUST use `queue_full` as the value of
+// `error.type` for log records dropped due to a full queue.
+// SDK Log Record Processors MUST use `already_shutdown` as the value of
+// `error.type` for log records dropped because the processor has already been
+// shut down.
 // For the SDK Simple and Batching Log Record Processor a log record is
 // considered to be processed already when it has been submitted to the exporter,
 // not when the corresponding export call has finished.
@@ -1441,16 +2140,16 @@ func (m SDKProcessorLogProcessed) Add(
 	incr int64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(
 		*o,
@@ -1466,20 +2165,25 @@ func (m SDKProcessorLogProcessed) Add(
 //
 // For successful processing, `error.type` MUST NOT be set. For failed
 // processing, `error.type` MUST contain the failure cause.
+// SDK Batching Log Record Processors MUST use `queue_full` as the value of
+// `error.type` for log records dropped due to a full queue.
+// SDK Log Record Processors MUST use `already_shutdown` as the value of
+// `error.type` for log records dropped because the processor has already been
+// shut down.
 // For the SDK Simple and Batching Log Record Processor a log record is
 // considered to be processed already when it has been submitted to the exporter,
 // not when the corresponding export call has finished.
 func (m SDKProcessorLogProcessed) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64Counter.Add(ctx, incr, *o...)
@@ -1487,8 +2191,6 @@ func (m SDKProcessorLogProcessed) AddSet(ctx context.Context, incr int64, set at
 
 // AttrErrorType returns an optional attribute for the "error.type" semantic
 // convention. It represents a low-cardinality description of the failure reason.
-// SDK Batching Log Record Processors MUST use `queue_full` for log records
-// dropped due to a full queue.
 func (SDKProcessorLogProcessed) AttrErrorType(val ErrorTypeAttr) attribute.KeyValue {
 	return attribute.String("error.type", string(val))
 }
@@ -1507,12 +2209,97 @@ func (SDKProcessorLogProcessed) AttrComponentType(val ComponentTypeAttr) attribu
 	return attribute.String("otel.component.type", string(val))
 }
 
+// SDKProcessorLogProcessedObservable is an instrument used to record metric
+// values conforming to the "otel.sdk.processor.log.processed" semantic
+// conventions. It represents the number of log records for which the processing
+// has finished, either successful or failed.
+type SDKProcessorLogProcessedObservable struct {
+	metric.Int64ObservableCounter
+}
+
+var newSDKProcessorLogProcessedObservableOpts = []metric.Int64ObservableCounterOption{
+	metric.WithDescription("The number of log records for which the processing has finished, either successful or failed."),
+	metric.WithUnit("{log_record}"),
+}
+
+// NewSDKProcessorLogProcessedObservable returns a new
+// SDKProcessorLogProcessedObservable instrument.
+func NewSDKProcessorLogProcessedObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableCounterOption,
+) (SDKProcessorLogProcessedObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKProcessorLogProcessedObservable{noop.Int64ObservableCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKProcessorLogProcessedObservableOpts
+	} else {
+		opt = append(opt, newSDKProcessorLogProcessedObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableCounter(
+		"otel.sdk.processor.log.processed",
+		opt...,
+	)
+	if err != nil {
+		return SDKProcessorLogProcessedObservable{noop.Int64ObservableCounter{}}, err
+	}
+	return SDKProcessorLogProcessedObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKProcessorLogProcessedObservable) Inst() metric.Int64ObservableCounter {
+	return m.Int64ObservableCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKProcessorLogProcessedObservable) Name() string {
+	return "otel.sdk.processor.log.processed"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKProcessorLogProcessedObservable) Unit() string {
+	return "{log_record}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKProcessorLogProcessedObservable) Description() string {
+	return "The number of log records for which the processing has finished, either successful or failed."
+}
+
+// AttrErrorType returns an optional attribute for the "error.type" semantic
+// convention. It represents a low-cardinality description of the failure reason.
+func (SDKProcessorLogProcessedObservable) AttrErrorType(val ErrorTypeAttr) attribute.KeyValue {
+	return attribute.String("error.type", string(val))
+}
+
+// AttrComponentName returns an optional attribute for the "otel.component.name"
+// semantic convention. It represents a name uniquely identifying the instance of
+// the OpenTelemetry component within its containing SDK instance.
+func (SDKProcessorLogProcessedObservable) AttrComponentName(val string) attribute.KeyValue {
+	return attribute.String("otel.component.name", val)
+}
+
+// AttrComponentType returns an optional attribute for the "otel.component.type"
+// semantic convention. It represents a name identifying the type of the
+// OpenTelemetry component.
+func (SDKProcessorLogProcessedObservable) AttrComponentType(val ComponentTypeAttr) attribute.KeyValue {
+	return attribute.String("otel.component.type", string(val))
+}
+
 // SDKProcessorLogQueueCapacity is an instrument used to record metric values
 // conforming to the "otel.sdk.processor.log.queue.capacity" semantic
 // conventions. It represents the maximum number of log records the queue of a
 // given instance of an SDK Log Record processor can hold.
 type SDKProcessorLogQueueCapacity struct {
 	metric.Int64ObservableUpDownCounter
+}
+
+var newSDKProcessorLogQueueCapacityOpts = []metric.Int64ObservableUpDownCounterOption{
+	metric.WithDescription("The maximum number of log records the queue of a given instance of an SDK Log Record processor can hold."),
+	metric.WithUnit("{log_record}"),
 }
 
 // NewSDKProcessorLogQueueCapacity returns a new SDKProcessorLogQueueCapacity
@@ -1526,15 +2313,18 @@ func NewSDKProcessorLogQueueCapacity(
 		return SDKProcessorLogQueueCapacity{noop.Int64ObservableUpDownCounter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKProcessorLogQueueCapacityOpts
+	} else {
+		opt = append(opt, newSDKProcessorLogQueueCapacityOpts...)
+	}
+
 	i, err := m.Int64ObservableUpDownCounter(
 		"otel.sdk.processor.log.queue.capacity",
-		append([]metric.Int64ObservableUpDownCounterOption{
-			metric.WithDescription("The maximum number of log records the queue of a given instance of an SDK Log Record processor can hold."),
-			metric.WithUnit("{log_record}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKProcessorLogQueueCapacity{noop.Int64ObservableUpDownCounter{}}, err
+		return SDKProcessorLogQueueCapacity{noop.Int64ObservableUpDownCounter{}}, err
 	}
 	return SDKProcessorLogQueueCapacity{i}, nil
 }
@@ -1581,6 +2371,11 @@ type SDKProcessorLogQueueSize struct {
 	metric.Int64ObservableUpDownCounter
 }
 
+var newSDKProcessorLogQueueSizeOpts = []metric.Int64ObservableUpDownCounterOption{
+	metric.WithDescription("The number of log records in the queue of a given instance of an SDK log processor."),
+	metric.WithUnit("{log_record}"),
+}
+
 // NewSDKProcessorLogQueueSize returns a new SDKProcessorLogQueueSize instrument.
 func NewSDKProcessorLogQueueSize(
 	m metric.Meter,
@@ -1591,15 +2386,18 @@ func NewSDKProcessorLogQueueSize(
 		return SDKProcessorLogQueueSize{noop.Int64ObservableUpDownCounter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKProcessorLogQueueSizeOpts
+	} else {
+		opt = append(opt, newSDKProcessorLogQueueSizeOpts...)
+	}
+
 	i, err := m.Int64ObservableUpDownCounter(
 		"otel.sdk.processor.log.queue.size",
-		append([]metric.Int64ObservableUpDownCounterOption{
-			metric.WithDescription("The number of log records in the queue of a given instance of an SDK log processor."),
-			metric.WithUnit("{log_record}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKProcessorLogQueueSize{noop.Int64ObservableUpDownCounter{}}, err
+		return SDKProcessorLogQueueSize{noop.Int64ObservableUpDownCounter{}}, err
 	}
 	return SDKProcessorLogQueueSize{i}, nil
 }
@@ -1646,6 +2444,11 @@ type SDKProcessorSpanProcessed struct {
 	metric.Int64Counter
 }
 
+var newSDKProcessorSpanProcessedOpts = []metric.Int64CounterOption{
+	metric.WithDescription("The number of spans for which the processing has finished, either successful or failed."),
+	metric.WithUnit("{span}"),
+}
+
 // NewSDKProcessorSpanProcessed returns a new SDKProcessorSpanProcessed
 // instrument.
 func NewSDKProcessorSpanProcessed(
@@ -1657,15 +2460,18 @@ func NewSDKProcessorSpanProcessed(
 		return SDKProcessorSpanProcessed{noop.Int64Counter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKProcessorSpanProcessedOpts
+	} else {
+		opt = append(opt, newSDKProcessorSpanProcessedOpts...)
+	}
+
 	i, err := m.Int64Counter(
 		"otel.sdk.processor.span.processed",
-		append([]metric.Int64CounterOption{
-			metric.WithDescription("The number of spans for which the processing has finished, either successful or failed."),
-			metric.WithUnit("{span}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKProcessorSpanProcessed{noop.Int64Counter{}}, err
+		return SDKProcessorSpanProcessed{noop.Int64Counter{}}, err
 	}
 	return SDKProcessorSpanProcessed{i}, nil
 }
@@ -1696,6 +2502,10 @@ func (SDKProcessorSpanProcessed) Description() string {
 //
 // For successful processing, `error.type` MUST NOT be set. For failed
 // processing, `error.type` MUST contain the failure cause.
+// SDK Batching Span Processors MUST use `queue_full` as the value of
+// `error.type` for spans dropped due to a full queue.
+// SDK Span Processors MUST use `already_shutdown` as the value of `error.type`
+// for spans dropped because the processor has already been shut down.
 // For the SDK Simple and Batching Span Processor a span is considered to be
 // processed already when it has been submitted to the exporter, not when the
 // corresponding export call has finished.
@@ -1704,16 +2514,16 @@ func (m SDKProcessorSpanProcessed) Add(
 	incr int64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(
 		*o,
@@ -1729,20 +2539,24 @@ func (m SDKProcessorSpanProcessed) Add(
 //
 // For successful processing, `error.type` MUST NOT be set. For failed
 // processing, `error.type` MUST contain the failure cause.
+// SDK Batching Span Processors MUST use `queue_full` as the value of
+// `error.type` for spans dropped due to a full queue.
+// SDK Span Processors MUST use `already_shutdown` as the value of `error.type`
+// for spans dropped because the processor has already been shut down.
 // For the SDK Simple and Batching Span Processor a span is considered to be
 // processed already when it has been submitted to the exporter, not when the
 // corresponding export call has finished.
 func (m SDKProcessorSpanProcessed) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64Counter.Add(ctx, incr, *o...)
@@ -1750,8 +2564,6 @@ func (m SDKProcessorSpanProcessed) AddSet(ctx context.Context, incr int64, set a
 
 // AttrErrorType returns an optional attribute for the "error.type" semantic
 // convention. It represents a low-cardinality description of the failure reason.
-// SDK Batching Span Processors MUST use `queue_full` for spans dropped due to a
-// full queue.
 func (SDKProcessorSpanProcessed) AttrErrorType(val ErrorTypeAttr) attribute.KeyValue {
 	return attribute.String("error.type", string(val))
 }
@@ -1770,12 +2582,97 @@ func (SDKProcessorSpanProcessed) AttrComponentType(val ComponentTypeAttr) attrib
 	return attribute.String("otel.component.type", string(val))
 }
 
+// SDKProcessorSpanProcessedObservable is an instrument used to record metric
+// values conforming to the "otel.sdk.processor.span.processed" semantic
+// conventions. It represents the number of spans for which the processing has
+// finished, either successful or failed.
+type SDKProcessorSpanProcessedObservable struct {
+	metric.Int64ObservableCounter
+}
+
+var newSDKProcessorSpanProcessedObservableOpts = []metric.Int64ObservableCounterOption{
+	metric.WithDescription("The number of spans for which the processing has finished, either successful or failed."),
+	metric.WithUnit("{span}"),
+}
+
+// NewSDKProcessorSpanProcessedObservable returns a new
+// SDKProcessorSpanProcessedObservable instrument.
+func NewSDKProcessorSpanProcessedObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableCounterOption,
+) (SDKProcessorSpanProcessedObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKProcessorSpanProcessedObservable{noop.Int64ObservableCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKProcessorSpanProcessedObservableOpts
+	} else {
+		opt = append(opt, newSDKProcessorSpanProcessedObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableCounter(
+		"otel.sdk.processor.span.processed",
+		opt...,
+	)
+	if err != nil {
+		return SDKProcessorSpanProcessedObservable{noop.Int64ObservableCounter{}}, err
+	}
+	return SDKProcessorSpanProcessedObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKProcessorSpanProcessedObservable) Inst() metric.Int64ObservableCounter {
+	return m.Int64ObservableCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKProcessorSpanProcessedObservable) Name() string {
+	return "otel.sdk.processor.span.processed"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKProcessorSpanProcessedObservable) Unit() string {
+	return "{span}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKProcessorSpanProcessedObservable) Description() string {
+	return "The number of spans for which the processing has finished, either successful or failed."
+}
+
+// AttrErrorType returns an optional attribute for the "error.type" semantic
+// convention. It represents a low-cardinality description of the failure reason.
+func (SDKProcessorSpanProcessedObservable) AttrErrorType(val ErrorTypeAttr) attribute.KeyValue {
+	return attribute.String("error.type", string(val))
+}
+
+// AttrComponentName returns an optional attribute for the "otel.component.name"
+// semantic convention. It represents a name uniquely identifying the instance of
+// the OpenTelemetry component within its containing SDK instance.
+func (SDKProcessorSpanProcessedObservable) AttrComponentName(val string) attribute.KeyValue {
+	return attribute.String("otel.component.name", val)
+}
+
+// AttrComponentType returns an optional attribute for the "otel.component.type"
+// semantic convention. It represents a name identifying the type of the
+// OpenTelemetry component.
+func (SDKProcessorSpanProcessedObservable) AttrComponentType(val ComponentTypeAttr) attribute.KeyValue {
+	return attribute.String("otel.component.type", string(val))
+}
+
 // SDKProcessorSpanQueueCapacity is an instrument used to record metric values
 // conforming to the "otel.sdk.processor.span.queue.capacity" semantic
 // conventions. It represents the maximum number of spans the queue of a given
 // instance of an SDK span processor can hold.
 type SDKProcessorSpanQueueCapacity struct {
 	metric.Int64ObservableUpDownCounter
+}
+
+var newSDKProcessorSpanQueueCapacityOpts = []metric.Int64ObservableUpDownCounterOption{
+	metric.WithDescription("The maximum number of spans the queue of a given instance of an SDK span processor can hold."),
+	metric.WithUnit("{span}"),
 }
 
 // NewSDKProcessorSpanQueueCapacity returns a new SDKProcessorSpanQueueCapacity
@@ -1789,15 +2686,18 @@ func NewSDKProcessorSpanQueueCapacity(
 		return SDKProcessorSpanQueueCapacity{noop.Int64ObservableUpDownCounter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKProcessorSpanQueueCapacityOpts
+	} else {
+		opt = append(opt, newSDKProcessorSpanQueueCapacityOpts...)
+	}
+
 	i, err := m.Int64ObservableUpDownCounter(
 		"otel.sdk.processor.span.queue.capacity",
-		append([]metric.Int64ObservableUpDownCounterOption{
-			metric.WithDescription("The maximum number of spans the queue of a given instance of an SDK span processor can hold."),
-			metric.WithUnit("{span}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKProcessorSpanQueueCapacity{noop.Int64ObservableUpDownCounter{}}, err
+		return SDKProcessorSpanQueueCapacity{noop.Int64ObservableUpDownCounter{}}, err
 	}
 	return SDKProcessorSpanQueueCapacity{i}, nil
 }
@@ -1844,6 +2744,11 @@ type SDKProcessorSpanQueueSize struct {
 	metric.Int64ObservableUpDownCounter
 }
 
+var newSDKProcessorSpanQueueSizeOpts = []metric.Int64ObservableUpDownCounterOption{
+	metric.WithDescription("The number of spans in the queue of a given instance of an SDK span processor."),
+	metric.WithUnit("{span}"),
+}
+
 // NewSDKProcessorSpanQueueSize returns a new SDKProcessorSpanQueueSize
 // instrument.
 func NewSDKProcessorSpanQueueSize(
@@ -1855,15 +2760,18 @@ func NewSDKProcessorSpanQueueSize(
 		return SDKProcessorSpanQueueSize{noop.Int64ObservableUpDownCounter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKProcessorSpanQueueSizeOpts
+	} else {
+		opt = append(opt, newSDKProcessorSpanQueueSizeOpts...)
+	}
+
 	i, err := m.Int64ObservableUpDownCounter(
 		"otel.sdk.processor.span.queue.size",
-		append([]metric.Int64ObservableUpDownCounterOption{
-			metric.WithDescription("The number of spans in the queue of a given instance of an SDK span processor."),
-			metric.WithUnit("{span}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKProcessorSpanQueueSize{noop.Int64ObservableUpDownCounter{}}, err
+		return SDKProcessorSpanQueueSize{noop.Int64ObservableUpDownCounter{}}, err
 	}
 	return SDKProcessorSpanQueueSize{i}, nil
 }
@@ -1910,6 +2818,11 @@ type SDKSpanLive struct {
 	metric.Int64UpDownCounter
 }
 
+var newSDKSpanLiveOpts = []metric.Int64UpDownCounterOption{
+	metric.WithDescription("The number of created spans with `recording=true` for which the end operation has not been called yet."),
+	metric.WithUnit("{span}"),
+}
+
 // NewSDKSpanLive returns a new SDKSpanLive instrument.
 func NewSDKSpanLive(
 	m metric.Meter,
@@ -1920,15 +2833,18 @@ func NewSDKSpanLive(
 		return SDKSpanLive{noop.Int64UpDownCounter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKSpanLiveOpts
+	} else {
+		opt = append(opt, newSDKSpanLiveOpts...)
+	}
+
 	i, err := m.Int64UpDownCounter(
 		"otel.sdk.span.live",
-		append([]metric.Int64UpDownCounterOption{
-			metric.WithDescription("The number of created spans with `recording=true` for which the end operation has not been called yet."),
-			metric.WithUnit("{span}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKSpanLive{noop.Int64UpDownCounter{}}, err
+		return SDKSpanLive{noop.Int64UpDownCounter{}}, err
 	}
 	return SDKSpanLive{i}, nil
 }
@@ -1956,21 +2872,24 @@ func (SDKSpanLive) Description() string {
 // Add adds incr to the existing count for attrs.
 //
 // All additional attrs passed are included in the recorded value.
+//
+// Non-recording spans are not counted, hence `otel.span.sampling_result` can
+// only take values `RECORD_ONLY` and `RECORD_AND_SAMPLE`, not `DROP`.
 func (m SDKSpanLive) Add(
 	ctx context.Context,
 	incr int64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Int64UpDownCounter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64UpDownCounter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(
 		*o,
@@ -1983,17 +2902,20 @@ func (m SDKSpanLive) Add(
 }
 
 // AddSet adds incr to the existing count for set.
+//
+// Non-recording spans are not counted, hence `otel.span.sampling_result` can
+// only take values `RECORD_ONLY` and `RECORD_AND_SAMPLE`, not `DROP`.
 func (m SDKSpanLive) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64UpDownCounter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64UpDownCounter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64UpDownCounter.Add(ctx, incr, *o...)
@@ -2006,11 +2928,82 @@ func (SDKSpanLive) AttrSpanSamplingResult(val SpanSamplingResultAttr) attribute.
 	return attribute.String("otel.span.sampling_result", string(val))
 }
 
+// SDKSpanLiveObservable is an instrument used to record metric values conforming
+// to the "otel.sdk.span.live" semantic conventions. It represents the number of
+// created spans with `recording=true` for which the end operation has not been
+// called yet.
+type SDKSpanLiveObservable struct {
+	metric.Int64ObservableUpDownCounter
+}
+
+var newSDKSpanLiveObservableOpts = []metric.Int64ObservableUpDownCounterOption{
+	metric.WithDescription("The number of created spans with `recording=true` for which the end operation has not been called yet."),
+	metric.WithUnit("{span}"),
+}
+
+// NewSDKSpanLiveObservable returns a new SDKSpanLiveObservable instrument.
+func NewSDKSpanLiveObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableUpDownCounterOption,
+) (SDKSpanLiveObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKSpanLiveObservable{noop.Int64ObservableUpDownCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKSpanLiveObservableOpts
+	} else {
+		opt = append(opt, newSDKSpanLiveObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableUpDownCounter(
+		"otel.sdk.span.live",
+		opt...,
+	)
+	if err != nil {
+		return SDKSpanLiveObservable{noop.Int64ObservableUpDownCounter{}}, err
+	}
+	return SDKSpanLiveObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKSpanLiveObservable) Inst() metric.Int64ObservableUpDownCounter {
+	return m.Int64ObservableUpDownCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKSpanLiveObservable) Name() string {
+	return "otel.sdk.span.live"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKSpanLiveObservable) Unit() string {
+	return "{span}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKSpanLiveObservable) Description() string {
+	return "The number of created spans with `recording=true` for which the end operation has not been called yet."
+}
+
+// AttrSpanSamplingResult returns an optional attribute for the
+// "otel.span.sampling_result" semantic convention. It represents the result
+// value of the sampler for this span.
+func (SDKSpanLiveObservable) AttrSpanSamplingResult(val SpanSamplingResultAttr) attribute.KeyValue {
+	return attribute.String("otel.span.sampling_result", string(val))
+}
+
 // SDKSpanStarted is an instrument used to record metric values conforming to the
 // "otel.sdk.span.started" semantic conventions. It represents the number of
 // created spans.
 type SDKSpanStarted struct {
 	metric.Int64Counter
+}
+
+var newSDKSpanStartedOpts = []metric.Int64CounterOption{
+	metric.WithDescription("The number of created spans."),
+	metric.WithUnit("{span}"),
 }
 
 // NewSDKSpanStarted returns a new SDKSpanStarted instrument.
@@ -2023,15 +3016,18 @@ func NewSDKSpanStarted(
 		return SDKSpanStarted{noop.Int64Counter{}}, nil
 	}
 
+	if len(opt) == 0 {
+		opt = newSDKSpanStartedOpts
+	} else {
+		opt = append(opt, newSDKSpanStartedOpts...)
+	}
+
 	i, err := m.Int64Counter(
 		"otel.sdk.span.started",
-		append([]metric.Int64CounterOption{
-			metric.WithDescription("The number of created spans."),
-			metric.WithUnit("{span}"),
-		}, opt...)...,
+		opt...,
 	)
 	if err != nil {
-	    return SDKSpanStarted{noop.Int64Counter{}}, err
+		return SDKSpanStarted{noop.Int64Counter{}}, err
 	}
 	return SDKSpanStarted{i}, nil
 }
@@ -2067,16 +3063,16 @@ func (m SDKSpanStarted) Add(
 	incr int64,
 	attrs ...attribute.KeyValue,
 ) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if len(attrs) == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(
 		*o,
@@ -2093,16 +3089,16 @@ func (m SDKSpanStarted) Add(
 // Implementations MUST record this metric for all spans, even for non-recording
 // ones.
 func (m SDKSpanStarted) AddSet(ctx context.Context, incr int64, set attribute.Set) {
+	if !m.Int64Counter.Enabled(ctx) {
+		return
+	}
 	if set.Len() == 0 {
 		m.Int64Counter.Add(ctx, incr)
 		return
 	}
 
-	o := addOptPool.Get().(*[]metric.AddOption)
-	defer func() {
-		*o = (*o)[:0]
-		addOptPool.Put(o)
-	}()
+	o := metricpool.AddOptions()
+	defer metricpool.PutAddOptions(o)
 
 	*o = append(*o, metric.WithAttributeSet(set))
 	m.Int64Counter.Add(ctx, incr, *o...)
@@ -2122,5 +3118,80 @@ func (SDKSpanStarted) AttrSpanParentOrigin(val SpanParentOriginAttr) attribute.K
 // "otel.span.sampling_result" semantic convention. It represents the result
 // value of the sampler for this span.
 func (SDKSpanStarted) AttrSpanSamplingResult(val SpanSamplingResultAttr) attribute.KeyValue {
+	return attribute.String("otel.span.sampling_result", string(val))
+}
+
+// SDKSpanStartedObservable is an instrument used to record metric values
+// conforming to the "otel.sdk.span.started" semantic conventions. It represents
+// the number of created spans.
+type SDKSpanStartedObservable struct {
+	metric.Int64ObservableCounter
+}
+
+var newSDKSpanStartedObservableOpts = []metric.Int64ObservableCounterOption{
+	metric.WithDescription("The number of created spans."),
+	metric.WithUnit("{span}"),
+}
+
+// NewSDKSpanStartedObservable returns a new SDKSpanStartedObservable instrument.
+func NewSDKSpanStartedObservable(
+	m metric.Meter,
+	opt ...metric.Int64ObservableCounterOption,
+) (SDKSpanStartedObservable, error) {
+	// Check if the meter is nil.
+	if m == nil {
+		return SDKSpanStartedObservable{noop.Int64ObservableCounter{}}, nil
+	}
+
+	if len(opt) == 0 {
+		opt = newSDKSpanStartedObservableOpts
+	} else {
+		opt = append(opt, newSDKSpanStartedObservableOpts...)
+	}
+
+	i, err := m.Int64ObservableCounter(
+		"otel.sdk.span.started",
+		opt...,
+	)
+	if err != nil {
+		return SDKSpanStartedObservable{noop.Int64ObservableCounter{}}, err
+	}
+	return SDKSpanStartedObservable{i}, nil
+}
+
+// Inst returns the underlying metric instrument.
+func (m SDKSpanStartedObservable) Inst() metric.Int64ObservableCounter {
+	return m.Int64ObservableCounter
+}
+
+// Name returns the semantic convention name of the instrument.
+func (SDKSpanStartedObservable) Name() string {
+	return "otel.sdk.span.started"
+}
+
+// Unit returns the semantic convention unit of the instrument
+func (SDKSpanStartedObservable) Unit() string {
+	return "{span}"
+}
+
+// Description returns the semantic convention description of the instrument
+func (SDKSpanStartedObservable) Description() string {
+	return "The number of created spans."
+}
+
+// AttrSpanParentOrigin returns an optional attribute for the
+// "otel.span.parent.origin" semantic convention. It represents the determines
+// whether the span has a parent span, and if so, [whether it is a remote parent]
+// .
+//
+// [whether it is a remote parent]: https://opentelemetry.io/docs/specs/otel/trace/api/#isremote
+func (SDKSpanStartedObservable) AttrSpanParentOrigin(val SpanParentOriginAttr) attribute.KeyValue {
+	return attribute.String("otel.span.parent.origin", string(val))
+}
+
+// AttrSpanSamplingResult returns an optional attribute for the
+// "otel.span.sampling_result" semantic convention. It represents the result
+// value of the sampler for this span.
+func (SDKSpanStartedObservable) AttrSpanSamplingResult(val SpanSamplingResultAttr) attribute.KeyValue {
 	return attribute.String("otel.span.sampling_result", string(val))
 }
